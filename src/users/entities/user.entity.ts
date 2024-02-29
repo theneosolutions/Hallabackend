@@ -1,6 +1,6 @@
 
 
-import { Column, DeleteDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { IsBoolean, IsEmail, IsOptional, IsString, Length, Matches } from 'class-validator';
 import {
   BCRYPT_HASH,
@@ -10,6 +10,8 @@ import {
 import { CredentialsEmbeddable } from '../embeddables/credentials.embeddable';
 import { IUser } from '../interfaces/user.interface';
 import { MANUAL_LOGIN } from '../../common/consts/login.const';
+import { EventInvitessContacts } from 'src/assessments/entities/events_invites_contacts.entity';
+import { Events } from 'src/assessments/entities/event.entity';
 
 export type UserStatus = "active" | "disabled";
 
@@ -139,4 +141,22 @@ export class Users implements IUser {
 
   @DeleteDateColumn()
   public deletedAt: Date;
+
+
+  @ManyToMany(
+    () => Events,
+    event => event.invites, //optional
+    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' })
+  @JoinTable({
+    name: 'assessment_candidates_users',
+    joinColumn: {
+      name: 'usersId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'eventId',
+      referencedColumnName: 'id',
+    },
+  })
+  events?: Events[];
 }

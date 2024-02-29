@@ -98,9 +98,13 @@ export class AuthController {
     })
     public async signUp(
         @Origin() origin: string | undefined,
+        @Res() res: Response,
         @Body() signUpDto: SignUpDto,
-    ): Promise<IMessage> {
-        return await this.authService.signUp(signUpDto, origin);
+    ): Promise<any> {
+        const result = await this.authService.signUp(signUpDto, origin);
+        this.saveRefreshCookie(res, result.refreshToken)
+            .status(HttpStatus.OK)
+            .json(AuthResponseMapper.map(result));
     }
 
     @Public()
@@ -118,8 +122,12 @@ export class AuthController {
     public async signUpWithPhone(
         @Origin() origin: string | undefined,
         @Body() phoneDto: PhoneDto,
-    ): Promise<IMessage> {
-        return await this.authService.signUpWithPhone(phoneDto, origin);
+        @Res() res: Response,
+    ): Promise<any> {
+        const result = await this.authService.signUpWithPhone(phoneDto, origin);
+        this.saveRefreshCookie(res, result.refreshToken)
+            .status(HttpStatus.OK)
+            .json(AuthResponseMapper.map(result));
     }
 
     @Public()

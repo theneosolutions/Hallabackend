@@ -1,15 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsJWT, IsString } from 'class-validator';
+import { IsEmail, IsJWT, IsNumber, IsString, Length } from 'class-validator';
 import { PasswordsDto } from './passwords.dto';
 
 export abstract class ResetPasswordDto extends PasswordsDto {
   @ApiProperty({
-    description: 'The JWT token sent to the user email',
-    example:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+    description: 'The email of the user',
+    example: 'someone@gmail.com',
+    minLength: 5,
+    maxLength: 255,
     type: String,
   })
   @IsString()
-  @IsJWT()
-  public resetToken!: string;
+  @IsEmail()
+  @Length(5, 255)
+  public email: string;
+
+  @ApiProperty({
+    description: 'The User OTP code',
+    example: 1234,
+    minLength: 4,
+    maxLength: 4,
+    type: Number,
+  })
+  @IsNumber()
+  public otp!: number;
 }
