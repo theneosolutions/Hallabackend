@@ -67,7 +67,7 @@ export abstract class UpdateEventDto {
 
     @ApiProperty({
         description: 'notes',
-        example: 'just some random notes related to this assessment',
+        example: 'just some random notes related to this event',
         type: String,
     })
     @IsOptional()

@@ -40,7 +40,6 @@ import { Express } from 'express';
 import { IResponseEvent } from './interfaces/response-event.interface';
 import { EventsService } from './events.service';
 import { Origin } from 'src/auth/decorators/origin.decorator';
-// import { ResponseAssessmentMapper } from './mappers/response-assessment.mapper';
 import { GetEventParams } from './dtos/get-event.params';
 import { PageOptionsDto } from './dtos/page-option.dto';
 import { PageDto } from './dtos/page.dto';
