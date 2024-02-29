@@ -57,7 +57,7 @@ export class AuthService {
     this.loggerService = new Logger(AuthService.name);
   }
 
-  public async signUp(dto: SignUpDto, domain?: string): Promise<IMessage> {
+  public async signUp(dto: SignUpDto, domain?: string): Promise<IAuthResult> {
     const { firstName, lastName, email, password1, password2, referredBy } = dto;
     this.comparePasswords(password1, password2);
     const user = await this.usersService.create(email, firstName, lastName, password1, referredBy);
@@ -67,14 +67,28 @@ export class AuthService {
       domain,
     );
     this.mailerService.sendConfirmationEmail(user, confirmationToken);
-    return this.commonService.generateMessage('Registration successful');
+    if (isUndefined(user) || isNull(user)) {
+      throw new BadRequestException(['Invalid email or password.Please try again']);
+    }
+    const [accessToken, refreshToken] = await this.generateAuthTokens(
+      user,
+      domain,
+    );
+    return { user, accessToken, refreshToken };
   }
 
-  public async signUpWithPhone(dto: PhoneDto, domain?: string): Promise<IMessage> {
+  public async signUpWithPhone(dto: PhoneDto, domain?: string): Promise<IAuthResult> {
     const { callingCode, phoneNumber } = dto;
     const user = await this.usersService.createUserWithPhone(callingCode, phoneNumber);
     await this.sendOtpPhoneWithRetry(callingCode, phoneNumber, user?.otp, 3, 1000);
-    return this.commonService.generateMessage('Registration successful.Please verify your phone number.');
+    if (isUndefined(user) || isNull(user)) {
+      throw new BadRequestException(['Invalid email or password.Please try again']);
+    }
+    const [accessToken, refreshToken] = await this.generateAuthTokens(
+      user,
+      domain,
+    );
+    return { user, accessToken, refreshToken };
   }
 
 
@@ -224,20 +238,18 @@ export class AuthService {
         TokenTypeEnum.RESET_PASSWORD,
         domain,
       );
-      this.mailerService.sendResetPasswordEmail(user, resetToken);
+      this.mailerService.sendResetPasswordEmail(user, user?.otp);
     }
 
     return this.commonService.generateMessage('Reset password email sent');
   }
 
   public async resetPassword(dto: ResetPasswordDto): Promise<IMessage> {
-    const { password1, password2, resetToken } = dto;
-    const { id, version } = await this.jwtService.verifyToken<IEmailToken>(
-      resetToken,
-      TokenTypeEnum.RESET_PASSWORD,
-    );
+    const { password1, password2, otp, email } = dto;
+    const user = await this.userByEmailOrUsername(email);
     this.comparePasswords(password1, password2);
-    await this.usersService.resetPassword(id, version, password1);
+    this.compareOTPs(user?.otp, otp);
+    await this.usersService.resetPassword(user?.id, user.credentials.version, password1);
     return this.commonService.generateMessage('Password reset successful');
   }
 
@@ -408,12 +420,27 @@ export class AuthService {
         },
         data: data
       };
+      console.log("🚀 ~ AuthService ~ sendRequest ~ config:", config)
 
       try {
         const response = await axios.request(config);
         console.log(JSON.stringify(response.data));
       } catch (error) {
-        console.error(`Error sending OTP via SMS: ${error.message}`);
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+        } else if (error.request) {
+          // The request was made but no response was received
+          // `error.request` is an instance of XMLHttpRequest in the browser 
+          // and an instance of http.ClientRequest in node.js
+          console.log(error.request);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.log('Error', error.message);
+        }
         retryCount++;
         if (retryCount <= maxRetries) {
           console.log(`Retrying (${retryCount}/${maxRetries})...`);

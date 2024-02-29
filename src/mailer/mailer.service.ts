@@ -7,7 +7,7 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { join } from 'path';
 import { IEmailConfig } from '../config/interfaces/email-config.interface';
 import { IUser } from '../users/interfaces/user.interface';
-import { ITemplatedData } from './interfaces/template-data.interface';
+import { IRestPasswordTemplatedData, ITemplatedData } from './interfaces/template-data.interface';
 import { ITemplates } from './interfaces/templates.interface';
 
 @Injectable()
@@ -32,7 +32,7 @@ export class MailerService {
 
     private static parseTemplate(
         templateName: string,
-    ): Handlebars.TemplateDelegate<ITemplatedData> {
+    ): Handlebars.TemplateDelegate<ITemplatedData | IRestPasswordTemplatedData> {
         const templateText = readFileSync(
             join(__dirname, '..','mailer', 'templates', templateName),
             'utf-8',
@@ -51,13 +51,13 @@ export class MailerService {
         this.sendEmail(email, subject, html, 'A new confirmation email was sent.');
     }
 
-    public sendResetPasswordEmail(user: IUser, token: string): void {
+    public sendResetPasswordEmail(user: IUser, otp: number): void {
         const { email, firstName, lastName } = user;
         const name = `${firstName} ${lastName}`;
         const subject = 'Reset your password';
         const html = this.templates.resetPassword({
             name,
-            link: `https://${this.domain}/api/auth/reset-password?resetToken=${token}`,
+            otp: otp,
         });
         this.sendEmail(
             email,

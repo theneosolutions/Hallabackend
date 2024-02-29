@@ -13,6 +13,8 @@ import { AuthGuard } from './auth/guards/auth.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MailerModule } from './mailer/mailer.module';
 import { StripeModule } from './stripe/stripe.module';
+import { ContactsModule } from './contacts/contacts.module';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { StripeModule } from './stripe/stripe.module';
     JwtModule,
     MailerModule,
     StripeModule,
+    ContactsModule,
+    WhatsappModule
   ],
   controllers: [AppController],
   providers: [
