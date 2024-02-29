@@ -14,4 +14,4 @@ import { Users } from 'src/users/entities/user.entity';
   exports: [EventsService],
   controllers: [EventsController],
 })
-export class AssessmentModule { }
+export class EventsModule { }
