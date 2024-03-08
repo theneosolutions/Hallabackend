@@ -5,8 +5,7 @@ import { IEvent } from '../interfaces/event.interface';
 import { Contacts } from '../../contacts/entities/contacts.entity';
 import { v4 as uuidV4, v5 as uuidV5 } from 'uuid';
 import { Users } from 'src/users/entities/user.entity';
-
-
+import { Card } from 'src/cards/entities/card.entity';
 
 @Entity()
 export class Events implements IEvent {
@@ -45,6 +44,16 @@ export class Events implements IEvent {
 
   @IsOptional()
   @IsString()
+  @Column({ type: 'varchar', default: '', nullable: true })
+  public nearby: string;
+
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', default: '', nullable: true })
+  public address: string;
+
+  @IsOptional()
+  @IsString()
   @Column({ type: 'decimal', precision: 10, scale: 6 , nullable: true })
   public latitude: number;
 
@@ -61,13 +70,17 @@ export class Events implements IEvent {
   @ManyToOne(() => Users, (user) => user.id)
   public user: number;
 
+  
+  @ManyToMany(() => Card)
+  @JoinTable()
+  card: Card[]
 
   @ManyToMany(
-    () => Users,
-    users => users.events,
+    () => Contacts,
+    contacts => contacts.events,
     { onDelete: 'NO ACTION', onUpdate: 'NO ACTION', },
   )
-  invites?: Users[];
+  invites?: Contacts[];
 
 
   @Column({ default: () => `now()`, nullable: false })

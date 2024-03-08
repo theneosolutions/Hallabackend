@@ -1,11 +1,12 @@
 
 
-import { Column, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { IsEmail, IsOptional, IsString, Length, Matches } from 'class-validator';
 import { NAME_REGEX } from '../../common/consts/regex.const';
 import { IContacts } from '../interfaces/contacts.interface';
 import { v4 as uuidV4 } from 'uuid';
 import { Users } from 'src/users/entities/user.entity';
+import { Events } from 'src/events/entities/event.entity';
 
 export type ContactsStatus = "active" | "disabled";
 
@@ -75,4 +76,21 @@ export class Contacts implements IContacts {
 
   @DeleteDateColumn()
   public deletedAt: Date;
+
+  @ManyToMany(
+    () => Events,
+    event => event.invites, //optional
+    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' })
+  @JoinTable({
+    name: 'event_invitess_contacts',
+    joinColumn: {
+      name: 'contactsId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'eventId',
+      referencedColumnName: 'id',
+    },
+  })
+  events?: Events[];
 }

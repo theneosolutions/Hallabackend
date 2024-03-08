@@ -16,6 +16,7 @@ import { isNull, isUndefined } from './utils/validation.util';
 
 @Injectable()
 export class CommonService {
+ 
   private readonly loggerService: LoggerService;
 
   constructor() {
@@ -94,5 +95,20 @@ export class CommonService {
 
   public generateMessage(message: string): IMessage {
     return { id: v4(), message };
+  }
+
+  public getDateInMySQLFormat(dateStr:any) {
+    const d = new Date(dateStr + " 00:00:00")
+    const year = d?.getFullYear()
+    let month = d?.getMonth() + 1
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment     
+    // @ts-ignore
+    if (month < 10) month = '0' + month
+    let date = d?.getDate()
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment     
+    // @ts-ignore
+    if (date < 10) date = '0' + date
+
+    return `${year}-${month}-${date}`;
   }
 }

@@ -15,6 +15,8 @@ import { MailerModule } from './mailer/mailer.module';
 import { StripeModule } from './stripe/stripe.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
+import { EventsModule } from './events/events.module';
+import { CardModule } from './cards/card.module';
 
 @Module({
   imports: [
@@ -44,7 +46,9 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     MailerModule,
     StripeModule,
     ContactsModule,
-    WhatsappModule
+    WhatsappModule,
+    EventsModule,
+    CardModule
   ],
   controllers: [AppController],
   providers: [

@@ -206,7 +206,7 @@ export class UploaderService {
                 fileExt;
         } else {
             key =
-                this.bucketData.folder +
+            process.env.POST_FOLDER +
                 '/' +
                 uuidV5(userId.toString(), this.bucketData.appUuid) +
                 '/' +

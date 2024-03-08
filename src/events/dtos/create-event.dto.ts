@@ -11,6 +11,14 @@ export abstract class EventDto {
   public user: number;
 
   @ApiProperty({
+    description: 'Card id',
+    example: 123,
+    type: Number,
+  })
+  @IsNumber()
+  public cardId: number;
+
+  @ApiProperty({
     type: String,
     example: [
       '+923012345678',
@@ -72,6 +80,23 @@ export abstract class EventDto {
   @IsOptional()
   @IsString()
   public notes: string;
+
+  @ApiProperty({
+    description: 'nearby place',
+    example: 'name of the nearby place',
+    type: String,
+  })
+  @IsOptional()
+  @IsString()
+  public nearby: string;
+
+  @ApiProperty({
+    description: 'address',
+    example: 'Address of the place',
+    type: String,
+  })
+  @IsString()
+  public address: string;
 
   @ApiProperty({
     description: 'latitude',

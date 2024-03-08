@@ -52,6 +52,10 @@ import { MessageMapper } from 'src/common/mappers/message.mapper';
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { UpdateEventDto } from './dtos/update-event.dto';
 import { userInfo } from 'os';
+import { ResponseEventsMapper } from './mappers/response-events.mapper';
+import { ResponseMediaMapper } from './mappers/response-media.mapper';
+import { IEventMedia } from './interfaces/media.interface';
+import { EventGuestsDto } from './dtos/create-guests-event.dto';
 
 @ApiTags('Events')
 @Controller('api/events')
@@ -61,6 +65,112 @@ export class EventsController {
         private readonly eventsService: EventsService,
         private readonly configService: ConfigService,
     ) { }
+
+    @Post()
+    // @Public()
+    @ApiOkResponse({
+        type: ResponseEventsMapper,
+        description: 'Event is created and returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'User is not logged in.',
+    })
+    public async create(
+        @CurrentUser() id: number,
+        @Origin() origin: string | undefined,
+        @Body() eventDto: EventDto,
+    ): Promise<IResponseEvent> {
+        const event = await this.eventsService.create(origin, eventDto);
+        return ResponseEventsMapper.map(event);
+    }
+
+
+    @Post('addGuests/:id')
+    @Public()
+    @ApiOkResponse({
+        type: ResponseEventsMapper,
+        description: 'Event is created and returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'User is not logged in.',
+    })
+    public async addContactsIntoEvent(
+        @CurrentUser() id: number,
+        @Origin() origin: string | undefined,
+        @Body() eventGuestsDto: EventGuestsDto,
+        @Param() params: GetEventParams
+    ): Promise<IResponseEvent> {
+        const event = await this.eventsService.addContactsIntoEvent(origin, eventGuestsDto,params?.id);
+        return ResponseEventsMapper.map(event);
+    }
+
+    @Post('send-invites/:id')
+    @Public()
+    @ApiOkResponse({
+        type: ResponseEventsMapper,
+        description: 'Event invitations is sent and returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'User is not logged in.',
+    })
+    public async sendEventInvites(
+        @CurrentUser() id: number,
+        @Param() params: GetEventParams
+    ): Promise<IResponseEvent> {
+        const event = await this.eventsService.sendEventInvites(id,params?.id);
+        return ResponseEventsMapper.map(event);
+    }
+
+    @Post('/upload-event-image')
+    @Public()
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string', format: 'binary'
+                },
+                fileType: {
+                    type: 'string',
+                    enum: ['event'],
+                },
+            },
+        },
+    })
+    @ApiOkResponse({
+        type: ResponseMediaMapper,
+        description: 'file is uploaded and return file url.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'The user is not found.',
+    })
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadFile(
+        @UploadedFile() file: Express.Multer.File,
+        @Body() dto: any,
+    ): Promise<IEventMedia> {
+        console.log("🚀 ~ file: users.controller.ts:105 ~ UsersController ~ @Body ~ dto", dto, file)
+        const { ratio, fileType } = dto;
+        const uploadedFile = await this.eventsService.uploadImage(file, ratio, fileType);
+        return ResponseMediaMapper.map({
+            link: uploadedFile,
+            type: "jpg",
+        });
+
+    }
 
     
 }
