@@ -142,21 +142,4 @@ export class Users implements IUser {
   @DeleteDateColumn()
   public deletedAt: Date;
 
-
-  @ManyToMany(
-    () => Events,
-    event => event.invites, //optional
-    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' })
-  @JoinTable({
-    name: 'assessment_candidates_users',
-    joinColumn: {
-      name: 'usersId',
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'eventId',
-      referencedColumnName: 'id',
-    },
-  })
-  events?: Events[];
 }

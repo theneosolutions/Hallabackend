@@ -8,6 +8,8 @@ export interface IEvent {
   status: string;
   notes?: string;
   showQRCode?: boolean;
+  nearby?:string;
+  address?:string;
   latitude?: number;
   longitude?: number;
   code?: string;

@@ -4,13 +4,14 @@ import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Users } from '../../users/entities/user.entity';
 import { Events } from './event.entity';
 import { v4 as uuidV4, v5 as uuidV5 } from 'uuid';
+import { Contacts } from 'src/contacts/entities/contacts.entity';
 
 @Entity()
 export class EventInvitessContacts{
 
   @IsOptional()
   @IsString()
-  @Column({ type: 'varchar', default: 'invited' })
+  @Column({ type: 'varchar', default: 'pending' })
   public status: string;
 
   @IsOptional()
@@ -24,7 +25,7 @@ export class EventInvitessContacts{
   @Column({ type: 'decimal', precision: 6, scale: 2, default: 0, nullable: true })
   public numberOfGuests: number;
 
-  @PrimaryColumn({ type: "int" })
+  @Column({ type: "int" , nullable: true})
   usersId: number;
 
   @PrimaryColumn({ type: "int" })
@@ -38,21 +39,21 @@ export class EventInvitessContacts{
 
   @IsOptional()
   @IsString()
-  @Column({ type: 'text', default: "email" })
+  @Column({ type: 'varchar', default: null })
   public notes: string;
 
   @IsOptional()
   @IsBoolean()
-  @Column('boolean')
+  @Column({type:'boolean', default: null})
   public haveChat: true | false = false;
 
   @ManyToOne(
-    () => Users,
-    users => users.events,
+    () => Contacts,
+    contacts => contacts.events,
     { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' }
   )
-  @JoinColumn([{ name: 'usersId', referencedColumnName: 'id' }])
-  invites: Users[];
+  @JoinColumn([{ name: 'contactsId', referencedColumnName: 'id' }])
+  invites: Contacts[];
 
   @ManyToOne(
     () => Events,

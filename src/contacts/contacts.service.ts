@@ -70,6 +70,70 @@ export class ContactsService {
     return constact;
   }
 
+  public async getOrCreateContacts(contacts: any[], userId: number): Promise<number[]> {
+    const ContactsIds = await Promise.all(contacts.map(async (contact: any) => {
+      const phone = await this.findOneByPhone(contact.callingCode, contact.phoneNumber);
+      if (phone && phone.id) {
+        return phone.id;
+      } else {
+        const newPhone = await this.createContact(contact, userId);
+        return newPhone.id;
+      }
+    }));
+
+    return ContactsIds;
+  }
+
+  public async findOneByPhone(
+    callingCode: string,
+    phoneNumber: string
+  ): Promise<Contacts> {
+    return await this.contactsRepository.findOneBy({ callingCode, phoneNumber });
+  }
+
+  public async createContact(contact: any, userId: any): Promise<Contacts> {
+    const { callingCode, phoneNumber } = contact;
+
+    if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
+      throw new BadRequestException(['User cannot be null']);
+    }
+
+    const userDetail = await this.usersService.findOneById(userId);
+    console.log("🚀 ~ ContactsService ~ createContact ~ userDetail:", userDetail)
+
+    if (isNull(userDetail) || isUndefined(userDetail)) {
+      throw new BadRequestException(['User not found with id: ' + userId]);
+    }
+
+    if (isNull(callingCode) || isUndefined(callingCode)) {
+      throw new BadRequestException(['calling Code cannot be null']);
+    }
+
+    if (isNull(phoneNumber) || isUndefined(phoneNumber)) {
+      throw new BadRequestException(['phone number cannot be null']);
+    }
+
+    const formattedPhone = phoneNumber.toLowerCase();
+
+    const constact = this.contactsRepository.create({
+      email: null,
+      name: 'new',
+      suffix: 'Mr',
+      callingCode: callingCode,
+      phoneNumber: formattedPhone,
+      user: userId,
+    });
+    await this.contactsRepository.insert(constact);
+    return constact;
+  }
+
+  public async findOneByWhere(
+    where: any,
+  ): Promise<Contacts[]> {
+    const contactsItems = await this.contactsRepository.findBy(where)
+    return contactsItems;
+  }
+
   private async checkPhoneUniqueness(callingCode: string, phoneNumber: string): Promise<void> {
     const count = await this.contactsRepository.countBy({ callingCode, phoneNumber });
 

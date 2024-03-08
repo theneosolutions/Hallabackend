@@ -102,6 +102,39 @@ export class WhatsappService {
     return null;
   }
 
+  public async sendInviteToGuest(body: any): Promise<any> {
+    const { callingCode, phoneNumber, text, image, recipientName, eventName } = body;
+    const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`
+    try {
+      await this.Whatsapp.sendSimpleButtons({
+        message: text,
+        // caption: text,
+        // file_path: image,
+        recipientPhone: recipientPhone,
+        listOfButtons: [
+          {
+            title: 'confirm',
+            id: 'event_confirm',
+          },
+          {
+            title: 'Decline',
+            id: 'event_deline',
+          },
+          {
+            title: 'Event Location',
+            id: 'event_location',
+          },
+        ],
+      });
+  
+      return null
+      
+    } catch (error) {
+      console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ error:", error)
+      
+    }
 
+     
+  }
 
 }
