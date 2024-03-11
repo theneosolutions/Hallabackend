@@ -17,7 +17,7 @@ import { ContactsModule } from './contacts/contacts.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { EventsModule } from './events/events.module';
 import { CardModule } from './cards/card.module';
-import { NotificationsModule } from './notifications/notifications.module';
+import { NotificationsModule } from './Notifications/notifications.module';
 
 @Module({
   imports: [
@@ -51,6 +51,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     EventsModule,
     CardModule,
     NotificationsModule
+    
   ],
   controllers: [AppController],
   providers: [
