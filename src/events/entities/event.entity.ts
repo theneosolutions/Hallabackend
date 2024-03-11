@@ -6,6 +6,7 @@ import { Contacts } from '../../contacts/entities/contacts.entity';
 import { v4 as uuidV4, v5 as uuidV5 } from 'uuid';
 import { Users } from 'src/users/entities/user.entity';
 import { Card } from 'src/cards/entities/card.entity';
+import { EventsChats } from './events_chats.entity';
 
 @Entity()
 export class Events implements IEvent {
@@ -81,6 +82,9 @@ export class Events implements IEvent {
     { onDelete: 'NO ACTION', onUpdate: 'NO ACTION', },
   )
   invites?: Contacts[];
+
+  @OneToMany(() => EventsChats, eventschats => eventschats.event)
+  eventschats: EventsChats[];
 
 
   @Column({ default: () => `now()`, nullable: false })

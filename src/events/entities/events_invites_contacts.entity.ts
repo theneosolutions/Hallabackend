@@ -16,13 +16,13 @@ export class EventInvitessContacts{
 
   @IsOptional()
   @IsNumber()
-  @Column({ type: 'decimal', precision: 6, scale: 2, default: 0, nullable: true })
+  @Column({ type: 'int', default: 0, nullable: true })
   public numberOfScans: number;
 
 
   @IsOptional()
   @IsNumber()
-  @Column({ type: 'decimal', precision: 6, scale: 2, default: 0, nullable: true })
+  @Column({ type: 'int', default: 0, nullable: true })
   public numberOfGuests: number;
 
   @Column({ type: "int" , nullable: true})
@@ -46,6 +46,16 @@ export class EventInvitessContacts{
   @IsBoolean()
   @Column({type:'boolean', default: null})
   public haveChat: true | false = false;
+
+  @IsOptional()
+  @IsBoolean()
+  @Column({type:'boolean', default: false})
+  public selectedEvent: true | false = false;
+
+  @IsOptional()
+  @IsBoolean()
+  @Column({type:'boolean', default: false})
+  public sendList: true | false = false;
 
   @ManyToOne(
     () => Contacts,

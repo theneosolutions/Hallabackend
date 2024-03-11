@@ -28,6 +28,8 @@ import * as qrcode from 'qrcode';
 import nodeHtmlToImage from 'node-html-to-image'
 import { ConfigService } from '@nestjs/config';
 import { eventNames } from 'process';
+import { EventsChats } from 'src/events/entities/events_chats.entity';
+import { ChatGateway } from 'src/chat/chat.gateway';
 
 
 const unirest = require('unirest');
@@ -48,7 +50,7 @@ export class WhatsappService {
   private readonly templates: ITemplates;
   private readonly domain: string;
   private newMessage = 0;
-       
+
 
   constructor(
     @InjectRepository(Contacts)
@@ -57,9 +59,12 @@ export class WhatsappService {
     private readonly eventsRepository: Repository<Events>,
     @InjectRepository(EventInvitessContacts)
     private readonly eventInvitessContacts: Repository<EventInvitessContacts>,
+    @InjectRepository(EventsChats)
+    private readonly eventsChats: Repository<EventsChats>,
     private readonly usersService: UsersService,
     private readonly commonService: CommonService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly chatGateway: ChatGateway
   ) {
 
     this.domain = this.configService.get<string>('domain');
@@ -84,63 +89,91 @@ export class WhatsappService {
 
     if (data?.isMessage) {
       let incomingMessage = data.message;
+      console.log("🚀 ~ WhatsappService ~ create ~ incomingMessage:", incomingMessage)
       let recipientPhone = incomingMessage.from.phone; // extract the phone number of sender
       let recipientName = incomingMessage.from.name;
       let typeOfMsg = incomingMessage.type; // extract the type of message (some are text, others are images, others are responses to buttons etc...)
       let message_id = incomingMessage.message_id; // extract the message id
 
-      if (typeOfMsg === 'text_message' && this.newMessage ==0) {
+      if (typeOfMsg === 'text_message') {
         this.newMessage = 1;
-        const contactInfo:any = await this.findByCombinedPhoneNumber(recipientPhone); 
-        console.log("🚀 ~ WhatsappService ~ create ~ contactInfo:", contactInfo)
+        const contactInfo: any = await this.findByCombinedPhoneNumber(recipientPhone);
         const userEvents: any = await this.findInviteByContactId(contactInfo?.id);
-        console.log("🚀 ~ WhatsappService ~ create ~ userEvents:", userEvents)
-        if(userEvents.length == 1){
+        if (userEvents.length == 1) {
           const invite = userEvents[0];
-
-          await this.sendRadioButtons({
-            recipientPhone: recipientPhone,
-            headerText: 'How can i help?',
-            bodyText:'Please choose from the list',
-            footerText: ' ',
-            listOfSections: [
+          if(invite.sendList){
+            await this.sendRadioButtons({
+              recipientPhone: recipientPhone,
+              headerText: 'How can i help?',
+              bodyText: 'Please choose from the list',
+              footerText: ' ',
+              listOfSections: [
                 {
-                    title: ' ',
-                    rows: [
-                        {
-                            title: 'Send message',
-                            description: ' ',
-                            id: 'SKU12_black_lvx_tshirt',
-                        },
-                        {
-                            title: 'Re-send the invitaion',
-                            description:' ',
-                            id: `event-invitaion_${invite?.eventId}_${invite?.invites?.id}`,
-                        },
-                        {
-                            title: 'Re-send the location',
-                            description:' ',
-                            id: `event-location_${invite?.eventId}_${invite?.invites?.id}`,
-                        },
-                        {
-                          title: 'Other',
-                          description:' ',
-                          id: `other_${invite?.eventId}_${invite?.invites?.id}`,
-                      },
-                    ],
+                  title: ' ',
+                  rows: [
+                    {
+                      title: 'Send message',
+                      description: ' ',
+                      id: `event-message_${invite?.eventId}_${invite?.invites?.id}`,
+                    },
+                    {
+                      title: 'Re-send the invitaion',
+                      description: ' ',
+                      id: `event-invitaion_${invite?.eventId}_${invite?.invites?.id}`,
+                    },
+                    {
+                      title: 'Re-send the location',
+                      description: ' ',
+                      id: `event-location_${invite?.eventId}_${invite?.invites?.id}`,
+                    },
+                    {
+                      title: 'Other',
+                      description: ' ',
+                      id: `other_${invite?.eventId}_${invite?.invites?.id}`,
+                    },
+                  ],
                 }
               ],
-        });
-          setTimeout(() => {
-            this.newMessage = 0
-          }, 2500);
-        }else {
+            });
+            invite.sendList = false;
+            await this.eventInvitessContacts.save(invite);
+            setTimeout(async()=>{
+              invite.sendList = true;
+              await this.eventInvitessContacts.save(invite);
+            },2000)
+          }else{
+            const message = {
+              action: 'message',
+              actionData: incomingMessage?.text?.body,
+              actionType: 'text',
+              actionUser: invite?.usersId,
+              contact: invite?.invites?.id,
+              event: invite?.eventId
+            }
+            console.log("🚀 ~ WhatsappService ~ create ~ message:", message)
+            const chat = this.eventsChats.create(message);
+            await this.eventsChats.insert(chat);
+            this.emitEvent('chat',chat);
+            invite.sendList = true;
+            invite.haveChat = true;
+            await this.eventInvitessContacts.save(invite);
+            this.sendText({
+              message: 'Thank you.Message is sent to event creator',
+              recipientPhone: recipientPhone,
+            });
 
+          }
+
+         
           
+        } else {
+
+
 
         }
-       
+
       }
+      
       if (typeOfMsg === 'simple_button_message') {
         let button_id = incomingMessage.button_reply.id;
         const button_event = button_id?.split('_')
@@ -209,6 +242,20 @@ export class WhatsappService {
           });
 
         }
+
+        if (button_event[0] === 'event-deline-yes') {
+          const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
+          invite.selectedEvent = true;
+          invite.sendList = false;
+          await this.eventInvitessContacts.save(invite);
+          this.sendText({
+            message: 'Please enter your message.Only text is allowed.',
+            recipientPhone: recipientPhone,
+          });
+
+        }
+
+
         if (button_event[0] === 'other') {
           this.sendText({
             message: 'Welcome to Halla Electronic invitaions! We are here to assist you.To speek with our customer serviceteam, please click on the link below.',
@@ -234,10 +281,22 @@ export class WhatsappService {
 
         }
 
+        if (button_event[0] === 'event-message') {
+          const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
+          invite.selectedEvent = true;
+          invite.sendList = false;
+          await this.eventInvitessContacts.save(invite);
+          this.sendText({
+            message: 'Please enter your message.Only text is allowed.',
+            recipientPhone: recipientPhone,
+          });
+
+        }
+
         if (button_event[0] === 'event-invitaion') {
           const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
           const { invites, events }: any = invite;
-          const { image, name: eventName,id }: any = events
+          const { image, name: eventName, id }: any = events
           const { callingCode, phoneNumber, name: recipientName, } = invites;
 
           await this.sendImage({
@@ -245,7 +304,7 @@ export class WhatsappService {
             // caption: text,
             url: image,
           });
-    
+
           await this.sendSimpleButtons({
             message: `Hey ${recipientName}, \nWe are please to invite you to.\n${eventName}`,
             recipientPhone: recipientPhone,
@@ -345,7 +404,7 @@ export class WhatsappService {
     return invite;
   }
 
-  public async findInviteByContactId( id: number): Promise<EventInvitessContacts[]> {
+  public async findInviteByContactId(id: number): Promise<EventInvitessContacts[]> {
     const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
     const invite = await queryBuilder.where("event_invitess_contacts.contactsId = :id", { id: id })
       .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
@@ -375,120 +434,130 @@ export class WhatsappService {
     return response;
   }
 
+  public async emitEvent(event: string, data: any): Promise<void> {
+    const server = this.chatGateway.getServerInstance();
+    if (server) {
+      console.log("🚀 ~ WhatsappService ~ create ~ chat:", data)
+      server.emit(event, data);
+    } else {
+      console.error('Server instance not available');
+    }
+  }
+
   async sendRadioButtons({
     recipientPhone,
     headerText,
     bodyText,
     footerText,
     listOfSections,
-}) {
+  }) {
     this._mustHaverecipientPhone(recipientPhone);
 
     if (!bodyText)
-        throw new Error('"bodyText" is required in making a request');
+      throw new Error('"bodyText" is required in making a request');
     if (!headerText)
-        throw new Error('"headerText" is required in making a request');
+      throw new Error('"headerText" is required in making a request');
     if (!footerText)
-        throw new Error('"footerText" is required in making a request');
+      throw new Error('"footerText" is required in making a request');
 
     let totalNumberOfItems = 0;
     let validSections = listOfSections
-        .map((section) => {
-            let title = section.title;
-            let rows = section.rows?.map((row) => {
-                if (!row.id) {
-                    throw new Error(
-                        '"row.id" of an item is required in list of radio buttons.'
-                    );
-                }
-                if (row.id.length > 200) {
-                    throw new Error(
-                        'The row id must be between 1 and 200 characters long.'
-                    );
-                }
-                if (!row.title) {
-                    throw new Error(
-                        '"row.title" of an item is required in list of radio buttons.'
-                    );
-                }
-                if (row.title.length > 24) {
-                    throw new Error(
-                        'The row title must be between 1 and 24 characters long.'
-                    );
-                }
-                if (!row.description) {
-                    throw new Error(
-                        '"row.description" of an item is required in list of radio buttons.'
-                    );
-                }
-                if (row.description.length > 72) {
-                    throw new Error(
-                        'The row description must be between 1 and 72 characters long.'
-                    );
-                }
+      .map((section) => {
+        let title = section.title;
+        let rows = section.rows?.map((row) => {
+          if (!row.id) {
+            throw new Error(
+              '"row.id" of an item is required in list of radio buttons.'
+            );
+          }
+          if (row.id.length > 200) {
+            throw new Error(
+              'The row id must be between 1 and 200 characters long.'
+            );
+          }
+          if (!row.title) {
+            throw new Error(
+              '"row.title" of an item is required in list of radio buttons.'
+            );
+          }
+          if (row.title.length > 24) {
+            throw new Error(
+              'The row title must be between 1 and 24 characters long.'
+            );
+          }
+          if (!row.description) {
+            throw new Error(
+              '"row.description" of an item is required in list of radio buttons.'
+            );
+          }
+          if (row.description.length > 72) {
+            throw new Error(
+              'The row description must be between 1 and 72 characters long.'
+            );
+          }
 
-                totalNumberOfItems += 1;
+          totalNumberOfItems += 1;
 
-                return {
-                    id: row.id,
-                    title: row.title,
-                    description: row.description,
-                };
-            });
-            if (!title) {
-                throw new Error(
-                    '"title" of a section is required in list of radio buttons.'
-                );
-            }
-            return {
-                title,
-                rows,
-            };
-        })
-        .filter(Boolean);
+          return {
+            id: row.id,
+            title: row.title,
+            description: row.description,
+          };
+        });
+        if (!title) {
+          throw new Error(
+            '"title" of a section is required in list of radio buttons.'
+          );
+        }
+        return {
+          title,
+          rows,
+        };
+      })
+      .filter(Boolean);
 
     if (totalNumberOfItems > 10) {
-        throw new Error(
-            'The total number of items in the rows must be equal or less than 10.'
-        );
+      throw new Error(
+        'The total number of items in the rows must be equal or less than 10.'
+      );
     }
 
     let samples = {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: recipientPhone,
-        type: 'interactive',
-        interactive: {
-            type: 'list',
-            header: {
-                type: 'text',
-                text: headerText,
-            },
-            body: {
-                text: bodyText,
-            },
-            footer: {
-                text: footerText,
-            },
-            action: {
-                button: 'List',
-                sections: validSections,
-            },
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: recipientPhone,
+      type: 'interactive',
+      interactive: {
+        type: 'list',
+        header: {
+          type: 'text',
+          text: headerText,
         },
+        body: {
+          text: bodyText,
+        },
+        footer: {
+          text: footerText,
+        },
+        action: {
+          button: 'List',
+          sections: validSections,
+        },
+      },
     };
 
     if (validSections.length === 0) {
-        throw new Error('"listOfSections" is required in making a request');
+      throw new Error('"listOfSections" is required in making a request');
     }
 
     let response = await this._fetchAssistant({
-        url: '/messages',
-        method: 'POST',
-        body: samples,
+      url: '/messages',
+      method: 'POST',
+      body: samples,
     });
 
     return response;
-}
+  }
 
   public async findByCombinedPhoneNumber(phoneNumber: string): Promise<Contacts> {
     const combinedPhoneNumber = `+${phoneNumber}`;
