@@ -398,7 +398,7 @@ export class AuthService {
       const message = `Your Halla verification code is: ${otp}. This code will expire in 10 minutes. Don't share this code with anyone; our employees will never ask for the code.`;
 
       const data = JSON.stringify({
-        src: "oursms",
+        src: "halla",
         dests: [`${callingCode}${phoneNumber}`],
         body: message,
         priority: 0,
