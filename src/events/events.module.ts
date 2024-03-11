@@ -13,7 +13,7 @@ import { EventsService } from './events.service';
 import { Users } from 'src/users/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Events, EventInvitessContacts, Users]), UsersModule,UploaderModule,CardModule,ContactsModule,WhatsappModule],
+  imports: [TypeOrmModule.forFeature([Events, EventInvitessContacts, Users]), UsersModule,UploaderModule,CardModule,ContactsModule,forwardRef(() => WhatsappModule)],
   providers: [EventsService],
   exports: [EventsService],
   controllers: [EventsController],

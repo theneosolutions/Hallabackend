@@ -160,7 +160,8 @@ export class EventsService {
             const getUsers = await this.contactsService.findOneByWhere({ id: In(contacts_ids) })
             console.log("🚀 ~ EventsService ~ addContactsIntoEvent ~ getUsers:", getUsers)
             if (!getUsers || getUsers.length < 1) throw new BadRequestException({ error: "No Contacts found with given IDs" })
-            eventDetail.invites = getUsers
+            eventDetail.invites = getUsers;
+            eventDetail.status = 'active';
         }
         await this.eventsRepository.save(eventDetail);
         const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
@@ -170,7 +171,8 @@ export class EventsService {
 
         invitesList?.map(async (invite) => {
             invite.code = uuidV4();
-            invite.usersId = userId
+            invite.usersId = userId;
+            invite.haveChat = false;
             await this.eventInvitessContacts.save(invite);
         })
 
@@ -208,23 +210,75 @@ export class EventsService {
             .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getMany();
         invitesList?.map(async (invite) => {
             console.log("🚀 ~ EventsService ~ invitesList?.map ~ invite:", invite)
-            const {invites,events}:any = invite;
-            const {image,name:eventName}:any = events
-            const {callingCode,phoneNumber,name:recipientName} = invites;
-            await this.whatsappService.sendInviteToGuest({
+            const { invites, events }: any = invite;
+            const { image, name: eventName,id }: any = events
+            const { callingCode, phoneNumber, name: recipientName, } = invites;
+            const { status } = await this.whatsappService.sendInviteToGuest({
                 callingCode,
                 phoneNumber,
                 text: `Hey ${recipientName}, \nWe are please to invite you to.\n${eventName}`,
                 image,
                 recipientName,
-                eventName
-            })
+                eventName,
+                eventId:id,
+                contactId:invites?.id
+            });
+            if (status == 'success') {
+                invite.status = 'invited';
+            }
+
+            if (status == 'failed') {
+                invite.status = 'failed';
+            }
 
             await this.eventInvitessContacts.save(invite);
         })
 
 
         return eventDetail;
+    }
+
+
+    public async findEventById(
+        id: string,
+    ): Promise<any> {
+        const parsedValue = parseInt(id, 10);
+
+        if (isNaN(parsedValue) && !isInt(parsedValue)) {
+            throw new BadRequestException('Invalid event id: ' + parsedValue);
+
+        }
+
+        const eventItem: any = await this
+            .eventsRepository
+            .createQueryBuilder("events")
+            .where("events.id = :id", { id: parsedValue })
+            .leftJoinAndSelect('events.user', 'user')
+            // .leftJoinAndSelect('events.invites', 'invites')
+            .select([
+                'events',
+                // 'invites.email',
+                // 'invites.id',
+                // 'invites.name',
+                // 'invites.callingCode',
+                // 'invites.phoneNumber',
+                'user.id',
+                'user.firstName',
+                'user.lastName',
+            ])
+            .getOne();
+        const stats = await this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts").where("event_invitess_contacts.eventId = :id", { id: id })
+            .select("SUM(event_invitess_contacts.status='pending')", "GuestNotInvited")
+            .addSelect("SUM(event_invitess_contacts.status='invited')", "GuestInvited")
+            .addSelect("SUM(event_invitess_contacts.status='confirmed')", "GuestConfirmed")
+            .addSelect("SUM(event_invitess_contacts.status='rejected')", "GuestRejected")
+            .addSelect("SUM(event_invitess_contacts.haveChat='1')", "GuestMessages")
+            .addSelect("SUM(event_invitess_contacts.numberOfScans)", "GuestScanned")
+            .addSelect("SUM(event_invitess_contacts.status='failed')", "GuestFailed")
+            .groupBy("event_invitess_contacts.eventId")
+            .getRawMany();
+        eventItem["stats"] = await Promise.all(stats);
+        return eventItem;
     }
 
 
@@ -236,6 +290,43 @@ export class EventsService {
         console.log("🚀 ~ CardService ~ cardItem:", eventId)
         this.commonService.checkEntityExistence(eventId, 'event');
         return eventId;
+    }
+
+    public async findInviteOneById(
+        id: number,
+        eventId:number
+    ): Promise<EventInvitessContacts> {
+        const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
+        const invite = await queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventId })
+            .andWhere("event_invitess_contacts.contactsId = :id", { id: id })
+            .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
+            .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getOne();
+        return invite;
+    }
+
+    public async getEventsByUserId(
+        id: string,
+        pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+        const queryBuilder = this.eventsRepository.createQueryBuilder("events");
+        queryBuilder.where("events.userId = :id", { id: id })
+            .leftJoinAndSelect('events.user', 'user')
+            .select(['events', 'user.id', 'user.firstName', 'user.lastName',])
+            .orderBy("events.createdAt", pageOptionsDto.order)
+
+        if (pageOptionsDto.status !== '') {
+            queryBuilder.andWhere("events.status like :status", { status: `%${pageOptionsDto.status}%` });
+        }
+        if (pageOptionsDto.status == '') {
+            queryBuilder.andWhere("events.status IN(:...keys)", { keys: ['active', 'draft'] });
+        }
+
+        const itemCount = await queryBuilder.getCount();
+        let { entities }: any = await queryBuilder.getRawAndEntities();
+
+        const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+        return new PageDto(await Promise.all(entities), pageMetaDto);
     }
 
 

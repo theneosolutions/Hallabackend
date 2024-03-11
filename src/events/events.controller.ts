@@ -47,7 +47,7 @@ import { Events } from './entities/event.entity';
 import { ApiPaginatedResponse } from './decorators/api-paginated-response.decorator';
 import { GetEventByUserIdParams } from './dtos/get-events-by-userid.params';
 import { EventDto } from './dtos/create-event.dto';
-import { extname } from 'path';
+import { extname, join } from 'path';
 import { MessageMapper } from 'src/common/mappers/message.mapper';
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { UpdateEventDto } from './dtos/update-event.dto';
@@ -85,6 +85,26 @@ export class EventsController {
     ): Promise<IResponseEvent> {
         const event = await this.eventsService.create(origin, eventDto);
         return ResponseEventsMapper.map(event);
+    }
+
+    @Get('/:id')
+    @Public()
+    @ApiOkResponse({
+        type: ResponseEventsMapper,
+        description: 'event is found and returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'eventItem is not found.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'User is not logged in.',
+    })
+    public async findCompanyById(@Param() params: GetEventParams): Promise<any> {
+        const eventItem = await this.eventsService.findEventById(params.id);
+        return (eventItem);
     }
 
 
@@ -129,6 +149,30 @@ export class EventsController {
         const event = await this.eventsService.sendEventInvites(id,params?.id);
         return ResponseEventsMapper.map(event);
     }
+
+    @Public()
+    @Get('/byUserId/:id')
+    @ApiPaginatedResponse(ResponseEventsMapper)
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'event not found.',
+    })
+    async getCompanyByUserId(
+        @Param() params: GetEventByUserIdParams,
+        @Query() pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+
+        return this.eventsService.getEventsByUserId(params.id, pageOptionsDto);
+    }
+
+    @Public()
+    @Get('qrcodes/:fileId')
+    async serveAvatar(@Param('fileId') fileId, @Res() res): Promise<any> {
+      res.sendFile( join(__dirname, '..', '..', 'qrcodes', `${fileId}`));
+    }
+
 
     @Post('/upload-event-image')
     @Public()
