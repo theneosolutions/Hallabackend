@@ -18,6 +18,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { EventsModule } from './events/events.module';
 import { CardModule } from './cards/card.module';
 import { NotificationsModule } from './Notifications/notifications.module';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { NotificationsModule } from './Notifications/notifications.module';
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
+    ChatGateway,
   ],
 })
 export class AppModule { }

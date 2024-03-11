@@ -36,6 +36,7 @@ import { CardService } from 'src/cards/card.service';
 import { ContactsService } from 'src/contacts/contacts.service';
 import { WhatsappService } from 'src/whatsapp/whatsapp.service';
 import { EventGuestsDto } from './dtos/create-guests-event.dto';
+import { EventsChats } from './entities/events_chats.entity';
 
 @Injectable()
 export class EventsService {
@@ -44,6 +45,8 @@ export class EventsService {
         private readonly eventsRepository: Repository<Events>,
         @InjectRepository(EventInvitessContacts)
         private readonly eventInvitessContacts: Repository<EventInvitessContacts>,
+        @InjectRepository(EventsChats)
+        private readonly eventsChats: Repository<EventsChats>,
         private readonly usersService: UsersService,
         private readonly cardService: CardService,
         private readonly uploaderService: UploaderService,
@@ -211,7 +214,7 @@ export class EventsService {
         invitesList?.map(async (invite) => {
             console.log("🚀 ~ EventsService ~ invitesList?.map ~ invite:", invite)
             const { invites, events }: any = invite;
-            const { image, name: eventName,id }: any = events
+            const { image, name: eventName, id }: any = events
             const { callingCode, phoneNumber, name: recipientName, } = invites;
             const { status } = await this.whatsappService.sendInviteToGuest({
                 callingCode,
@@ -220,11 +223,12 @@ export class EventsService {
                 image,
                 recipientName,
                 eventName,
-                eventId:id,
-                contactId:invites?.id
+                eventId: id,
+                contactId: invites?.id
             });
             if (status == 'success') {
                 invite.status = 'invited';
+                invite.sendList = true;
             }
 
             if (status == 'failed') {
@@ -294,7 +298,7 @@ export class EventsService {
 
     public async findInviteOneById(
         id: number,
-        eventId:number
+        eventId: number
     ): Promise<EventInvitessContacts> {
         const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
         const invite = await queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventId })
@@ -320,6 +324,49 @@ export class EventsService {
         if (pageOptionsDto.status == '') {
             queryBuilder.andWhere("events.status IN(:...keys)", { keys: ['active', 'draft'] });
         }
+
+        const itemCount = await queryBuilder.getCount();
+        let { entities }: any = await queryBuilder.getRawAndEntities();
+
+        const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+        return new PageDto(await Promise.all(entities), pageMetaDto);
+    }
+
+    public async getAllChatMessagesOfEvent(
+        eventId: string,
+        userId: string,
+        contactId: string,
+        pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+        const queryBuilder = this.eventsChats.createQueryBuilder("events_chats");
+        queryBuilder.where("events_chats.actionUserId = :actionUserId", { actionUserId: userId })
+            .andWhere("events_chats.eventId = :eventId", { eventId: eventId })
+            .andWhere("events_chats.contactId = :contactId", { contactId: contactId })
+            .leftJoinAndSelect('events_chats.contact', 'contact')
+            .select(['events_chats', 'contact.id', 'contact.name', 'contact.callingCode', 'contact.phoneNumber'])
+            .orderBy("events_chats.createdAt", pageOptionsDto.order)
+
+        const itemCount = await queryBuilder.getCount();
+        let { entities }: any = await queryBuilder.getRawAndEntities();
+
+        const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+        return new PageDto(await Promise.all(entities), pageMetaDto);
+    }
+
+    public async getAllChatsOfEvent(
+        eventId: string,
+        userId: string,
+        pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+
+        const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
+        queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventId })
+            .andWhere("event_invitess_contacts.usersId = :userId", { userId: userId })
+            .andWhere("event_invitess_contacts.haveChat = :haveChat", { haveChat: true })
+            .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
+            .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']);
 
         const itemCount = await queryBuilder.getCount();
         let { entities }: any = await queryBuilder.getRawAndEntities();

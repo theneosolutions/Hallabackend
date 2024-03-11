@@ -168,6 +168,40 @@ export class EventsController {
     }
 
     @Public()
+    @Get('/chats/messages/user/:userId/event/:eventId/contact/:contactId')
+    @ApiPaginatedResponse(ResponseEventsMapper)
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'event not found.',
+    })
+    async getAllChatMessagesOfEvent(
+        @Param() params: any,
+        @Query() pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+
+        return this.eventsService.getAllChatMessagesOfEvent(params.eventId,params.userId,params.contactId, pageOptionsDto);
+    }
+
+    @Public()
+    @Get('/chats/user/:userId/event/:eventId')
+    @ApiPaginatedResponse(ResponseEventsMapper)
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'event not found.',
+    })
+    async getAllChatsOfEvent(
+        @Param() params: any,
+        @Query() pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+
+        return this.eventsService.getAllChatsOfEvent(params.eventId,params.userId, pageOptionsDto);
+    }
+
+    @Public()
     @Get('qrcodes/:fileId')
     async serveAvatar(@Param('fileId') fileId, @Res() res): Promise<any> {
       res.sendFile( join(__dirname, '..', '..', 'qrcodes', `${fileId}`));
