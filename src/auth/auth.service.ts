@@ -122,9 +122,9 @@ export class AuthService {
         domain,
       );
       this.mailerService.sendConfirmationEmail(user, confirmationToken);
-      throw new UnauthorizedException(
-        ['Please confirm your email, a new email has been sent',]
-      );
+      // throw new UnauthorizedException(
+      //   ['Please confirm your email, a new email has been sent',]
+      // );
     }
 
 
