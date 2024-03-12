@@ -233,6 +233,7 @@ export class EventsService {
 
             if (status == 'failed') {
                 invite.status = 'failed';
+                invite.sendList = true;
             }
 
             await this.eventInvitessContacts.save(invite);

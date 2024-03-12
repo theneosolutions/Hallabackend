@@ -85,7 +85,6 @@ export class WhatsappService {
 
   public async create(origin: string | undefined, body: any): Promise<any> {
     let data = this.parseMessage(body);
-    console.log("🚀 ~ WhatsappService ~ create ~ data:", data)
 
     if (data?.isMessage) {
       let incomingMessage = data.message;
@@ -94,6 +93,9 @@ export class WhatsappService {
       let recipientName = incomingMessage.from.name;
       let typeOfMsg = incomingMessage.type; // extract the type of message (some are text, others are images, others are responses to buttons etc...)
       let message_id = incomingMessage.message_id; // extract the message id
+      let previousRecipientPhone = ''
+
+      if (previousRecipientPhone == recipientPhone) return
 
       if (typeOfMsg === 'text_message') {
         this.newMessage = 1;
@@ -101,7 +103,7 @@ export class WhatsappService {
         const userEvents: any = await this.findInviteByContactId(contactInfo?.id);
         if (userEvents.length == 1) {
           const invite = userEvents[0];
-          if(invite.sendList){
+          if (invite.sendList) {
             await this.sendRadioButtons({
               recipientPhone: recipientPhone,
               headerText: 'How can i help?',
@@ -137,11 +139,11 @@ export class WhatsappService {
             });
             invite.sendList = false;
             await this.eventInvitessContacts.save(invite);
-            setTimeout(async()=>{
+            setTimeout(async () => {
               invite.sendList = true;
               await this.eventInvitessContacts.save(invite);
-            },2000)
-          }else{
+            }, 2000)
+          } else {
             const message = {
               action: 'message',
               actionData: incomingMessage?.text?.body,
@@ -153,7 +155,7 @@ export class WhatsappService {
             console.log("🚀 ~ WhatsappService ~ create ~ message:", message)
             const chat = this.eventsChats.create(message);
             await this.eventsChats.insert(chat);
-            this.emitEvent('chat',chat);
+            this.emitEvent('chat', chat);
             invite.sendList = true;
             invite.haveChat = true;
             await this.eventInvitessContacts.save(invite);
@@ -164,8 +166,8 @@ export class WhatsappService {
 
           }
 
-         
-          
+
+
         } else {
 
 
@@ -173,7 +175,7 @@ export class WhatsappService {
         }
 
       }
-      
+
       if (typeOfMsg === 'simple_button_message') {
         let button_id = incomingMessage.button_reply.id;
         const button_event = button_id?.split('_')
@@ -295,6 +297,7 @@ export class WhatsappService {
 
         if (button_event[0] === 'event-invitaion') {
           const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
+          console.log("🚀 ~ WhatsappService ~ create ~ invite:", invite)
           const { invites, events }: any = invite;
           const { image, name: eventName, id }: any = events
           const { callingCode, phoneNumber, name: recipientName, } = invites;
@@ -335,7 +338,12 @@ export class WhatsappService {
         }
 
       };
+
+      setTimeout(() => {
+        previousRecipientPhone = ''
+      }, 2500);
     }
+
     return null;
   }
 
@@ -346,33 +354,36 @@ export class WhatsappService {
     const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`
     try {
 
-      await this.sendImage({
-        recipientPhone: recipientPhone,
-        // caption: text,
-        url: image,
-      });
+      if (image) {
+        await this.sendImage({
+          recipientPhone: recipientPhone,
+          // caption: text,
+          url: image,
+        });
+      }
+      setTimeout(async () => {
+        const response = await this.sendSimpleButtons({
+          message: text,
+          recipientPhone: recipientPhone,
+          listOfButtons: [
+            {
+              title: 'Confirm',
+              id: `event-confirm_${eventId}_${contactId}`,
+            },
+            {
+              title: 'Decline',
+              id: `event-deline_${eventId}_${contactId}`,
+            },
+            {
+              title: 'Event Location',
+              id: `event-location_${eventId}_${contactId}`,
+            },
+          ],
+        });
+        console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:", response)
+        return response;
+      }, 1000);
 
-      const response = await this.sendSimpleButtons({
-        message: text,
-        recipientPhone: recipientPhone,
-        listOfButtons: [
-          {
-            title: 'Confirm',
-            id: `event-confirm_${eventId}_${contactId}`,
-          },
-          {
-            title: 'Decline',
-            id: `event-deline_${eventId}_${contactId}`,
-          },
-          {
-            title: 'Event Location',
-            id: `event-location_${eventId}_${contactId}`,
-          },
-        ],
-      });
-      console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:", response)
-
-      return response;
 
     } catch (error) {
       console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ error:", error);
