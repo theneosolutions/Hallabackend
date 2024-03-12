@@ -165,12 +165,63 @@ export class WhatsappService {
             });
 
           }
-
-
-
         } else {
+          const sendMessage = []
+          userEvents?.map((invite:any)=>{
+            if(invite?.selectedEvent){
+              sendMessage.push(invite)
+            }
+          })
+          if(sendMessage.length == 1){
+            const inviteDetail = sendMessage[0]
+            const message = {
+              action: 'message',
+              actionData: incomingMessage?.text?.body,
+              actionType: 'text',
+              actionUser: inviteDetail?.usersId,
+              contact: inviteDetail?.invites?.id,
+              event: inviteDetail?.eventId
+            }
+            console.log("🚀 ~ WhatsappService ~ create ~ message:", message)
+            const chat = this.eventsChats.create(message);
+            await this.eventsChats.insert(chat);
+            this.emitEvent('chat', chat);
+            inviteDetail.sendList = true;
+            inviteDetail.haveChat = true;
+            await this.eventInvitessContacts.save(inviteDetail);
+            this.sendText({
+              message: 'Thank you.Message is sent to event creator',
+              recipientPhone: recipientPhone,
+            });
+            userEvents?.map(async (invite:any)=>{
+              inviteDetail.sendList = true;
+              inviteDetail.selectedEvent = false;
+              await this.eventInvitessContacts.save(inviteDetail);
+            })
 
-
+          }else {
+            const rows = userEvents?.map((invite:any)=>{
+              return {
+                title: invite?.events?.name,
+                description: ' ',
+                id: `event-selected_${invite?.eventId}_${invite?.invites?.id}`,
+              }
+            })
+  
+            await this.sendRadioButtons({
+              recipientPhone: recipientPhone,
+              headerText: 'How can i help?',
+              bodyText: 'Please choose from the list',
+              footerText: ' ',
+              listOfSections: [
+                {
+                  title: ' ',
+                  rows: rows,
+                }
+              ],
+            });
+          }
+         
 
         }
 
@@ -271,6 +322,53 @@ export class WhatsappService {
         let button_id = incomingMessage.list_reply.id;
         const button_event = button_id?.split('_')
 
+        if (button_event[0] === 'event-selected') {
+          const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
+          invite.selectedEvent = true;
+          invite.sendList = false;
+          await this.eventInvitessContacts.save(invite);
+          await this.sendRadioButtons({
+            recipientPhone: recipientPhone,
+            headerText: 'How can i help?',
+            bodyText: 'Please choose from the list',
+            footerText: ' ',
+            listOfSections: [
+              {
+                title: ' ',
+                rows: [
+                  {
+                    title: 'Send message',
+                    description: ' ',
+                    id: `event-message_${invite?.eventId}_${invite?.invites?.id}`,
+                  },
+                  {
+                    title: 'Re-send the invitaion',
+                    description: ' ',
+                    id: `event-invitaion_${invite?.eventId}_${invite?.invites?.id}`,
+                  },
+                  {
+                    title: 'Re-send the location',
+                    description: ' ',
+                    id: `event-location_${invite?.eventId}_${invite?.invites?.id}`,
+                  },
+                  {
+                    title: 'Other',
+                    description: ' ',
+                    id: `other_${invite?.eventId}_${invite?.invites?.id}`,
+                  },
+                ],
+              }
+            ],
+          });
+          invite.sendList = false;
+          await this.eventInvitessContacts.save(invite);
+          setTimeout(async () => {
+            invite.sendList = true;
+            await this.eventInvitessContacts.save(invite);
+          }, 2000)
+
+        }
+
         if (button_event[0] === 'event-location') {
           const event = await this.findEventOneById(button_event[1]);
           await this.sendLocation({
@@ -297,6 +395,7 @@ export class WhatsappService {
 
         if (button_event[0] === 'event-invitaion') {
           const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
+          console.log("🚀 ~ WhatsappService ~ create ~ button_event[2], button_event[1]:", button_event[2], button_event[1])
           console.log("🚀 ~ WhatsappService ~ create ~ invite:", invite)
           const { invites, events }: any = invite;
           const { image, name: eventName, id }: any = events
@@ -361,30 +460,27 @@ export class WhatsappService {
           url: image,
         });
       }
-      setTimeout(async () => {
-        const response = await this.sendSimpleButtons({
-          message: text,
-          recipientPhone: recipientPhone,
-          listOfButtons: [
-            {
-              title: 'Confirm',
-              id: `event-confirm_${eventId}_${contactId}`,
-            },
-            {
-              title: 'Decline',
-              id: `event-deline_${eventId}_${contactId}`,
-            },
-            {
-              title: 'Event Location',
-              id: `event-location_${eventId}_${contactId}`,
-            },
-          ],
-        });
-        console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:", response)
-        return response;
-      }, 1000);
 
-
+      const response = await this.sendSimpleButtons({
+        message: text,
+        recipientPhone: recipientPhone,
+        listOfButtons: [
+          {
+            title: 'Confirm',
+            id: `event-confirm_${eventId}_${contactId}`,
+          },
+          {
+            title: 'Decline',
+            id: `event-deline_${eventId}_${contactId}`,
+          },
+          {
+            title: 'Event Location',
+            id: `event-location_${eventId}_${contactId}`,
+          },
+        ],
+      });
+      console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:", response)
+      return response;
     } catch (error) {
       console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ error:", error);
       return error;
@@ -408,16 +504,17 @@ export class WhatsappService {
     eventId: number
   ): Promise<EventInvitessContacts> {
     const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
-    const invite = await queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventId })
-      .andWhere("event_invitess_contacts.contactsId = :id", { id: id })
+    const invite = await queryBuilder.where("event_invitess_contacts.eventId = :eventId", { eventId: eventId })
+      .andWhere("event_invitess_contacts.contactsId = :contactsId", { contactsId: id })
       .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
       .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getOne();
+    console.log("🚀 ~ WhatsappService ~ invite:", invite)
     return invite;
   }
 
   public async findInviteByContactId(id: number): Promise<EventInvitessContacts[]> {
     const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
-    const invite = await queryBuilder.where("event_invitess_contacts.contactsId = :id", { id: id })
+    const invite = await queryBuilder.where("event_invitess_contacts.contactsId = :contactsId", { contactsId: id })
       .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
       .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getMany();
     return invite;
