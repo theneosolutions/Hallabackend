@@ -59,7 +59,7 @@ export class CardController {
     ) { }
 
     @Post('/create-card')
-    @Public()
+    @Public(['admin'])
     @ApiOkResponse({
         type: ResponseCardMapper,
         description: 'Card is created and returned.',
@@ -81,7 +81,7 @@ export class CardController {
 
 
     @Get()
-    @Public()
+    @Public(['admin', 'user'])
     @ApiPaginatedResponse(ResponseCardMapper)
     @ApiBadRequestResponse({
         description: 'Something is invalid on the request body',
@@ -97,7 +97,7 @@ export class CardController {
     }
 
     @Get('/:id')
-    @Public()
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseCardMapper,
         description: 'card is found and returned.',

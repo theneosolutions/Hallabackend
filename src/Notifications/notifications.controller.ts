@@ -58,7 +58,7 @@ export class NotificationsController {
 
 
     @Post()
-    @Public()
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseNotificationMapper,
         description: 'Notification is created and returned.',
@@ -81,7 +81,7 @@ export class NotificationsController {
 
 
     @Get()
-    @Public()
+    @Public(['admin', 'user'])
     @ApiPaginatedResponse(ResponseNotificationMapper)
     @ApiBadRequestResponse({
         description: 'Something is invalid on the request body',
@@ -99,7 +99,7 @@ export class NotificationsController {
 
 
     @Get('/:id')
-    @Public()
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseNotificationMapper,
         description: 'notification is found and returned.',
@@ -119,7 +119,7 @@ export class NotificationsController {
     }
 
 
-    @Public()
+    @Public(['admin', 'user'])
     @Get('/notificationByUserId/:id')
     @ApiPaginatedResponse(ResponseNotificationMapper)
     @ApiBadRequestResponse({
@@ -136,7 +136,7 @@ export class NotificationsController {
         return this.notificationsService.getNotificationsByUserId(params.id, pageOptionsDto);
     }
 
-    @Public()
+    @Public(['admin', 'user'])
     @Get('/unreadNotificationByUserId/:id')
     @ApiPaginatedResponse(ResponseNotificationMapper)
     @ApiBadRequestResponse({
@@ -153,7 +153,7 @@ export class NotificationsController {
         return this.notificationsService.unreadNotificationByUserId(params.id, pageOptionsDto);
     }
 
-    @Public()
+    @Public(['admin', 'user'])
     @Patch('/:id')
     @ApiPaginatedResponse(ResponseNotificationMapper)
     @ApiBadRequestResponse({
@@ -171,7 +171,7 @@ export class NotificationsController {
     }
 
 
-    @Public()
+    @Public(['admin', 'user'])
     @Patch('/readAllNotificationByUserId/:id')
     @ApiPaginatedResponse(ResponseNotificationMapper)
     @ApiBadRequestResponse({
@@ -188,7 +188,7 @@ export class NotificationsController {
 
 
     @Get('/notificationsByResourceId/:id')
-    @Public()
+    @Public(['admin', 'user'])
     @ApiPaginatedResponse(ResponseNotificationMapper)
     @ApiBadRequestResponse({
         description: 'Something is invalid on the request body',
@@ -205,7 +205,7 @@ export class NotificationsController {
     }
 
     @Get('/notificationsByResourceType/:type')
-    @Public()
+    @Public(['admin', 'user'])
     @ApiPaginatedResponse(ResponseNotificationMapper)
     @ApiBadRequestResponse({
         description: 'Something is invalid on the request body',
@@ -224,7 +224,7 @@ export class NotificationsController {
 
 
     @Delete('/:id')
-    @Public()
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseNotificationMapper,
         description: 'notification is found and returned.',

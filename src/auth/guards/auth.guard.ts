@@ -20,13 +20,19 @@ export class AuthGuard implements CanActivate {
     ) { }
 
     public async canActivate(context: ExecutionContext): Promise<boolean> {
-        const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+        const roles = this.reflector.getAllAndOverride<string>(IS_PUBLIC_KEY, [
             context.getHandler(),
             context.getClass(),
         ]);
+        console.log("🚀 ~ file: auth.guard.ts:27 ~ AuthGuard ~ canActivate ~ roles:", roles)
+
+        if (isUndefined(roles) || isNull(roles) || roles.length === 0) {
+            return true;
+        }
+
         const activate = await this.setHttpHeader(
             context.switchToHttp().getRequest(),
-            isPublic,
+            roles,
         );
 
         if (!activate) {
@@ -43,34 +49,48 @@ export class AuthGuard implements CanActivate {
      */
     private async setHttpHeader(
         req: any,
-        isPublic: boolean,
+        isPublic: string,
     ): Promise<boolean> {
         const auth = req.headers?.authorization;
 
         if (isUndefined(auth) || isNull(auth) || auth.length === 0) {
-            return isPublic;
+
+            return false;
         }
 
         const authArr = auth.split(' ');
         const bearer = authArr[0];
         const token = authArr[1];
 
+
+
         if (isUndefined(bearer) || isNull(bearer) || bearer !== 'Bearer') {
-            return isPublic;
+            return false;
         }
         if (isUndefined(token) || isNull(token) || !isJWT(token)) {
-            return isPublic;
+            return false;
         }
 
         try {
-            const { id } = await this.jwtService.verifyToken(
+
+
+            const { id, type } = await this.jwtService.verifyToken(
                 token,
                 TokenTypeEnum.ACCESS,
             );
-            req['user'] = id;
-            return true;
+            console.log("🚀 ~ file: auth.guard.ts:82 ~ AuthGuard ~ id, type:", id, type, isPublic)
+            if (!isUndefined(type) || !isNull(type)) {
+                if (type == isPublic || isPublic.includes(type)) {
+                    req['user'] = id;
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+
         } catch (_) {
-            return isPublic;
+            return false;
         }
     }
 }
