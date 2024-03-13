@@ -85,248 +85,45 @@ export class WhatsappService {
 
   public async create(origin: string | undefined, body: any): Promise<any> {
     let data = this.parseMessage(body);
+    try {
 
-    if (data?.isMessage) {
-      let incomingMessage = data.message;
-      console.log("🚀 ~ WhatsappService ~ create ~ incomingMessage:", incomingMessage)
-      let recipientPhone = incomingMessage.from.phone; // extract the phone number of sender
-      let recipientName = incomingMessage.from.name;
-      let typeOfMsg = incomingMessage.type; // extract the type of message (some are text, others are images, others are responses to buttons etc...)
-      let message_id = incomingMessage.message_id; // extract the message id
-      let previousRecipientPhone = ''
+      if (data?.isMessage) {
+        let incomingMessage = data.message;
+        let recipientPhone = incomingMessage.from.phone; // extract the phone number of sender
+        let recipientName = incomingMessage.from.name;
+        let typeOfMsg = incomingMessage.type; // extract the type of message (some are text, others are images, others are responses to buttons etc...)
+        let message_id = incomingMessage.message_id; // extract the message id
 
-      if (previousRecipientPhone == recipientPhone) return
-
-      if (typeOfMsg === 'text_message') {
-        this.newMessage = 1;
-        const contactInfo: any = await this.findByCombinedPhoneNumber(recipientPhone);
-        const userEvents: any = await this.findInviteByContactId(contactInfo?.id);
-        if (userEvents.length == 1) {
-          const invite = userEvents[0];
-          if (invite.sendList) {
-            await this.sendRadioButtons({
-              recipientPhone: recipientPhone,
-              headerText: 'How can i help?',
-              bodyText: 'Please choose from the list',
-              footerText: ' ',
-              listOfSections: [
-                {
-                  title: ' ',
-                  rows: [
-                    {
-                      title: 'Send message',
-                      description: ' ',
-                      id: `event-message_${invite?.eventId}_${invite?.invites?.id}`,
-                    },
-                    {
-                      title: 'Re-send the invitaion',
-                      description: ' ',
-                      id: `event-invitaion_${invite?.eventId}_${invite?.invites?.id}`,
-                    },
-                    {
-                      title: 'Re-send the location',
-                      description: ' ',
-                      id: `event-location_${invite?.eventId}_${invite?.invites?.id}`,
-                    },
-                    {
-                      title: 'Other',
-                      description: ' ',
-                      id: `other_${invite?.eventId}_${invite?.invites?.id}`,
-                    },
-                  ],
-                }
-              ],
-            });
-            invite.sendList = false;
-            await this.eventInvitessContacts.save(invite);
-            setTimeout(async () => {
-              invite.sendList = true;
-              await this.eventInvitessContacts.save(invite);
-            }, 2000)
-          } else {
-            const message = {
-              action: 'message',
-              actionData: incomingMessage?.text?.body,
-              actionType: 'text',
-              actionUser: invite?.usersId,
-              contact: invite?.invites?.id,
-              event: invite?.eventId
-            }
-            console.log("🚀 ~ WhatsappService ~ create ~ message:", message)
-            const chat = this.eventsChats.create(message);
-            await this.eventsChats.insert(chat);
-            this.emitEvent('chat', chat);
-            invite.sendList = true;
-            invite.haveChat = true;
-            await this.eventInvitessContacts.save(invite);
-            this.sendText({
-              message: 'Thank you.Message is sent to event creator',
-              recipientPhone: recipientPhone,
-            });
-
-          }
-        } else {
-          const sendMessage = []
-          userEvents?.map((invite:any)=>{
-            if(invite?.selectedEvent){
-              sendMessage.push(invite)
-            }
-          })
-          if(sendMessage.length == 1){
-            const inviteDetail = sendMessage[0]
-            const message = {
-              action: 'message',
-              actionData: incomingMessage?.text?.body,
-              actionType: 'text',
-              actionUser: inviteDetail?.usersId,
-              contact: inviteDetail?.invites?.id,
-              event: inviteDetail?.eventId
-            }
-            console.log("🚀 ~ WhatsappService ~ create ~ message:", message)
-            const chat = this.eventsChats.create(message);
-            await this.eventsChats.insert(chat);
-            this.emitEvent('chat', chat);
-            inviteDetail.sendList = true;
-            inviteDetail.haveChat = true;
-            await this.eventInvitessContacts.save(inviteDetail);
-            this.sendText({
-              message: 'Thank you.Message is sent to event creator',
-              recipientPhone: recipientPhone,
-            });
-            userEvents?.map(async (invite:any)=>{
-              inviteDetail.sendList = true;
-              inviteDetail.selectedEvent = false;
-              await this.eventInvitessContacts.save(inviteDetail);
-            })
-
-          }else {
-            const rows = userEvents?.map((invite:any)=>{
-              return {
-                title: invite?.events?.name,
-                description: ' ',
-                id: `event-selected_${invite?.eventId}_${invite?.invites?.id}`,
-              }
-            })
-  
-            await this.sendRadioButtons({
-              recipientPhone: recipientPhone,
-              headerText: 'How can i help?',
-              bodyText: 'Please choose from the list',
-              footerText: ' ',
-              listOfSections: [
-                {
-                  title: ' ',
-                  rows: rows,
-                }
-              ],
-            });
-          }
-         
-
+        switch (incomingMessage.type) {
+          case 'text_message':
+            await this.processTextMessage(incomingMessage, recipientPhone, recipientName, typeOfMsg, message_id);
+            break;
+          case 'simple_button_message':
+            await this.processButtonMessage(incomingMessage, recipientPhone, recipientName, typeOfMsg, message_id);
+            break;
+          case 'radio_button_message':
+            await this.processRadioButtonMessage(incomingMessage, recipientPhone, recipientName, typeOfMsg, message_id);
+            break;
+          default:
+            break;
         }
 
       }
 
-      if (typeOfMsg === 'simple_button_message') {
-        let button_id = incomingMessage.button_reply.id;
-        const button_event = button_id?.split('_')
+    } catch (error) {
+      console.log("🚀 ~ WhatsappService ~ create ~ error:", error)
+    }
 
+  }
 
-        if (button_event[0] === 'event-confirm') {
-          const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
-          const url = `https://${this.domain}/api/events/scan-qrcode/${invite?.code}`
-          const qrCodeDataURL = await this.generateQrCode(url);
-          const html = this.templates.invite({
-            guests: String(invite?.numberOfGuests),
-            qrCodeDataURL: qrCodeDataURL,
-          });
-          nodeHtmlToImage({
-            output: join(__dirname, '..', '..', 'qrcodes', `${invite?.code}.png`),
-            html: html
-          })
-            .then(() => console.log('The image was created successfully!'))
-          await this.sendImage({
-            recipientPhone: recipientPhone,
-            caption: `Please use this code to access (${invite?.events?.name}),make sure to save the image before it expire.`,
-            url: `https://${this.domain}/api/events/qrcodes/${invite?.code}.png`,
-          });
-          invite.status = 'confirmed'
-          await this.eventInvitessContacts.save(invite);
-
-        }
-
-        if (button_event[0] === 'event-location') {
-          const event = await this.findEventOneById(button_event[1]);
-          await this.sendLocation({
-            recipientPhone: recipientPhone,
-            latitude: event?.latitude,
-            longitude: event?.longitude,
-            name: event?.address,
-            address: event?.address,
-          });
-
-        }
-
-        if (button_event[0] === 'event-deline') {
-          const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
-          await this.sendSimpleButtons({
-            message: `Thank you, your reply had been sent to the host.\nWould you like to send a message?`,
-            recipientPhone: recipientPhone,
-            listOfButtons: [
-              {
-                title: 'Yes',
-                id: `event-deline-yes_${invite?.eventId}_${invite?.invites?.id}`,
-              },
-              {
-                title: 'No',
-                id: `event-deline-no_${invite?.eventId}_${invite?.invites?.id}`,
-              },
-            ],
-          });
-          invite.status = 'rejected';
-          await this.eventInvitessContacts.save(invite);
-
-        }
-
-        if (button_event[0] === 'event-deline-no') {
-          this.sendText({
-            message: 'Thank you',
-            recipientPhone: recipientPhone,
-          });
-
-        }
-
-        if (button_event[0] === 'event-deline-yes') {
-          const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
-          invite.selectedEvent = true;
-          invite.sendList = false;
-          await this.eventInvitessContacts.save(invite);
-          this.sendText({
-            message: 'Please enter your message.Only text is allowed.',
-            recipientPhone: recipientPhone,
-          });
-
-        }
-
-
-        if (button_event[0] === 'other') {
-          this.sendText({
-            message: 'Welcome to Halla Electronic invitaions! We are here to assist you.To speek with our customer serviceteam, please click on the link below.',
-            recipientPhone: recipientPhone,
-          });
-
-        }
-
-      };
-      if (typeOfMsg === 'radio_button_message') {
-        let button_id = incomingMessage.list_reply.id;
-        const button_event = button_id?.split('_')
-
-        if (button_event[0] === 'event-selected') {
-          const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
-          invite.selectedEvent = true;
-          invite.sendList = false;
-          await this.eventInvitessContacts.save(invite);
+  private async processTextMessage(incomingMessage: any, recipientPhone: any, recipientName: any, typeOfMsg: any, message_id: any): Promise<void> {
+    if (typeOfMsg === 'text_message') {
+      this.newMessage = 1;
+      const contactInfo: any = await this.findByCombinedPhoneNumber(recipientPhone);
+      const userEvents: any = await this.findInviteByContactId(contactInfo?.id);
+      if (userEvents.length == 1) {
+        const invite = userEvents[0];
+        if (invite.sendList) {
           await this.sendRadioButtons({
             recipientPhone: recipientPhone,
             headerText: 'How can i help?',
@@ -366,129 +163,407 @@ export class WhatsappService {
             invite.sendList = true;
             await this.eventInvitessContacts.save(invite);
           }, 2000)
-
-        }
-
-        if (button_event[0] === 'event-location') {
-          const event = await this.findEventOneById(button_event[1]);
-          await this.sendLocation({
-            recipientPhone: recipientPhone,
-            latitude: event?.latitude,
-            longitude: event?.longitude,
-            name: event?.address,
-            address: event?.address,
-          });
-
-        }
-
-        if (button_event[0] === 'event-message') {
-          const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
-          invite.selectedEvent = true;
-          invite.sendList = false;
+        } else {
+          const message = {
+            action: 'message',
+            actionData: incomingMessage?.text?.body,
+            actionType: 'text',
+            actionUser: invite?.usersId,
+            contact: invite?.invites?.id,
+            event: invite?.eventId
+          }
+          console.log("🚀 ~ WhatsappService ~ create ~ message:", message)
+          const chat = this.eventsChats.create(message);
+          await this.eventsChats.insert(chat);
+          this.emitEvent('chat', chat);
+          invite.sendList = true;
+          invite.haveChat = true;
           await this.eventInvitessContacts.save(invite);
           this.sendText({
-            message: 'Please enter your message.Only text is allowed.',
+            message: 'Thank you.Message is sent to event creator',
             recipientPhone: recipientPhone,
           });
+
+          userEvents?.map(async (invite: any) => {
+            invite.sendList = true;
+            invite.selectedEvent = false;
+            await this.eventInvitessContacts.save(invite);
+          })
 
         }
-
-        if (button_event[0] === 'event-invitaion') {
-          const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
-          console.log("🚀 ~ WhatsappService ~ create ~ button_event[2], button_event[1]:", button_event[2], button_event[1])
-          console.log("🚀 ~ WhatsappService ~ create ~ invite:", invite)
-          const { invites, events }: any = invite;
-          const { image, name: eventName, id }: any = events
-          const { callingCode, phoneNumber, name: recipientName, } = invites;
-
-          await this.sendImage({
+      } else {
+        const sendMessage = []
+        userEvents?.map((invite: any) => {
+          if (invite?.selectedEvent) {
+            sendMessage.push(invite)
+          }
+        })
+        if (sendMessage.length == 1) {
+          const inviteDetail = sendMessage[0]
+          const message = {
+            action: 'message',
+            actionData: incomingMessage?.text?.body,
+            actionType: 'text',
+            actionUser: inviteDetail?.usersId,
+            contact: inviteDetail?.invites?.id,
+            event: inviteDetail?.eventId
+          }
+          console.log("🚀 ~ WhatsappService ~ create ~ message:", message)
+          const chat = this.eventsChats.create(message);
+          await this.eventsChats.insert(chat);
+          this.emitEvent('chat', chat);
+          inviteDetail.sendList = true;
+          inviteDetail.haveChat = true;
+          await this.eventInvitessContacts.save(inviteDetail);
+          this.sendText({
+            message: 'Thank you.Message is sent to event creator',
             recipientPhone: recipientPhone,
-            // caption: text,
-            url: image,
           });
+          userEvents?.map(async (invite: any) => {
+            inviteDetail.sendList = true;
+            inviteDetail.selectedEvent = false;
+            await this.eventInvitessContacts.save(inviteDetail);
+          })
 
-          await this.sendSimpleButtons({
-            message: `Hey ${recipientName}, \nWe are please to invite you to.\n${eventName}`,
+        } else {
+          const rows = userEvents?.map((invite: any) => {
+            return {
+              title: invite?.events?.name,
+              description: ' ',
+              id: `event-selected_${invite?.eventId}_${invite?.invites?.id}`,
+            }
+          })
+
+          await this.sendRadioButtons({
             recipientPhone: recipientPhone,
-            listOfButtons: [
+            headerText: 'How can i help?',
+            bodyText: 'Please choose from the list',
+            footerText: ' ',
+            listOfSections: [
               {
-                title: 'Confirm',
-                id: `event-confirm_${invite?.eventId}_${invite?.invites?.id}`,
-              },
-              {
-                title: 'Decline',
-                id: `event-deline_${invite?.eventId}_${invite?.invites?.id}`,
-              },
-              {
-                title: 'Event Location',
-                id: `event-location_${invite?.eventId}_${invite?.invites?.id}`,
-              },
+                title: ' ',
+                rows: rows,
+              }
             ],
           });
-
         }
 
-        if (button_event[0] === 'other') {
-          this.sendText({
-            message: 'Welcome to Halla Electronic invitaions! We are here to assist you.To speek with our customer serviceteam, please click on the link below.',
-            recipientPhone: recipientPhone,
-          });
 
-        }
+      }
 
-      };
-
-      setTimeout(() => {
-        previousRecipientPhone = ''
-      }, 2500);
     }
-
-    return null;
   }
 
+  private async processButtonMessage(
+    incomingMessage: any,
+    recipientPhone: string,
+    recipientName: string,
+    typeOfMsg: string,
+    message_id: string
+  ): Promise<void> {
+    try {
+      if (typeOfMsg === 'simple_button_message') {
+        const button_id = incomingMessage.button_reply?.id;
+        if (!button_id) {
+          console.error('Button ID not found in the incoming message.');
+          return;
+        }
 
+        const button_event = button_id.split('_');
+        const eventType = button_event[0];
+
+        switch (eventType) {
+          case 'event-confirm':
+            await this.handleConfirmEventButton(button_event, recipientPhone);
+            break;
+          case 'event-location':
+            await this.handleLocationEventButton(button_event, recipientPhone);
+            break;
+          case 'event-deline':
+            await this.handleDelineEventButton(button_event, recipientPhone);
+            break;
+          case 'event-deline-no':
+            await this.handleDelineNoEventButton(recipientPhone);
+            break;
+          case 'event-deline-yes':
+            await this.handleDelineYesEventButton(button_event, recipientPhone);
+            break;
+          case 'other':
+            await this.handleOtherButton(recipientPhone);
+            break;
+          default:
+            console.error('Unknown button event type:', eventType);
+            break;
+        }
+      }
+    } catch (error) {
+      console.error('Error processing button message:', error);
+      // Handle error cases...
+    }
+  }
+
+  private async handleConfirmEventButton(button_event: any[], recipientPhone: string): Promise<void> {
+    const invite:any = await this.findInviteOneById(button_event[2], button_event[1]);
+    if (!invite) {
+      console.error('Invite not found for confirmation button event.');
+      return;
+    }
+    const url = `https://${this.domain}/api/events/scan-qrcode/${invite?.code}`
+    const qrCodeDataURL = await this.generateQrCode(url);
+    const html = this.templates.invite({
+      guests: String(invite?.numberOfGuests),
+      qrCodeDataURL: qrCodeDataURL,
+    });
+    nodeHtmlToImage({
+      output: join(__dirname, '..', '..', 'qrcodes', `${invite?.code}.png`),
+      html: html
+    })
+      .then(() => console.log('The image was created successfully!'))
+    await this.sendImage({
+      recipientPhone: recipientPhone,
+      caption: `Please use this code to access (${invite?.events?.name}),make sure to save the image before it expire.`,
+      url: `https://${this.domain}/api/events/qrcodes/${invite?.code}.png`,
+    });
+    invite.status = 'confirmed'
+    await this.eventInvitessContacts.save(invite);
+  }
+
+  private async handleLocationEventButton(button_event: any[], recipientPhone: string): Promise<void> {
+    const event = await this.findEventOneById(button_event[1]);
+    if (!event) {
+      console.error('Event not found for location button event.');
+      return;
+    }
+
+    await this.sendLocation({
+      recipientPhone: recipientPhone,
+      latitude: event?.latitude,
+      longitude: event?.longitude,
+      name: event?.address,
+      address: event?.address,
+    });
+  }
+
+  private async handleDelineEventButton(button_event: any[], recipientPhone: string): Promise<void> {
+    const invite:any = await this.findInviteOneById(button_event[2], button_event[1]);
+    if (!invite) {
+      console.error('Invite not found for delineation button event.');
+      return;
+    }
+    await this.sendSimpleButtons({
+      message: `Thank you, your reply had been sent to the host.\nWould you like to send a message?`,
+      recipientPhone: recipientPhone,
+      listOfButtons: [
+        {
+          title: 'Yes',
+          id: `event-deline-yes_${invite?.eventId}_${invite?.invites?.id}`,
+        },
+        {
+          title: 'No',
+          id: `event-deline-no_${invite?.eventId}_${invite?.invites?.id}`,
+        },
+      ],
+    });
+    invite.status = 'rejected';
+    await this.eventInvitessContacts.save(invite);
+  }
+
+  private async handleDelineNoEventButton(recipientPhone: string): Promise<void> {
+    // Send thank you message for declining...
+    await this.sendText({
+      message: 'Thank you',
+      recipientPhone: recipientPhone,
+    });
+  }
+  
+  private async handleDelineYesEventButton(button_event: any[], recipientPhone: string): Promise<void> {
+    const invite = await this.findInviteOneById(button_event[2], button_event[1]);
+    if (!invite) {
+      console.error('Invite not found for delineation (yes) button event.');
+      return;
+    }
+  
+    // Update invite properties...
+    invite.selectedEvent = true;
+    invite.sendList = false;
+    await this.eventInvitessContacts.save(invite);
+  
+    // Prompt user to enter a message...
+    await this.sendText({
+      message: 'Please enter your message. Only text is allowed.',
+      recipientPhone: recipientPhone,
+    });
+  }
+
+  private async handleOtherButton(recipientPhone: string): Promise<void> {
+    this.sendText({
+      message: 'Welcome to Halla Electronic invitaions! We are here to assist you.To speek with our customer serviceteam, please click on the link below.',
+      recipientPhone: recipientPhone,
+    });
+  }
+
+  private async processRadioButtonMessage(
+    incomingMessage: any,
+    recipientPhone: any,
+    recipientName: any,
+    typeOfMsg: any,
+    message_id: any
+  ): Promise<void> {
+    if (typeOfMsg !== 'radio_button_message') return;
+  
+    const button_id = incomingMessage.list_reply?.id;
+    if (!button_id) return;
+  
+    const button_event = button_id.split('_');
+  
+    try {
+      switch (button_event[0]) {
+        case 'event-selected':
+          await this.handleEventSelected(button_event[1], button_event[2],recipientPhone);
+          break;
+        case 'event-location':
+          await this.handleEventLocation(button_event[1], recipientPhone);
+          break;
+        case 'event-message':
+          await this.handleEventMessage(button_event[1], button_event[2], recipientPhone);
+          break;
+        case 'event-invitaion':
+          await this.handleEventInvitation(button_event[1], button_event[2], recipientPhone, recipientName);
+          break;
+        case 'other':
+          this.handleOther(recipientPhone);
+          break;
+        default:
+          console.error('Invalid button event type:', button_event[0]);
+      }
+    } catch (error) {
+      console.error('Error processing radio button message:', error);
+    }
+  }
+
+  private async handleEventSelected(eventId: string, inviteId: string,recipientPhone:any): Promise<void> {
+    const invite: any = await this.findInviteOneById(Number(inviteId), Number(eventId));
+    invite.selectedEvent = true;
+    invite.sendList = false;
+    await this.eventInvitessContacts.save(invite);
+  
+    await this.sendRadioButtons({
+      recipientPhone: recipientPhone,
+      headerText: 'How can I help?',
+      bodyText: 'Please choose from the list',
+      footerText: ' ',
+      listOfSections: [
+        {
+          title: ' ',
+          rows: [
+            { title: 'Send message', description: ' ', id: `event-message_${invite?.eventId}_${invite?.invites?.id}` },
+            { title: 'Re-send the invitation', description: ' ', id: `event-invitation_${invite?.eventId}_${invite?.invites?.id}` },
+            { title: 'Re-send the location', description: ' ', id: `event-location_${invite?.eventId}_${invite?.invites?.id}` },
+            { title: 'Other', description: ' ', id: `other_${invite?.eventId}_${invite?.invites?.id}` }
+          ]
+        }
+      ]
+    });
+  
+    invite.sendList = false;
+    await this.eventInvitessContacts.save(invite);
+  
+    setTimeout(async () => {
+      invite.sendList = true;
+      await this.eventInvitessContacts.save(invite);
+    }, 2000);
+  }
+
+  private async handleEventLocation(eventId: string, recipientPhone: any): Promise<void> {
+    const event = await this.findEventOneById(Number(eventId));
+    if (!event) return;
+    
+    await this.sendLocation({
+      recipientPhone: recipientPhone,
+      latitude: event.latitude,
+      longitude: event.longitude,
+      name: event.address,
+      address: event.address,
+    });
+  }
+
+  private async handleEventMessage(eventId: string, inviteId: string, recipientPhone: any): Promise<void> {
+    const invite: any = await this.findInviteOneById(Number(inviteId), Number(eventId));
+    invite.selectedEvent = true;
+    invite.sendList = false;
+    await this.eventInvitessContacts.save(invite);
+  
+    this.sendText({
+      message: 'Please enter your message. Only text is allowed.',
+      recipientPhone: recipientPhone,
+    });
+  }
+
+  private async handleEventInvitation(eventId: string, inviteId: string, recipientPhone: any, recipientName: any): Promise<void> {
+    const invite: any = await this.findInviteOneById(Number(inviteId), Number(eventId));
+    const { invites, events }: any = invite;
+    const { image, name: eventName, id }: any = events;
+    const { callingCode, phoneNumber, name }: any = invites;
+  
+    await this.sendImage({
+      recipientPhone: recipientPhone,
+      url: image,
+    });
+  
+    await this.sendSimpleButtons({
+      message: `Hey ${recipientName}, \nWe are pleased to invite you to ${eventName}.`,
+      recipientPhone: recipientPhone,
+      listOfButtons: [
+        { title: 'Confirm', id: `event-confirm_${invite?.eventId}_${invite?.invites?.id}` },
+        { title: 'Decline', id: `event-decline_${invite?.eventId}_${invite?.invites?.id}` },
+        { title: 'Event Location', id: `event-location_${invite?.eventId}_${invite?.invites?.id}` },
+      ],
+    });
+  }
+
+  private async handleOther(recipientPhone: any): Promise<void> {
+    this.sendText({
+      message: 'Welcome to Halla Electronic invitations! We are here to assist you. To speak with our customer service team, please click on the link below.',
+      recipientPhone: recipientPhone,
+    });
+  }
 
   public async sendInviteToGuest(body: any): Promise<any> {
     const { callingCode, phoneNumber, text, image, recipientName, eventName, eventId, contactId } = body;
-    const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`
+    const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
+  
     try {
-
       if (image) {
-        await this.sendImage({
+        const imageResponse:any = await this.sendImage({
           recipientPhone: recipientPhone,
           // caption: text,
           url: image,
         });
+  
+        // Check if there's any error in sending image
+        if (imageResponse && imageResponse?.error) {
+          console.error("Error sending image:", imageResponse?.error);
+        }
       }
-
+  
       const response = await this.sendSimpleButtons({
         message: text,
         recipientPhone: recipientPhone,
         listOfButtons: [
-          {
-            title: 'Confirm',
-            id: `event-confirm_${eventId}_${contactId}`,
-          },
-          {
-            title: 'Decline',
-            id: `event-deline_${eventId}_${contactId}`,
-          },
-          {
-            title: 'Event Location',
-            id: `event-location_${eventId}_${contactId}`,
-          },
+          { title: 'Confirm', id: `event-confirm_${eventId}_${contactId}` },
+          { title: 'Decline', id: `event-decline_${eventId}_${contactId}` },
+          { title: 'Event Location', id: `event-location_${eventId}_${contactId}` },
         ],
       });
-      console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:", response)
+  
+      console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:", response);
       return response;
     } catch (error) {
-      console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ error:", error);
+      console.error("Error sending invite to guest:", error);
       return error;
-
     }
-
-
   }
+  
 
   public async findEventOneById(
     id: number,
