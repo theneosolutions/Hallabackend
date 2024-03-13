@@ -201,6 +201,23 @@ export class EventsController {
         return this.eventsService.getAllChatsOfEvent(params.eventId,params.userId, pageOptionsDto);
     }
 
+    @Public(['admin', 'user'])
+    @Get('/chats/user/:userId')
+    @ApiPaginatedResponse(ResponseEventsMapper)
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'event not found.',
+    })
+    async getAllChatsOfUser(
+        @Param() params: any,
+        @Query() pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+
+        return this.eventsService.getAllChatsOfUser(params.userId, pageOptionsDto);
+    }
+
     // @Public(['admin', 'user'])
     @Get('qrcodes/:fileId')
     async serveAvatar(@Param('fileId') fileId, @Res() res): Promise<any> {

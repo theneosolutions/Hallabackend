@@ -377,6 +377,25 @@ export class EventsService {
         return new PageDto(await Promise.all(entities), pageMetaDto);
     }
 
+    public async getAllChatsOfUser(
+        userId: string,
+        pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+
+        const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
+        queryBuilder.where("event_invitess_contacts.usersId = :userId", { userId: userId })
+            .andWhere("event_invitess_contacts.haveChat = :haveChat", { haveChat: true })
+            .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
+            .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']);
+
+        const itemCount = await queryBuilder.getCount();
+        let { entities }: any = await queryBuilder.getRawAndEntities();
+
+        const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+        return new PageDto(await Promise.all(entities), pageMetaDto);
+    }
+
 
     public async uploadImage(
         file: Express.Multer.File,
