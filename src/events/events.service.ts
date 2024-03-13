@@ -259,14 +259,14 @@ export class EventsService {
             .createQueryBuilder("events")
             .where("events.id = :id", { id: parsedValue })
             .leftJoinAndSelect('events.user', 'user')
-            // .leftJoinAndSelect('events.invites', 'invites')
+            .leftJoinAndSelect('events.invites', 'invites')
             .select([
                 'events',
-                // 'invites.email',
-                // 'invites.id',
-                // 'invites.name',
-                // 'invites.callingCode',
-                // 'invites.phoneNumber',
+                'invites.email',
+                'invites.id',
+                'invites.name',
+                'invites.callingCode',
+                'invites.phoneNumber',
                 'user.id',
                 'user.firstName',
                 'user.lastName',
