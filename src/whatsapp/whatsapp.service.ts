@@ -303,7 +303,7 @@ export class WhatsappService {
   }
 
   private async handleConfirmEventButton(button_event: any[], recipientPhone: string): Promise<void> {
-    const invite:any = await this.findInviteOneById(button_event[2], button_event[1]);
+    const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
     if (!invite) {
       console.error('Invite not found for confirmation button event.');
       return;
@@ -318,14 +318,23 @@ export class WhatsappService {
       output: join(__dirname, '..', '..', 'qrcodes', `${invite?.code}.png`),
       html: html
     })
-      .then(() => console.log('The image was created successfully!'))
-    await this.sendImage({
-      recipientPhone: recipientPhone,
-      caption: `Please use this code to access (${invite?.events?.name}),make sure to save the image before it expire.`,
-      url: `https://${this.domain}/api/events/qrcodes/${invite?.code}.png`,
-    });
-    invite.status = 'confirmed'
-    await this.eventInvitessContacts.save(invite);
+      .then(async () => {
+        const imageResponse: any = await this.sendImage({
+          recipientPhone: recipientPhone,
+          caption: `Please use this code to access (${invite?.events?.name}),make sure to save the image before it expire.`,
+          url: `https://${this.domain}/api/events/qrcodes/${invite?.code}.png`,
+        });
+        if (imageResponse && imageResponse?.error) {
+          console.error("Error sending image:", imageResponse?.error);
+        }
+        invite.status = 'confirmed'
+        await this.eventInvitessContacts.save(invite);
+
+      })
+
+
+
+
   }
 
   private async handleLocationEventButton(button_event: any[], recipientPhone: string): Promise<void> {
@@ -345,7 +354,7 @@ export class WhatsappService {
   }
 
   private async handleDelineEventButton(button_event: any[], recipientPhone: string): Promise<void> {
-    const invite:any = await this.findInviteOneById(button_event[2], button_event[1]);
+    const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
     if (!invite) {
       console.error('Invite not found for delineation button event.');
       return;
@@ -375,19 +384,19 @@ export class WhatsappService {
       recipientPhone: recipientPhone,
     });
   }
-  
+
   private async handleDelineYesEventButton(button_event: any[], recipientPhone: string): Promise<void> {
     const invite = await this.findInviteOneById(button_event[2], button_event[1]);
     if (!invite) {
       console.error('Invite not found for delineation (yes) button event.');
       return;
     }
-  
+
     // Update invite properties...
     invite.selectedEvent = true;
     invite.sendList = false;
     await this.eventInvitessContacts.save(invite);
-  
+
     // Prompt user to enter a message...
     await this.sendText({
       message: 'Please enter your message. Only text is allowed.',
@@ -410,16 +419,16 @@ export class WhatsappService {
     message_id: any
   ): Promise<void> {
     if (typeOfMsg !== 'radio_button_message') return;
-  
+
     const button_id = incomingMessage.list_reply?.id;
     if (!button_id) return;
-  
+
     const button_event = button_id.split('_');
-  
+
     try {
       switch (button_event[0]) {
         case 'event-selected':
-          await this.handleEventSelected(button_event[1], button_event[2],recipientPhone);
+          await this.handleEventSelected(button_event[1], button_event[2], recipientPhone);
           break;
         case 'event-location':
           await this.handleEventLocation(button_event[1], recipientPhone);
@@ -441,12 +450,12 @@ export class WhatsappService {
     }
   }
 
-  private async handleEventSelected(eventId: string, inviteId: string,recipientPhone:any): Promise<void> {
+  private async handleEventSelected(eventId: string, inviteId: string, recipientPhone: any): Promise<void> {
     const invite: any = await this.findInviteOneById(Number(inviteId), Number(eventId));
     invite.selectedEvent = true;
     invite.sendList = false;
     await this.eventInvitessContacts.save(invite);
-  
+
     await this.sendRadioButtons({
       recipientPhone: recipientPhone,
       headerText: 'How can I help?',
@@ -464,10 +473,10 @@ export class WhatsappService {
         }
       ]
     });
-  
+
     invite.sendList = false;
     await this.eventInvitessContacts.save(invite);
-  
+
     setTimeout(async () => {
       invite.sendList = true;
       await this.eventInvitessContacts.save(invite);
@@ -477,7 +486,7 @@ export class WhatsappService {
   private async handleEventLocation(eventId: string, recipientPhone: any): Promise<void> {
     const event = await this.findEventOneById(Number(eventId));
     if (!event) return;
-    
+
     await this.sendLocation({
       recipientPhone: recipientPhone,
       latitude: event.latitude,
@@ -492,7 +501,7 @@ export class WhatsappService {
     invite.selectedEvent = true;
     invite.sendList = false;
     await this.eventInvitessContacts.save(invite);
-  
+
     this.sendText({
       message: 'Please enter your message. Only text is allowed.',
       recipientPhone: recipientPhone,
@@ -504,12 +513,16 @@ export class WhatsappService {
     const { invites, events }: any = invite;
     const { image, name: eventName, id }: any = events;
     const { callingCode, phoneNumber, name }: any = invites;
-  
-    await this.sendImage({
+
+    const imageResponse: any = await this.sendImage({
       recipientPhone: recipientPhone,
       url: image,
     });
-  
+
+    if (imageResponse && imageResponse?.error) {
+      console.error("Error sending image:", imageResponse?.error);
+    }
+
     await this.sendSimpleButtons({
       message: `Hey ${recipientName}, \nWe are pleased to invite you to ${eventName}.`,
       recipientPhone: recipientPhone,
@@ -531,21 +544,21 @@ export class WhatsappService {
   public async sendInviteToGuest(body: any): Promise<any> {
     const { callingCode, phoneNumber, text, image, recipientName, eventName, eventId, contactId } = body;
     const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
-  
+
     try {
       if (image) {
-        const imageResponse:any = await this.sendImage({
+        const imageResponse: any = await this.sendImage({
           recipientPhone: recipientPhone,
           // caption: text,
           url: image,
         });
-  
+
         // Check if there's any error in sending image
         if (imageResponse && imageResponse?.error) {
           console.error("Error sending image:", imageResponse?.error);
         }
       }
-  
+
       const response = await this.sendSimpleButtons({
         message: text,
         recipientPhone: recipientPhone,
@@ -555,7 +568,7 @@ export class WhatsappService {
           { title: 'Event Location', id: `event-location_${eventId}_${contactId}` },
         ],
       });
-  
+
       console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:", response);
       return response;
     } catch (error) {
@@ -563,7 +576,7 @@ export class WhatsappService {
       return error;
     }
   }
-  
+
 
   public async findEventOneById(
     id: number,
