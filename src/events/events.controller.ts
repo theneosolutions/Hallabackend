@@ -67,7 +67,7 @@ export class EventsController {
     ) { }
 
     @Post()
-    // @Public()
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseEventsMapper,
         description: 'Event is created and returned.',
@@ -88,7 +88,7 @@ export class EventsController {
     }
 
     @Get('/:id')
-    @Public()
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseEventsMapper,
         description: 'event is found and returned.',
@@ -109,7 +109,7 @@ export class EventsController {
 
 
     @Post('addGuests/:id')
-    @Public()
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseEventsMapper,
         description: 'Event is created and returned.',
@@ -131,7 +131,7 @@ export class EventsController {
     }
 
     @Post('send-invites/:id')
-    @Public()
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseEventsMapper,
         description: 'Event invitations is sent and returned.',
@@ -150,7 +150,7 @@ export class EventsController {
         return ResponseEventsMapper.map(event);
     }
 
-    @Public()
+    @Public(['admin', 'user'])
     @Get('/byUserId/:id')
     @ApiPaginatedResponse(ResponseEventsMapper)
     @ApiBadRequestResponse({
@@ -167,7 +167,7 @@ export class EventsController {
         return this.eventsService.getEventsByUserId(params.id, pageOptionsDto);
     }
 
-    @Public()
+    @Public(['admin', 'user'])
     @Get('/chats/messages/user/:userId/event/:eventId/contact/:contactId')
     @ApiPaginatedResponse(ResponseEventsMapper)
     @ApiBadRequestResponse({
@@ -184,7 +184,7 @@ export class EventsController {
         return this.eventsService.getAllChatMessagesOfEvent(params.eventId,params.userId,params.contactId, pageOptionsDto);
     }
 
-    @Public()
+    @Public(['admin', 'user'])
     @Get('/chats/user/:userId/event/:eventId')
     @ApiPaginatedResponse(ResponseEventsMapper)
     @ApiBadRequestResponse({
@@ -201,7 +201,7 @@ export class EventsController {
         return this.eventsService.getAllChatsOfEvent(params.eventId,params.userId, pageOptionsDto);
     }
 
-    @Public()
+    @Public(['admin', 'user'])
     @Get('qrcodes/:fileId')
     async serveAvatar(@Param('fileId') fileId, @Res() res): Promise<any> {
       res.sendFile( join(__dirname, '..', '..', 'qrcodes', `${fileId}`));
@@ -209,7 +209,7 @@ export class EventsController {
 
 
     @Post('/upload-event-image')
-    @Public()
+    @Public(['admin', 'user'])
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {

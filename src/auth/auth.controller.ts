@@ -84,7 +84,7 @@ export class AuthController {
         this.loggerService = new Logger(AuthController.name);
     }
 
-    @Public()
+   
     @Post('/sign-up')
     @ApiCreatedResponse({
         type: MessageMapper,
@@ -107,7 +107,7 @@ export class AuthController {
             .json(AuthResponseMapper.map(result));
     }
 
-    @Public()
+    
     @Post('/sign-up/phone')
     @ApiCreatedResponse({
         type: MessageMapper,
@@ -130,7 +130,7 @@ export class AuthController {
             .json(AuthResponseMapper.map(result));
     }
 
-    @Public()
+    
     @Post('/sign-in')
     @ApiOkResponse({
         type: AuthResponseMapper,
@@ -153,7 +153,7 @@ export class AuthController {
             .json(AuthResponseMapper.map(result));
     }
 
-    @Public()
+  
     @Post('/sign-in/phone')
     @ApiOkResponse({
         type: MessageMapper,
@@ -173,7 +173,7 @@ export class AuthController {
         return await this.authService.signInWithPhone(phoneDto, origin);
     }
 
-    @Public()
+   
     @Post('/otp/resend')
     @ApiCreatedResponse({
         type: MessageMapper,
@@ -192,7 +192,7 @@ export class AuthController {
         return await this.authService.reSendUserOTP(phoneDto, origin);
     }
 
-    @Public()
+    
     @Post('/otp/verify')
     @ApiOkResponse({
         type: AuthResponseMapper,
@@ -215,7 +215,7 @@ export class AuthController {
             .json(AuthResponseMapper.map(result));
     }
 
-
+    @Public(['admin', 'user'])
     @Post('/logout')
     @ApiOkResponse({
         type: MessageMapper,
@@ -239,7 +239,7 @@ export class AuthController {
             .json(message);
     }
 
-    @Public()
+    
     @Post('/refresh-access')
     @ApiOkResponse({
         type: AuthResponseMapper,
@@ -309,7 +309,7 @@ export class AuthController {
 
 
 
-    @Public()
+    
     @Get('/confirm-email/:confirmationToken')
     @ApiOkResponse({
         type: AuthResponseMapper,
@@ -333,7 +333,7 @@ export class AuthController {
             .json(AuthResponseMapper.map(result));
     }
 
-    @Public()
+    
     @Post('/forgot-password')
     @HttpCode(HttpStatus.OK)
     @ApiOkResponse({
@@ -348,7 +348,7 @@ export class AuthController {
         return this.authService.resetPasswordEmail(emailDto, origin);
     }
 
-    @Public()
+   
     @Post('/reset-password')
     @HttpCode(HttpStatus.OK)
     @ApiOkResponse({
@@ -365,7 +365,7 @@ export class AuthController {
         return this.authService.resetPassword(resetPasswordDto);
     }
 
-    @Public()
+   
     @Post('/reset-password/phone')
     @HttpCode(HttpStatus.OK)
     @ApiOkResponse({
@@ -383,6 +383,7 @@ export class AuthController {
     }
 
     @Patch('/update-password')
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: AuthResponseMapper,
         description: 'The password has been updated',
@@ -407,6 +408,7 @@ export class AuthController {
     }
 
     @Get('/me')
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: AuthResponseUserMapper,
         description: 'The user is found and returned.',

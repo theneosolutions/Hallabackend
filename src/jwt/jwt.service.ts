@@ -102,7 +102,7 @@ export class JwtService {
       case TokenTypeEnum.ACCESS:
         const { privateKey, time: accessTime } = this.jwtConfig.access;
         return this.commonService.throwInternalError(
-          JwtService.generateTokenAsync({ id: user.id }, privateKey, {
+          JwtService.generateTokenAsync({ id: user.id,type:user.roles }, privateKey, {
             ...jwtOptions,
             expiresIn: accessTime,
             algorithm: 'RS256',
@@ -115,6 +115,7 @@ export class JwtService {
           JwtService.generateTokenAsync(
             {
               id: user.id,
+              type:user.roles,
               version: user.credentials.version,
               tokenId: tokenId ?? v4(),
             },
@@ -130,7 +131,7 @@ export class JwtService {
         const { secret, time } = this.jwtConfig[tokenType];
         return this.commonService.throwInternalError(
           JwtService.generateTokenAsync(
-            { id: user.id, version: user.credentials.version },
+            { id: user.id,type:user.roles, version: user.credentials.version },
             secret,
             {
               ...jwtOptions,
@@ -146,7 +147,7 @@ export class JwtService {
   >(token: string, tokenType: TokenTypeEnum): Promise<T> {
     const jwtOptions: jwt.VerifyOptions = {
       issuer: this.issuer,
-      audience: new RegExp(this.domain),
+      // audience: new RegExp(this.domain),
     };
 
     switch (tokenType) {

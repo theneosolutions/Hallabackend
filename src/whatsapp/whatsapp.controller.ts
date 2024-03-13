@@ -44,7 +44,6 @@ export class WhatsappController {
 
     }
 
-    @Public()
     @Get('/meta_wa_callbackurl')
     @ApiOkResponse({
         description: 'The user is found and returned.',
@@ -80,7 +79,6 @@ export class WhatsappController {
         }
     }
 
-    @Public()
     @Post('/meta_wa_callbackurl')
     @ApiOkResponse({
         description: 'The user is found and returned.',
