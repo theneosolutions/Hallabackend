@@ -457,7 +457,7 @@ export class WhatsappService {
           title: ' ',
           rows: [
             { title: 'Send message', description: ' ', id: `event-message_${invite?.eventId}_${invite?.invites?.id}` },
-            { title: 'Re-send the invitation', description: ' ', id: `event-invitation_${invite?.eventId}_${invite?.invites?.id}` },
+            { title: 'Re-send the invitation', description: ' ', id: `event-invitaion_${invite?.eventId}_${invite?.invites?.id}` },
             { title: 'Re-send the location', description: ' ', id: `event-location_${invite?.eventId}_${invite?.invites?.id}` },
             { title: 'Other', description: ' ', id: `other_${invite?.eventId}_${invite?.invites?.id}` }
           ]
