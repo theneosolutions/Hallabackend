@@ -201,7 +201,7 @@ export class EventsController {
         return this.eventsService.getAllChatsOfEvent(params.eventId,params.userId, pageOptionsDto);
     }
 
-    @Public(['admin', 'user'])
+    // @Public(['admin', 'user'])
     @Get('qrcodes/:fileId')
     async serveAvatar(@Param('fileId') fileId, @Res() res): Promise<any> {
       res.sendFile( join(__dirname, '..', '..', 'qrcodes', `${fileId}`));
