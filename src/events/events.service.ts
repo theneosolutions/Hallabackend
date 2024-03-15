@@ -350,6 +350,7 @@ export class EventsService {
 
         const itemCount = await queryBuilder.getCount();
         let { entities }: any = await queryBuilder.getRawAndEntities();
+        console.log("🚀 ~ EventsService ~ entities:", entities)
 
         const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 

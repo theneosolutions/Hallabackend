@@ -18,7 +18,8 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { EventsModule } from './events/events.module';
 import { CardModule } from './cards/card.module';
 import { NotificationsModule } from './Notifications/notifications.module';
-import { ChatGateway } from './chat/chat.gateway';
+// import { ChatGateway } from './chat/chat.gateway';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -51,7 +52,8 @@ import { ChatGateway } from './chat/chat.gateway';
     WhatsappModule,
     EventsModule,
     CardModule,
-    NotificationsModule
+    NotificationsModule,
+    SocketModule
     
   ],
   controllers: [AppController],
@@ -61,7 +63,7 @@ import { ChatGateway } from './chat/chat.gateway';
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
-    ChatGateway,
+    // ChatGateway,
   ],
 })
 export class AppModule { }
