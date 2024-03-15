@@ -10,12 +10,13 @@ import { EventsModule } from 'src/events/events.module';
 import { Events } from 'src/events/entities/event.entity';
 import { EventInvitessContacts } from 'src/events/entities/events_invites_contacts.entity';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
-// import { ChatGateway } from 'src/chat/chat.gateway';
+import { SocketModule } from 'src/socket/socket.module';
+import { SocketGateway } from 'src/socket/socket.gateway';
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contacts,Events,EventInvitessContacts,EventsChats]),UsersModule, forwardRef(() => EventsModule), forwardRef(() => EventInvitessContacts),forwardRef(() => EventsChats)],
-  providers: [WhatsappService],
+  imports: [TypeOrmModule.forFeature([Contacts,Events,EventInvitessContacts,EventsChats]),UsersModule, forwardRef(() => EventsModule), forwardRef(() => EventInvitessContacts),forwardRef(() => EventsChats),forwardRef(() => SocketModule)],
+  providers: [WhatsappService,SocketGateway],
   exports: [WhatsappService],
   controllers: [WhatsappController],
 })

@@ -4,8 +4,10 @@ import { Like, Repository } from 'typeorm';
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
+  forwardRef,
 } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { CommonService } from '../common/common.service';
@@ -29,9 +31,8 @@ import nodeHtmlToImage from 'node-html-to-image'
 import { ConfigService } from '@nestjs/config';
 import { eventNames } from 'process';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
-// import { ChatGateway } from 'src/chat/chat.gateway';
-import { SubscribeMessage } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import { SocketGateway } from 'src/socket/socket.gateway';
+
 
 
 const unirest = require('unirest');
@@ -66,16 +67,14 @@ export class WhatsappService {
     private readonly usersService: UsersService,
     private readonly commonService: CommonService,
     private readonly configService: ConfigService,
-    // private readonly chatGateway: ChatGateway
+    @Inject(forwardRef(() => SocketGateway))
+    private readonly socketGateway: SocketGateway
   ) {
 
     this.domain = this.configService.get<string>('domain');
     this.templates = {
       invite: WhatsappService.parseTemplate('invite.hbs'),
     };
-    setTimeout(() => {
-      this.registerSocketListeners();
-    }, 2000);
   }
 
   private static parseTemplate(
@@ -88,18 +87,6 @@ export class WhatsappService {
     return Handlebars.compile<ITemplatedData>(templateText, { strict: true });
   }
 
-  private registerSocketListeners(): void {
-    const server = null //this.chatGateway.getServerInstance();
-    if (server) {
-      server.on('chat', (data) => {
-        console.log('Received message from socket:', data);
-        // Handle the message here
-      });
-    } else {
-      console.error('Server instance not available');
-    }
-    
-  }
 
   public async create(origin: string | undefined, body: any): Promise<any> {
     let data = this.parseMessage(body);
@@ -673,9 +660,9 @@ export class WhatsappService {
   }
 
   public async emitEvent(event: string, data: any): Promise<void> {
-    const server = null //this.chatGateway.getServerInstance();
+    const server = this.socketGateway.getServerInstance();
     if (server) {
-      console.log("🚀 ~ WhatsappService ~ create ~ chat:", data)
+      // console.log("🚀 ~ WhatsappService ~ create ~ chat:", data)
       server.emit(event, data);
     } else {
       console.error('Server instance not available');
