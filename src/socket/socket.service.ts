@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Socket } from 'socket.io';
 import { Events } from 'src/events/entities/event.entity';
@@ -12,6 +12,7 @@ export class SocketService {
   constructor(
     @InjectRepository(Events)
     private readonly eventsRepository: Repository<Events>,
+    @Inject(forwardRef(() => WhatsappService))
     private readonly whatsappService: WhatsappService
   ) {}
 

@@ -49,11 +49,11 @@ import { SocketModule } from './socket/socket.module';
     MailerModule,
     StripeModule,
     ContactsModule,
+    SocketModule,
     WhatsappModule,
     EventsModule,
     CardModule,
     NotificationsModule,
-    SocketModule
     
   ],
   controllers: [AppController],

@@ -20,6 +20,10 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     constructor(private readonly socketService: SocketService) { }
 
+    getServerInstance(): any {
+        return this.server;
+      }
+
     @SubscribeMessage('chat')
     async handleSendMessage(client: Socket, payload: any): Promise<void> {
         console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ payload:", payload)
