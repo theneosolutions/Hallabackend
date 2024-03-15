@@ -30,6 +30,9 @@ export class EventsChats {
   @Column({ type: 'text', nullable: true })
   additionalInfo: string;
 
+  @Column({ type: "int" , nullable: true})
+  sentBy: number;
+
   @Column({ default: () => `now()`, nullable: false })
   public createdAt: Date;
 
