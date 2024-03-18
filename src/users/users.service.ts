@@ -149,6 +149,10 @@ export class UsersService {
     return user;
   }
 
+  public async findOne(options): Promise<Users> {
+    return await this.usersRepository.findOne(options);
+  }
+
   public async findOneByIdOrUsername(
     idOrUsername: string,
   ): Promise<Users> {

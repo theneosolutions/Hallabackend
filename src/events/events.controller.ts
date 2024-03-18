@@ -168,6 +168,61 @@ export class EventsController {
     }
 
     @Public(['admin', 'user'])
+    @Get('/guestlist/:id')
+    @ApiPaginatedResponse(ResponseEventsMapper)
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'No Guest found.',
+    })
+    async getGuestsByEventId(
+        @Param() params: GetEventByUserIdParams,
+        @Query() pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+
+        return this.eventsService.getGuestsByEventId(params.id, pageOptionsDto);
+    }
+
+    @Delete('/:id')
+    @Public(['admin', 'user'])
+    @ApiNoContentResponse({
+        description: 'The event is deleted.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in.',
+    })
+    public async delete(
+        @CurrentUser() id: number,
+        @Param() params: GetEventParams,
+    ): Promise<IMessage> {
+       return await this.eventsService.delete(params.id);
+
+    }
+
+    @Patch('/:id')
+    @Public(['admin', 'user'])
+    @ApiOkResponse({
+        type: ResponseEventsMapper,
+        description: 'Event is updated.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in.',
+    })
+    public async update(
+        @CurrentUser() id: number,
+        @Param() params: GetEventParams,
+        @Body() dto: UpdateEventDto,
+    ): Promise<IResponseEvent> {
+        const company = await this.eventsService.update(params.id, dto, id);
+        return ResponseEventsMapper.map(company);
+    }
+
+
+    @Public(['admin', 'user'])
     @Get('/chats/messages/user/:userId/event/:eventId/contact/:contactId')
     @ApiPaginatedResponse(ResponseEventsMapper)
     @ApiBadRequestResponse({
@@ -265,6 +320,14 @@ export class EventsController {
             type: "jpg",
         });
 
+    }
+
+    @Delete('/remove/guest/:eventId/:contactsId')
+    async deleteRecordByEventAndContact(
+      @Param('eventId') eventId: number,
+      @Param('contactsId') contactsId: number,
+    ): Promise<IMessage> {
+      return await this.eventsService.deleteRecordByEventAndContact(eventId, contactsId);
     }
 
     

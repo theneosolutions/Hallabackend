@@ -7,6 +7,7 @@ import {
     Param,
     Patch,
     Post,
+    Query,
     Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -21,15 +22,18 @@ import {
 import { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-import { IAuthResponseUser } from '../auth/interfaces/auth-response-user.interface';
-import { AuthResponseUserMapper } from '../auth/mappers/auth-response-user.mapper';
-import { GetUserParams } from './dtos/get-user.params';
 import { UpdateContactsDto } from './dtos/update-contacts.dto';
 import { IResponseContacts } from './interfaces/response-contacts.interface';
 import { ResponseContactsMapper } from './mappers/response-contacts.mapper';
 import { ContactsService } from './contacts.service';
 import { Origin } from 'src/auth/decorators/origin.decorator';
 import { ContactsDto } from './dtos/create-contacts';
+import { GetContactParams } from './dtos/get-contact.params';
+import { ApiPaginatedResponse } from './decorators/api-paginated-response.decorator';
+import { GetContactsByUserIdParams } from 'src/contacts/dtos/get-contacts-by-userid.params';
+import { PageOptionsDto } from './dtos/page-option.dto';
+import { PageDto } from './dtos/page.dto';
+import { IMessage } from 'src/common/interfaces/message.interface';
 
 @ApiTags('Contacts')
 @Controller('api/contacts')
@@ -43,23 +47,25 @@ export class ContactsController {
     }
 
 
-    //     @Get('/:idOrUsername')
-    //     @ApiOkResponse({
-    //         type: ResponseUserMapper,
-    //         description: 'The user is found and returned.',
-    //     })
-    //     @ApiBadRequestResponse({
-    //         description: 'Something is invalid on the request body',
-    //     })
-    //     @ApiNotFoundResponse({
-    //         description: 'The user is not found.',
-    //     })
-    //     public async getUser(@Param() params: GetUserParams): Promise<IResponseUser> {
-    //         const user = await this.usersService.findOneByIdOrUsername(
-    //             params.idOrUsername,
-    //         );
-    //         return ResponseUserMapper.map(user);
-    //     }
+    @Get('/:id')
+    @Public(['admin', 'user'])
+    @ApiOkResponse({
+        type: ResponseContactsMapper,
+        description: 'contact is found and returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'contactItem is not found.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'User is not logged in.',
+    })
+    public async findCompanyById(@Param() params: GetContactParams): Promise<any> {
+        const contactItem = await this.contactsService.findContactById(params.id);
+        return (contactItem);
+    }
 
     @Post()
     @ApiOkResponse({
@@ -81,64 +87,59 @@ export class ContactsController {
         return ResponseContactsMapper.map(contact);
     }
 
-    //     @Patch()
-    //     @ApiOkResponse({
-    //         type: ResponseUserMapper,
-    //         description: 'The username is updated.',
-    //     })
-    //     @ApiBadRequestResponse({
-    //         description: 'Something is invalid on the request body.',
-    //     })
-    //     @ApiUnauthorizedResponse({
-    //         description: 'The user is not logged in.',
-    //     })
-    //     public async updateUser(
-    //         @CurrentUser() id: number,
-    //         @Body() dto: UpdateUserDto,
-    //     ): Promise<IResponseUser> {
-    //         const user = await this.usersService.update(id, dto);
-    //         return ResponseUserMapper.map(user);
-    //     }
+    @Public(['admin', 'user'])
+    @Get('/byUserId/:id')
+    @ApiPaginatedResponse(ResponseContactsMapper)
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'contact not found.',
+    })
+    async getCompanyByUserId(
+        @Param() params: GetContactsByUserIdParams,
+        @Query() pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<ContactsDto>> {
 
-    //     @Patch('/email')
-    //     @ApiOkResponse({
-    //         type: AuthResponseUserMapper,
-    //         description: 'The email is updated, and the user is returned.',
-    //     })
-    //     @ApiBadRequestResponse({
-    //         description: 'Something is invalid on the request body, or wrong password.',
-    //     })
-    //     @ApiUnauthorizedResponse({
-    //         description: 'The user is not logged in.',
-    //     })
-    //     public async updateEmail(
-    //         @CurrentUser() id: number,
-    //         @Body() dto: ChangeEmailDto,
-    //     ): Promise<IAuthResponseUser> {
-    //         const user = await this.usersService.updateEmail(id, dto);
-    //         return AuthResponseUserMapper.map(user);
-    //     }
+        return this.contactsService.getContactsByUserId(params.id, pageOptionsDto);
+    }
 
-    //     @Delete()
-    //     @ApiNoContentResponse({
-    //         description: 'The user is deleted.',
-    //     })
-    //     @ApiBadRequestResponse({
-    //         description: 'Something is invalid on the request body, or wrong password.',
-    //     })
-    //     @ApiUnauthorizedResponse({
-    //         description: 'The user is not logged in.',
-    //     })
-    //     public async deleteUser(
-    //         @CurrentUser() id: number,
-    //         @Body() dto: PasswordDto,
-    //         @Res() res: Response,
-    //     ): Promise<void> {
-    //         await this.usersService.delete(id, dto);
-    //         res
-    //             .clearCookie(this.cookieName, { path: this.cookiePath })
-    //             .status(HttpStatus.NO_CONTENT)
-    //             .send();
-    //     }
+    @Patch('/:id')
+    @Public(['admin','user'])
+    @ApiOkResponse({
+        type: ResponseContactsMapper,
+        description: 'contact is updated.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in.',
+    })
+    public async updateContact(
+        @CurrentUser() id: number,
+        @Param() params: GetContactParams,
+        @Body() dto: UpdateContactsDto,
+    ): Promise<IResponseContacts> {
+        const contact = await this.contactsService.update(params.id, dto);
+        return ResponseContactsMapper.map(contact);
+    }
+
+    @Delete('/:id')
+    @Public(['admin','user'])
+    @ApiNoContentResponse({
+        description: 'The contact is deleted.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in.',
+    })
+    public async delete(
+        @CurrentUser() id: number,
+        @Param() params: GetContactParams,
+    ): Promise<IMessage> {
+       return  await this.contactsService.delete(params.id);
+
+    }
+
 
 }

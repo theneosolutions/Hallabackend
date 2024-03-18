@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayMinSize, IsBoolean, IsDateString, IsLatitude, IsLongitude, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ArrayMinSize, IsArray, IsBoolean, IsDateString, IsLatitude, IsLongitude, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { PhoneDto } from 'src/auth/dtos/phone.dto';
 
 export abstract class UpdateEventDto {
 
@@ -9,19 +11,22 @@ export abstract class UpdateEventDto {
         type: Number,
     })
     @IsNumber()
+    @IsOptional()
     public user: number;
 
     @ApiProperty({
         type: String,
-        example: [
-            '+923012345678',
-            '+962245234234',
-        ]
-    })
-    @ArrayMinSize(1)
-    @IsOptional()
-    // @IsNumber()
-    public contacts?: String[];
+        example: [{
+          callingCode:'+92',
+          phoneNumber:'3012345678',
+        }]
+      })
+      @ArrayMinSize(1)
+      @IsOptional()
+      @IsArray()
+      @ValidateNested({ each: true })
+      @Type(() => PhoneDto)
+      public contacts?: PhoneDto[];
 
 
     @ApiProperty({
@@ -30,6 +35,7 @@ export abstract class UpdateEventDto {
         type: String,
     })
     @IsString()
+    @IsOptional()
     public name: string;
 
     @ApiProperty({
@@ -47,7 +53,8 @@ export abstract class UpdateEventDto {
         type: String,
     })
     @IsDateString()
-    public eventDate: String;
+    @IsOptional()
+    public eventDate: string;
 
     @ApiProperty({
         description: 'Show QR code',
@@ -55,6 +62,7 @@ export abstract class UpdateEventDto {
         type: Boolean,
     })
     @IsBoolean()
+    @IsOptional()
     public showQRCode: boolean;
 
     @ApiProperty({
@@ -63,6 +71,7 @@ export abstract class UpdateEventDto {
         type: String,
     })
     @IsString()
+    @IsOptional()
     public status: string;
 
     @ApiProperty({
@@ -75,11 +84,30 @@ export abstract class UpdateEventDto {
     public notes: string;
 
     @ApiProperty({
+        description: 'nearby place',
+        example: 'name of the nearby place',
+        type: String,
+      })
+      @IsOptional()
+      @IsString()
+      public nearby: string;
+    
+      @ApiProperty({
+        description: 'address',
+        example: 'Address of the place',
+        type: String,
+      })
+      @IsString()
+      @IsOptional()
+      public address: string;
+
+    @ApiProperty({
         description: 'latitude',
         example: 10.287896,
         type: Number,
     })
     @IsLatitude()
+    @IsOptional()
     public latitude: number;
 
     @ApiProperty({
@@ -88,6 +116,7 @@ export abstract class UpdateEventDto {
         type: Number,
     })
     @IsLongitude()
+    @IsOptional()
     public longitude: number;
 
 }

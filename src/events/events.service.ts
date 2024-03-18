@@ -334,6 +334,45 @@ export class EventsService {
         return new PageDto(await Promise.all(entities), pageMetaDto);
     }
 
+    public async getGuestsByEventId(
+        eventId: string,
+        pageOptionsDto: PageOptionsDto
+    ): Promise<PageDto<EventDto>> {
+        if (isNull(eventId) || isUndefined(eventId)) {
+            throw new BadRequestException(['Event id cannot be null']);
+        }
+        const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
+        await queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventId })
+            .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
+            .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email'])
+        if (pageOptionsDto.status !== '') {
+            queryBuilder.andWhere("event_invitess_contacts.status like :status", { status: `%${pageOptionsDto.status}%` });
+        }
+
+        const itemCount = await queryBuilder.getCount();
+        let { entities }: any = await queryBuilder.getRawAndEntities();
+
+        const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+        return new PageDto(await Promise.all(entities), pageMetaDto);
+    }
+
+    async deleteRecordByEventAndContact(eventId: number, contactsId: number): Promise<IMessage> {
+        const event: any = eventId;
+        if (isNaN(event) && !isInt(event)) {
+            throw new BadRequestException('Invalid event id: ' + event);
+        }
+        const contact: any = contactsId;
+        if (isNaN(contact) && !isInt(contact)) {
+            throw new BadRequestException('Invalid contact id: ' + contact);
+
+        }
+        //@ts-ignore
+        await this.eventInvitessContacts.delete({ eventId: event, invites: contact });
+        return this.commonService.generateMessage('Guest deleted successfully!');
+    }
+
+
     public async getAllChatMessagesOfEvent(
         eventId: string,
         userId: string,
@@ -414,6 +453,151 @@ export class EventsService {
             console.log("🚀 ~ file: users.service.ts:235 ~ UsersService ~ error", error)
             throw new InternalServerErrorException(['Error uploading image']);
         }
+    }
+
+    public async delete(id: string): Promise<IMessage> {
+        const parsedValue = parseInt(id, 10);
+
+        if (isNaN(parsedValue) && !isInt(parsedValue)) {
+            throw new BadRequestException('Invalid event id: ' + parsedValue);
+
+        }
+
+        await this.eventsRepository.softDelete(parsedValue);
+        return this.commonService.generateMessage('Event deleted successfully!');
+    }
+
+    public async findOne(options): Promise<Events> {
+        return await this.eventsRepository.findOne(options);
+    }
+
+    public async update(eventId: string, dto: UpdateEventDto, actionUser = null): Promise<Events> {
+        const { user: userId, contacts, name, image, eventDate, status, showQRCode, nearby, address, notes, latitude, longitude } = dto;
+        let contacts_ids = [];
+        if (contacts?.length) {
+            contacts_ids = await this.contactsService.getOrCreateContacts(contacts, userId);
+        }
+
+        const parsedValue = parseInt(eventId, 10);
+        const eventItem = await this.findOne({
+            where: { id: parsedValue },
+            relations: ['user', 'invites']
+        });
+        // below line assumed user entity/object will be returned and prev findOneById method was not returning any user,
+        // causing wrong decision and we had issues, fixed it with new method findOne
+        const eventCreator: any = eventItem?.user;
+        // deleting to avoid returning user detail in response
+        delete eventItem.user;
+
+        try {
+            if (!isUndefined(userId) && !isNull(userId)) {
+                eventItem.user = userId;
+            }
+
+            if (!isUndefined(name) && !isNull(name)) {
+                eventItem.name = name;
+            }
+
+
+            if (!isUndefined(image) && !isNull(image)) {
+                eventItem.image = image;
+            }
+
+            if (!isUndefined(notes) && !isNull(notes)) {
+                eventItem.notes = notes;
+            }
+
+            if (!isUndefined(status) && !isNull(status)) {
+                eventItem.status = status;
+            }
+
+            if (!isUndefined(eventDate) && !isNull(eventDate)) {
+                eventItem.eventDate = eventDate;
+            }
+
+            if (!isUndefined(showQRCode) && !isNull(showQRCode)) {
+                eventItem.showQRCode = showQRCode;
+            }
+
+            if (!isUndefined(nearby) && !isNull(nearby)) {
+                eventItem.nearby = nearby;
+            }
+
+            if (!isUndefined(address) && !isNull(address)) {
+                eventItem.address = address;
+            }
+
+            if (!isUndefined(latitude) && !isNull(latitude)) {
+                eventItem.latitude = latitude;
+            }
+            if (!isUndefined(longitude) && !isNull(longitude)) {
+                eventItem.longitude = longitude;
+            }
+
+            if (!isUndefined(contacts_ids) && !isNull(contacts_ids) && contacts_ids?.length) {
+                const newCandidates: any = contacts_ids.map(item => {
+                    console.log("🚀 ~ EventsService ~ update ~ item:", item)
+                    return {
+                        eventId: eventId,
+                        invites:{ id: Number(item) },
+                        code: uuidV4(),
+                        usersId: userId,
+                        haveChat: false,
+                    }
+                })
+                const insertCandidates = this.eventInvitessContacts.create(newCandidates);
+                await this.eventInvitessContacts.save(insertCandidates);
+
+            }
+            const userDetail = await this.usersService.findOne({
+                where: { id: eventCreator?.id },
+                // relations: ['company'] no relation from user to company as of now in case we need company
+            });
+
+            eventItem.updatedAt = new Date();
+            await this.eventsRepository.save(eventItem);
+            const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
+            const invitesList = await queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventItem.id })
+                .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
+                .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getMany();
+
+            invitesList?.map(async (invite) => {
+                invite.code = uuidV4();
+                invite.usersId = userId;
+                invite.haveChat = false;
+                await this.eventInvitessContacts.save(invite);
+            })
+
+
+            return eventItem;
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                const errorMessage = error.message;
+                console.log("🚀 ~ file: event.service.ts:580 ~ EventService ~ update ~ errorMessage:", errorMessage)
+                const match = /Duplicate entry '(.+)' for key '(.+)'/i.exec(errorMessage);
+
+                if (match) {
+                    const duplicateValue = match[1];
+                    console.log("🚀 ~ EventsService ~ update ~ duplicateValue:", duplicateValue)
+                    const duplicateKey = match[2];
+                    const [event_id, contact_id] = duplicateValue.split("-")
+                    console.log("🚀 ~ EventsService ~ update ~ event_id, contact_id:", event_id, contact_id)
+
+                    const existingRecord: any = await this.contactsService.findOneByWhere({ id: In([contact_id]) })
+                    // console.log("🚀 ~ file: assessment.service.ts:596 ~ AssessmentService ~ update ~ existingRecord:", existingRecord)
+                    throw new BadRequestException([{
+                        callingCode:existingRecord[0]?.callingCode,
+                        phoneNumber:existingRecord[0]?.phoneNumber
+                    }]);
+                }
+            } else {
+                // Handle other errors.
+                throw new BadRequestException([error?.message]);
+
+            }
+        }
+
+
     }
 
 
