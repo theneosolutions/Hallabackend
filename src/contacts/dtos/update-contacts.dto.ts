@@ -33,11 +33,8 @@ export abstract class UpdateContactsDto {
         type: String,
     })
     @IsString()
-    @Length(3, 100)
+    @Length(1, 100)
     @IsOptional()
-    @Matches(NAME_REGEX, {
-        message: 'Suffix must not have special characters',
-    })
     public suffix?: string;
 
     @ApiProperty({
