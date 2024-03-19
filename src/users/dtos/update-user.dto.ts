@@ -75,6 +75,15 @@ export abstract class UpdateUserDto {
     public status?: string;
 
     @ApiProperty({
+        description: 'profile image',
+        example: 'https://res.cloudinary.com/dogufahvv/image/upload/default.jpg',
+        type: String,
+    })
+    @IsString()
+    @IsOptional()
+    public profilePhoto: string;
+
+    @ApiProperty({
         description: 'Country calling code',
         example:'+92',
         minLength: 2,

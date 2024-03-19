@@ -29,6 +29,7 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { IResponseUser } from './interfaces/response-user.interface';
 import { ResponseUserMapper } from './mappers/response-user.mapper';
 import { UsersService } from './users.service';
+import { UsernameDto } from './dtos/username.dto';
 
 @ApiTags('Users')
 @Controller('api/users')
@@ -101,6 +102,26 @@ export class UsersController {
         @Body() dto: ChangeEmailDto,
     ): Promise<IAuthResponseUser> {
         const user = await this.usersService.updateEmail(id, dto);
+        return AuthResponseUserMapper.map(user);
+    }
+
+    @Patch('/username')
+    @Public(['admin', 'user'])
+    @ApiOkResponse({
+        type: AuthResponseUserMapper,
+        description: 'The email is updated, and the user is returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body, or wrong password.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in.',
+    })
+    public async updateUsername(
+        @CurrentUser() id: number,
+        @Body() dto: UsernameDto,
+    ): Promise<IAuthResponseUser> {
+        const user = await this.usersService.updateUsername(id, dto);
         return AuthResponseUserMapper.map(user);
     }
 
