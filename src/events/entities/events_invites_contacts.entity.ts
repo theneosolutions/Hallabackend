@@ -25,7 +25,7 @@ export class EventInvitessContacts{
   @Column({ type: 'int', default: 0, nullable: true })
   public numberOfGuests: number;
 
-  @Column({ type: "int" , nullable: true})
+  @Column({ type: "int" , nullable: true,default:0})
   usersId: number;
 
   @PrimaryColumn({ type: "int" })
@@ -36,15 +36,14 @@ export class EventInvitessContacts{
   @Column({ type: 'varchar', default: uuidV4() })
   public code: string;
 
-
   @IsOptional()
   @IsString()
-  @Column({ type: 'varchar', default: null })
+  @Column({ type: 'varchar', default: '' })
   public notes: string;
 
   @IsOptional()
   @IsBoolean()
-  @Column({type:'boolean', default: null})
+  @Column({type:'boolean', default: false})
   public haveChat: true | false = false;
 
   @IsOptional()

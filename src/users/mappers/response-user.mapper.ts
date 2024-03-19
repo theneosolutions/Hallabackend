@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IResponseUser } from '../interfaces/response-user.interface';
 import { IUser } from '../interfaces/user.interface';
-
 export class ResponseUserMapper implements IResponseUser {
   @ApiProperty({
     description: 'User id',
@@ -10,7 +9,6 @@ export class ResponseUserMapper implements IResponseUser {
     type: Number,
   })
   public id: number;
-
 
   @ApiProperty({
     description: 'User firstName',
@@ -96,6 +94,45 @@ export class ResponseUserMapper implements IResponseUser {
   public isBanned: boolean;
 
   @ApiProperty({
+    description: 'Country calling code',
+    example:'+92',
+    minLength: 2,
+    maxLength: 100,
+    type: String,
+  })
+  public callingCode!: string;
+
+  @ApiProperty({
+    description: 'The user phone number without country code',
+    example:'123456789',
+    minLength: 5,
+    maxLength: 100,
+    type: Number,
+  })
+  public phoneNumber!: string;
+
+  @ApiProperty({
+    description: 'address',
+    example: 'Address of the place',
+    type: String,
+  })
+  public address: string;
+
+  @ApiProperty({
+    description: 'latitude',
+    example: 10.287896,
+    type: Number,
+  })
+  public latitude: number;
+
+  @ApiProperty({
+    description: 'latitude',
+    example: 16.424534,
+    type: Number,
+  })
+  public longitude: number;
+
+  @ApiProperty({
     description: 'User creation date',
     example: '2021-01-01T00:00:00.000Z',
     type: String,
@@ -127,6 +164,11 @@ export class ResponseUserMapper implements IResponseUser {
       roles:user.roles,
       confirmed:user.confirmed,
       isBanned:user.isBanned,
+      callingCode:user.callingCode,
+      phoneNumber:user.phoneNumber,
+      address:user.address,
+      latitude:user.latitude,
+      longitude:user.longitude,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     });

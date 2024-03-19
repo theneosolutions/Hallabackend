@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, Length, Matches, ValidateIf } from 'class-validator';
+import { IsLatitude, IsLongitude, IsNumberString, IsOptional, IsString, Length, Matches, ValidateIf } from 'class-validator';
 import { NAME_REGEX, SLUG_REGEX } from '../../common/consts/regex.const';
 import { isNull, isUndefined } from '../../common/utils/validation.util';
 
@@ -11,6 +11,7 @@ export abstract class UpdateUserDto {
     })
     @IsString()
     @Length(3, 106)
+    @IsOptional()
     @Matches(SLUG_REGEX, {
         message: 'Username must be a valid slugs',
     })
@@ -47,15 +48,6 @@ export abstract class UpdateUserDto {
     public lastName?: string;
 
     @ApiProperty({
-        description: 'Discord user',
-        example: 'JohnDoe1122',
-        type: String,
-    })
-    @IsString()
-    @IsOptional()
-    public companyName?: string;
-
-    @ApiProperty({
         description: 'Ban/unban user',
         example: 'isBanned: false',
         type: Boolean,
@@ -81,4 +73,59 @@ export abstract class UpdateUserDto {
     @Length(3, 100)
     @IsOptional()
     public status?: string;
+
+    @ApiProperty({
+        description: 'Country calling code',
+        example:'+92',
+        minLength: 2,
+        maxLength: 100,
+        type: String,
+      })
+      @IsString()
+      @IsOptional()
+      @Length(3, 5, {
+        message: 'calling code has to be between 3 and 5 characters.',
+      })
+      public callingCode!: string;
+    
+      @ApiProperty({
+        description: 'The user phone number without country code',
+        example:'123456789',
+        minLength: 5,
+        maxLength: 100,
+        type: Number,
+      })
+      @IsNumberString()
+      @IsOptional()
+      @Length(3, 100, {
+        message: 'phone number has to be between 5 and 100 characters.',
+      })
+      public phoneNumber!: string;
+
+      @ApiProperty({
+        description: 'address',
+        example: 'Address of the place',
+        type: String,
+      })
+      @IsString()
+      @IsOptional()
+      public address: string;
+    
+      @ApiProperty({
+        description: 'latitude',
+        example: 10.287896,
+        type: Number,
+      })
+      @IsLatitude()
+      @IsOptional()
+      public latitude: number;
+    
+      @ApiProperty({
+        description: 'latitude',
+        example: 16.424534,
+        type: Number,
+      })
+      @IsLongitude()
+      @IsOptional()
+      public longitude: number;
 }

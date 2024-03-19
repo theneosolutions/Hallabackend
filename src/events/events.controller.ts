@@ -151,6 +151,22 @@ export class EventsController {
     }
 
     @Public(['admin', 'user'])
+    @Get('/categorize/byUserId/:id')
+    @ApiPaginatedResponse(ResponseEventsMapper)
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'event not found.',
+    })
+    async categorizeEvents(
+        @Param() params: GetEventByUserIdParams,
+        @Query() pageOptionsDto: PageOptionsDto
+    ): Promise<any> {
+        return this.eventsService.categorizeEvents(Number(params.id));
+    }
+
+    @Public(['admin', 'user'])
     @Get('/byUserId/:id')
     @ApiPaginatedResponse(ResponseEventsMapper)
     @ApiBadRequestResponse({

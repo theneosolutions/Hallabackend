@@ -131,6 +131,21 @@ export class Users implements IUser {
   @Column({ type: 'text', default: null, nullable: true })
   public deviceToken: string;
 
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', default: '', nullable: true })
+  public address: string;
+
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'decimal', precision: 10, scale: 6 , nullable: true })
+  public latitude: number;
+
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'decimal', precision: 10, scale: 6 , nullable: true })
+  public longitude: number;
+
   @Column(() => CredentialsEmbeddable, { prefix: false })
   public credentials: CredentialsEmbeddable;
 

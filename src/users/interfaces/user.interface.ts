@@ -22,6 +22,9 @@ export interface IUser {
   confirmed: boolean;
   isBanned: boolean;
   deviceToken?: string;
+  address?:string;
+  latitude?: number;
+  longitude?: number;
   credentials: ICredentials;
   createdAt: Date;
   updatedAt: Date;

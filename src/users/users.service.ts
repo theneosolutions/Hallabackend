@@ -232,7 +232,7 @@ export class UsersService {
   public async update(userId: number, dto: any): Promise<Users> {
     const user = await this.findOneById(userId);
     return await this.usersRepository.save({
-      ...user, // existing fields
+      ...user, // existing
       ...dto // updated fields
     });
   }
