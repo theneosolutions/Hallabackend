@@ -45,6 +45,7 @@ export class UsersController {
 
     
     @Get('/:idOrUsername')
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseUserMapper,
         description: 'The user is found and returned.',
@@ -63,6 +64,7 @@ export class UsersController {
     }
 
     @Patch()
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: ResponseUserMapper,
         description: 'The username is updated.',
@@ -77,11 +79,13 @@ export class UsersController {
         @CurrentUser() id: number,
         @Body() dto: UpdateUserDto,
     ): Promise<IResponseUser> {
+        console.log("🚀 ~ UsersController ~ id:", id)
         const user = await this.usersService.update(id, dto);
         return ResponseUserMapper.map(user);
     }
 
     @Patch('/email')
+    @Public(['admin', 'user'])
     @ApiOkResponse({
         type: AuthResponseUserMapper,
         description: 'The email is updated, and the user is returned.',
@@ -101,6 +105,7 @@ export class UsersController {
     }
 
     @Delete()
+    @Public(['admin', 'user'])
     @ApiNoContentResponse({
         description: 'The user is deleted.',
     })
