@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Code, In, Like, Repository } from 'typeorm';
+import { Code, Connection, In, Like, Repository } from 'typeorm';
 import {
     BadRequestException,
     ConflictException,
@@ -37,6 +37,7 @@ import { ContactsService } from 'src/contacts/contacts.service';
 import { WhatsappService } from 'src/whatsapp/whatsapp.service';
 import { EventGuestsDto } from './dtos/create-guests-event.dto';
 import { EventsChats } from './entities/events_chats.entity';
+import { all } from 'axios';
 
 @Injectable()
 export class EventsService {
@@ -53,6 +54,7 @@ export class EventsService {
         private readonly contactsService: ContactsService,
         private readonly whatsappService: WhatsappService,
         private readonly commonService: CommonService,
+        private readonly connection: Connection
 
     ) { }
 
@@ -160,25 +162,23 @@ export class EventsService {
         }
 
         if (contacts_ids?.length) {
-            const getUsers = await this.contactsService.findOneByWhere({ id: In(contacts_ids) })
-            console.log("🚀 ~ EventsService ~ addContactsIntoEvent ~ getUsers:", getUsers)
-            if (!getUsers || getUsers.length < 1) throw new BadRequestException({ error: "No Contacts found with given IDs" })
-            eventDetail.invites = getUsers;
+            const newCandidates: any = contacts_ids.map(item => {
+                return {
+                    eventId: eventDetail?.id,
+                    contactsId: Number(item),
+                    usersId: userId,
+                    haveChat: false
+                };
+            });
+
+            const values = newCandidates.map(candidate => `(${candidate.contactsId}, ${candidate.eventId}, ${candidate.usersId},${candidate.haveChat})`).join(', ');
+            // Construct the full INSERT query
+            const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId,haveChat) VALUES ${values};`;
+            const results = await this.connection.query(query);
+            console.log("🚀 ~ EventsService ~ update ~ results:", results)
             eventDetail.status = 'active';
         }
         await this.eventsRepository.save(eventDetail);
-        const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
-        const invitesList = await queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventDetail.id })
-            .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
-            .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getMany();
-
-        invitesList?.map(async (invite) => {
-            invite.code = uuidV4();
-            invite.usersId = userId;
-            invite.haveChat = false;
-            await this.eventInvitessContacts.save(invite);
-        })
-
 
         return eventDetail;
     }
@@ -333,6 +333,57 @@ export class EventsService {
 
         return new PageDto(await Promise.all(entities), pageMetaDto);
     }
+
+    public async categorizeEvents(userId: number): Promise<{
+        allEvents: Event[],
+        drafts: Event[],
+        upcoming: Event[],
+        new: Event[],
+        attended: Event[],
+        missed: Event[]
+    }> {
+        const currentDate = new Date();
+        const tenMinutesAgo = new Date(currentDate.getTime() - 10 * 60 * 1000); // 10 minutes ago
+        const queryBuilder = this.eventsRepository.createQueryBuilder("events");
+        queryBuilder.where("events.userId = :id", { id: userId })
+            .leftJoinAndSelect('events.user', 'user')
+            .leftJoinAndSelect('events.invites', 'invites')
+            .select([
+                'events',
+                'invites.email',
+                'invites.id',
+                'invites.name',
+                'invites.callingCode',
+                'invites.phoneNumber',
+                'user.id',
+                'user.firstName',
+                'user.lastName',
+            ])
+
+        let { entities }: any = await queryBuilder.getRawAndEntities();
+        // Fetch all events for the user
+        const allEvents = await entities;
+
+        const upcomingEvents = allEvents.filter(event => new Date(event.eventDate) > currentDate);
+
+        const attendedEvents = allEvents.filter(event => event.invites.some(attendee => attendee.id === userId));
+
+        const missedEvents = []//allEvents.filter(event => new Date(event.eventDate) < currentDate && !attendedEvents.includes(event));
+
+        const newEvents = allEvents.filter(event => event.createdAt > tenMinutesAgo);
+
+        const draftEvents = allEvents.filter(event => event.status === 'draft');
+
+        return {
+            allEvents: allEvents,
+            drafts: draftEvents,
+            upcoming: upcomingEvents,
+            new: newEvents,
+            attended: attendedEvents,
+            missed: missedEvents
+        };
+    }
+
 
     public async getGuestsByEventId(
         eventId: string,
@@ -536,39 +587,29 @@ export class EventsService {
 
             if (!isUndefined(contacts_ids) && !isNull(contacts_ids) && contacts_ids?.length) {
                 const newCandidates: any = contacts_ids.map(item => {
-                    console.log("🚀 ~ EventsService ~ update ~ item:", item)
                     return {
                         eventId: eventId,
-                        invites:{ id: Number(item) },
-                        code: uuidV4(),
-                        usersId: userId,
-                        haveChat: false,
-                    }
-                })
-                const insertCandidates = this.eventInvitessContacts.create(newCandidates);
-                await this.eventInvitessContacts.save(insertCandidates);
+                        contactsId: Number(item),
+                        usersId: eventCreator?.id,
+                        haveChat: false
+                    };
+                });
+
+                // Construct the VALUES part of the SQL query dynamically.
+                const values = newCandidates.map(candidate => `(${candidate.contactsId}, ${candidate.eventId}, ${candidate.usersId},${candidate.haveChat})`).join(', ');
+
+                // Construct the full INSERT query
+                const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId) VALUES ${values};`;
+                const results = await this.connection.query(query);
+                console.log("🚀 ~ EventsService ~ update ~ results:", results)
 
             }
             const userDetail = await this.usersService.findOne({
                 where: { id: eventCreator?.id },
-                // relations: ['company'] no relation from user to company as of now in case we need company
             });
 
             eventItem.updatedAt = new Date();
             await this.eventsRepository.save(eventItem);
-            const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
-            const invitesList = await queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventItem.id })
-                .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
-                .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getMany();
-
-            invitesList?.map(async (invite) => {
-                invite.code = uuidV4();
-                invite.usersId = userId;
-                invite.haveChat = false;
-                await this.eventInvitessContacts.save(invite);
-            })
-
-
             return eventItem;
         } catch (error) {
             if (error.code === 'ER_DUP_ENTRY') {
@@ -586,8 +627,8 @@ export class EventsService {
                     const existingRecord: any = await this.contactsService.findOneByWhere({ id: In([contact_id]) })
                     // console.log("🚀 ~ file: assessment.service.ts:596 ~ AssessmentService ~ update ~ existingRecord:", existingRecord)
                     throw new BadRequestException([{
-                        callingCode:existingRecord[0]?.callingCode,
-                        phoneNumber:existingRecord[0]?.phoneNumber
+                        callingCode: existingRecord[0]?.callingCode,
+                        phoneNumber: existingRecord[0]?.phoneNumber
                     }]);
                 }
             } else {
