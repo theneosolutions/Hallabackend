@@ -133,54 +133,81 @@ export class EventsService {
         console.log("🚀 ~ EventsService ~ create ~ dto:", dto)
         const { user: userId, contacts } = dto;
         let contacts_ids = [];
+        try {
 
-        if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
-            throw new BadRequestException(['User cannot be null']);
+            if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
+                throw new BadRequestException(['User cannot be null']);
+            }
+
+            const userDetail = await this.usersService.findOneById(userId);
+
+            if (isNull(userDetail) || isUndefined(userDetail)) {
+                throw new BadRequestException(['User not found with id: ' + userId]);
+            }
+
+            if (isNull(id) || isUndefined(id)) {
+                throw new BadRequestException(['Event id cannot be null']);
+            }
+
+            const eventDetail = await this.findOneById(Number(id));
+
+
+            if (isNull(eventDetail) || isUndefined(eventDetail)) {
+                throw new BadRequestException(['Event not found with id: ' + id]);
+            }
+
+            if (contacts?.length) {
+                console.log("🚀 ~ EventsService ~ addContactsIntoEvent ~ contacts:", contacts)
+                contacts_ids = await this.contactsService.getOrCreateContacts(contacts, userId);
+                console.log("🚀 ~ EventsService ~ addContactsIntoEvent ~ contacts_ids:", contacts_ids)
+            }
+
+            if (contacts_ids?.length) {
+                const newCandidates: any = contacts_ids.map(item => {
+                    return {
+                        eventId: eventDetail?.id,
+                        contactsId: Number(item),
+                        usersId: userId,
+                        haveChat: false
+                    };
+                });
+
+                const values = newCandidates.map(candidate => `(${candidate.contactsId}, ${candidate.eventId}, ${candidate.usersId},${candidate.haveChat})`).join(', ');
+                // Construct the full INSERT query
+                const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId,haveChat) VALUES ${values};`;
+                const results = await this.connection.query(query);
+                console.log("🚀 ~ EventsService ~ update ~ results:", results)
+                eventDetail.status = 'active';
+            }
+            await this.eventsRepository.save(eventDetail);
+
+            return eventDetail;
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                const errorMessage = error.message;
+                console.log("🚀 ~ file: event.service.ts:580 ~ EventService ~ update ~ errorMessage:", errorMessage)
+                const match = /Duplicate entry '(.+)' for key '(.+)'/i.exec(errorMessage);
+
+                if (match) {
+                    const duplicateValue = match[1];
+                    console.log("🚀 ~ EventsService ~ update ~ duplicateValue:", duplicateValue)
+                    const duplicateKey = match[2];
+                    const [event_id, contact_id] = duplicateValue.split("-")
+                    console.log("🚀 ~ EventsService ~ update ~ event_id, contact_id:", event_id, contact_id)
+
+                    const existingRecord: any = await this.contactsService.findOneByWhere({ id: In([contact_id]) })
+                    // console.log("🚀 ~ file: assessment.service.ts:596 ~ AssessmentService ~ update ~ existingRecord:", existingRecord)
+                    throw new BadRequestException([{
+                        callingCode: existingRecord[0]?.callingCode,
+                        phoneNumber: existingRecord[0]?.phoneNumber
+                    }]);
+                }
+            } else {
+                // Handle other errors.
+                throw new BadRequestException([error?.message]);
+
+            }
         }
-
-        const userDetail = await this.usersService.findOneById(userId);
-
-        if (isNull(userDetail) || isUndefined(userDetail)) {
-            throw new BadRequestException(['User not found with id: ' + userId]);
-        }
-
-        if (isNull(id) || isUndefined(id)) {
-            throw new BadRequestException(['Event id cannot be null']);
-        }
-
-        const eventDetail = await this.findOneById(Number(id));
-
-
-        if (isNull(eventDetail) || isUndefined(eventDetail)) {
-            throw new BadRequestException(['Event not found with id: ' + id]);
-        }
-
-        if (contacts?.length) {
-            console.log("🚀 ~ EventsService ~ addContactsIntoEvent ~ contacts:", contacts)
-            contacts_ids = await this.contactsService.getOrCreateContacts(contacts, userId);
-            console.log("🚀 ~ EventsService ~ addContactsIntoEvent ~ contacts_ids:", contacts_ids)
-        }
-
-        if (contacts_ids?.length) {
-            const newCandidates: any = contacts_ids.map(item => {
-                return {
-                    eventId: eventDetail?.id,
-                    contactsId: Number(item),
-                    usersId: userId,
-                    haveChat: false
-                };
-            });
-
-            const values = newCandidates.map(candidate => `(${candidate.contactsId}, ${candidate.eventId}, ${candidate.usersId},${candidate.haveChat})`).join(', ');
-            // Construct the full INSERT query
-            const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId,haveChat) VALUES ${values};`;
-            const results = await this.connection.query(query);
-            console.log("🚀 ~ EventsService ~ update ~ results:", results)
-            eventDetail.status = 'active';
-        }
-        await this.eventsRepository.save(eventDetail);
-
-        return eventDetail;
     }
 
     public async sendEventInvites(userId: number, id: string): Promise<Events> {
@@ -392,21 +419,99 @@ export class EventsService {
         if (isNull(eventId) || isUndefined(eventId)) {
             throw new BadRequestException(['Event id cannot be null']);
         }
-        const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
-        await queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventId })
-            .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
-            .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email'])
-        if (pageOptionsDto.status !== '') {
-            queryBuilder.andWhere("event_invitess_contacts.status like :status", { status: `%${pageOptionsDto.status}%` });
-        }
-
-        const itemCount = await queryBuilder.getCount();
-        let { entities }: any = await queryBuilder.getRawAndEntities();
-
+    
+        const rawQuery = `
+            SELECT 
+                event_invitess_contacts.status AS event_invitess_contacts_status, 
+                event_invitess_contacts.numberOfScans AS event_invitess_contacts_numberOfScans, 
+                event_invitess_contacts.numberOfGuests AS event_invitess_contacts_numberOfGuests, 
+                event_invitess_contacts.usersId AS event_invitess_contacts_usersId, 
+                event_invitess_contacts.eventId AS event_invitess_contacts_eventId, 
+                event_invitess_contacts.code AS event_invitess_contacts_code, 
+                event_invitess_contacts.notes AS event_invitess_contacts_notes, 
+                event_invitess_contacts.haveChat AS event_invitess_contacts_haveChat, 
+                event_invitess_contacts.selectedEvent AS event_invitess_contacts_selectedEvent, 
+                event_invitess_contacts.sendList AS event_invitess_contacts_sendList, 
+                event_invitess_contacts.createdAt AS event_invitess_contacts_createdAt, 
+                event_invitess_contacts.updatedAt AS event_invitess_contacts_updatedAt, 
+                event_invitess_contacts.deletedAt AS event_invitess_contacts_deletedAt, 
+                event_invitess_contacts.contactsId AS event_invitess_contacts_contactsId, 
+                invites.id AS invites_id, 
+                invites.name AS invites_name, 
+                invites.email AS invites_email, 
+                invites.callingCode AS invites_callingCode, 
+                invites.phoneNumber AS invites_phoneNumber, 
+                events.id AS events_id, 
+                events.name AS events_name, 
+                events.image AS events_image, 
+                events.status AS events_status, 
+                events.notes AS events_notes, 
+                events.eventDate AS events_eventDate, 
+                events.showQRCode AS events_showQRCode, 
+                events.nearby AS events_nearby, 
+                events.address AS events_address, 
+                events.latitude AS events_latitude, 
+                events.longitude AS events_longitude, 
+                events.code AS events_code, 
+                events.createdAt AS events_createdAt, 
+                events.updatedAt AS events_updatedAt, 
+                events.deletedAt AS events_deletedAt, 
+                events.userId AS events_userId 
+            FROM 
+                event_invitess_contacts 
+            LEFT JOIN 
+                contacts invites ON invites.id = event_invitess_contacts.contactsId AND invites.deletedAt IS NULL
+            LEFT JOIN 
+                events ON events.id = event_invitess_contacts.eventId AND events.deletedAt IS NULL 
+            WHERE 
+                event_invitess_contacts.eventId = ? 
+                AND event_invitess_contacts.deletedAt IS NULL`;
+    
+        const queryBuilder = this.eventInvitessContacts.createQueryBuilder();
+        const entities = await this.connection.query(rawQuery, [eventId]);
+        const formattedData = entities.map(entity => ({
+            status: entity.event_invitess_contacts_status,
+            numberOfScans: entity.event_invitess_contacts_numberOfScans,
+            numberOfGuests: entity.event_invitess_contacts_numberOfGuests,
+            usersId: entity.event_invitess_contacts_usersId,
+            eventId: entity.event_invitess_contacts_eventId,
+            code: entity.event_invitess_contacts_code,
+            notes: entity.event_invitess_contacts_notes,
+            haveChat: entity.event_invitess_contacts_haveChat,
+            selectedEvent: entity.event_invitess_contacts_selectedEvent,
+            sendList: entity.event_invitess_contacts_sendList,
+            createdAt: entity.event_invitess_contacts_createdAt,
+            updatedAt: entity.event_invitess_contacts_updatedAt,
+            invites: {
+                id: entity.invites_id,
+                name: entity.invites_name,
+                email: entity.invites_email,
+                callingCode: entity.invites_callingCode,
+                phoneNumber: entity.invites_phoneNumber
+            },
+            events: {
+                id: entity.events_id,
+                name: entity.events_name,
+                image: entity.events_image,
+                status: entity.events_status,
+                notes: entity.events_notes,
+                eventDate: entity.events_eventDate,
+                showQRCode: entity.events_showQRCode,
+                address: entity.events_address,
+                latitude: entity.events_latitude,
+                longitude: entity.events_longitude,
+                code: entity.events_code,
+                createdAt: entity.events_createdAt,
+                updatedAt: entity.events_updatedAt
+            }
+        }));
+    
+        const itemCount = formattedData.length;
         const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
-
-        return new PageDto(await Promise.all(entities), pageMetaDto);
+    
+        return new PageDto(formattedData, pageMetaDto);
     }
+    
 
     async deleteRecordByEventAndContact(eventId: number, contactsId: number): Promise<IMessage> {
         const event: any = eventId;
