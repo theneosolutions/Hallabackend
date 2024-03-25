@@ -9,6 +9,7 @@ export interface IAuthResponseUser {
     profilePhoto?: string;
     referenceCode?: string;
     roles?: string;
+    otp?:number;
     confirmed: boolean;
     isBanned: boolean;
     createdAt: string;

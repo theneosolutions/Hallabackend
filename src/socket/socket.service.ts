@@ -30,7 +30,7 @@ export class SocketService {
 
   async handleMessages(payload:any): Promise<any> {
    try {
-    console.log("🚀 ~ handleSendMessage ~ payload:", payload)
+    // console.log("🚀 ~ handleSendMessage ~ payload:", payload)
     const sms:any = await this.whatsappService.saveAndSendMessage(payload);
     const chat:any ={
         isRead: false,
@@ -45,7 +45,7 @@ export class SocketService {
         createdAt: sms?.createdAt,
         updatedAt: sms?.createdAt
       }
-      console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ sms:", chat)
+      // console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ sms:", chat)
    
     return chat;
    } catch (error) {

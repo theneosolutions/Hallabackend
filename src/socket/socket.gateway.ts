@@ -29,8 +29,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ payload:", payload)
         try {
             const sms:any =  await this.socketService.handleMessages(payload);
-            console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ sms:", sms)
-            this.server.emit('chat', payload);
+            // console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ sms:", sms)
+            this.server.emit('chat', sms);
         } catch (error) {
             console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ error:", error)
         }

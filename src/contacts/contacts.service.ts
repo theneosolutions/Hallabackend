@@ -96,7 +96,7 @@ export class ContactsService {
   }
 
   public async createContact(contact: any, userId: any): Promise<Contacts> {
-    const { callingCode, phoneNumber } = contact;
+    const { callingCode, phoneNumber,name='new' } = contact;
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
       throw new BadRequestException(['User cannot be null']);
@@ -121,7 +121,7 @@ export class ContactsService {
 
     const constact = this.contactsRepository.create({
       email: null,
-      name: 'new',
+      name: name,
       suffix: 'Mr',
       callingCode: callingCode,
       phoneNumber: formattedPhone,
