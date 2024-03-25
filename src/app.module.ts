@@ -18,7 +18,6 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { EventsModule } from './events/events.module';
 import { CardModule } from './cards/card.module';
 import { NotificationsModule } from './Notifications/notifications.module';
-// import { ChatGateway } from './chat/chat.gateway';
 import { SocketModule } from './socket/socket.module';
 
 @Module({
@@ -63,7 +62,6 @@ import { SocketModule } from './socket/socket.module';
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
-    // ChatGateway,
   ],
 })
 export class AppModule { }

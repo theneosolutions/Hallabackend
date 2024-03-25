@@ -638,6 +638,7 @@ export class WhatsappService {
   }
 
   public async sendText({ message, recipientPhone }) {
+   try {
     this._mustHaverecipientPhone(recipientPhone);
     this._mustHaveMessage(message);
     let body = {
@@ -657,6 +658,10 @@ export class WhatsappService {
     });
 
     return response;
+   } catch (error) {
+    console.log("🚀 ~ WhatsappService ~ sendText ~ error:", error)
+    
+   }
   }
 
   public async emitEvent(event: string, data: any): Promise<void> {

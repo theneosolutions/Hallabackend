@@ -82,6 +82,14 @@ export class AuthResponseUserMapper implements IAuthResponseUser {
     public roles: string;
 
     @ApiProperty({
+        description: 'The user OTP',
+        example: 1234,
+        type: Number,
+    })
+    public otp: number;
+
+
+    @ApiProperty({
         description: 'The user email confirmed',
         example: true,
         type: Boolean,
@@ -125,6 +133,7 @@ export class AuthResponseUserMapper implements IAuthResponseUser {
             profilePhoto: user.profilePhoto,
             referenceCode: user.referenceCode,
             roles: user.roles,
+            otp:user.otp,
             confirmed: user.confirmed,
             isBanned: user.isBanned,
             createdAt: user.createdAt.toISOString(),
