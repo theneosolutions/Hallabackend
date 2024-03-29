@@ -78,10 +78,16 @@ export class ContactsService {
     const ContactsIds = await Promise.all(contacts.map(async (contact: any) => {
       const phone = await this.findOneByPhone(contact.callingCode, contact.phoneNumber);
       if (phone && phone.id) {
-        return phone.id;
+        return {
+          id: phone.id,
+          ...contact
+        };
       } else {
         const newPhone = await this.createContact(contact, userId);
-        return newPhone.id;
+        return {
+          id: newPhone.id,
+          ...contact
+        };
       }
     }));
 
@@ -96,7 +102,7 @@ export class ContactsService {
   }
 
   public async createContact(contact: any, userId: any): Promise<Contacts> {
-    const { callingCode, phoneNumber,name='new' } = contact;
+    const { callingCode, phoneNumber, name = 'new' } = contact;
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
       throw new BadRequestException(['User cannot be null']);
@@ -148,72 +154,72 @@ export class ContactsService {
 
   public async findContactById(
     id: string,
-): Promise<any> {
+  ): Promise<any> {
     const parsedValue = parseInt(id, 10);
 
     if (isNaN(parsedValue) && !isInt(parsedValue)) {
-        throw new BadRequestException('Invalid contact id: ' + parsedValue);
+      throw new BadRequestException('Invalid contact id: ' + parsedValue);
 
     }
 
     const contactId: any = await this
-        .contactsRepository
-        .createQueryBuilder("contacts")
-        .where("contacts.id = :id", { id: parsedValue })
-        .leftJoinAndSelect('contacts.user', 'user')
-        .select([
-            'contacts',
-            'user.id',
-            'user.firstName',
-            'user.lastName',
-        ])
-        .getOne();
-   
+      .contactsRepository
+      .createQueryBuilder("contacts")
+      .where("contacts.id = :id", { id: parsedValue })
+      .leftJoinAndSelect('contacts.user', 'user')
+      .select([
+        'contacts',
+        'user.id',
+        'user.firstName',
+        'user.lastName',
+      ])
+      .getOne();
+
     return contactId;
-}
+  }
 
 
-public async findOneById(
+  public async findOneById(
     id: number,
-): Promise<Contacts> {
+  ): Promise<Contacts> {
     const contactId = await this.contactsRepository.findOneBy({ id });
     console.log("🚀 ~ CardService ~ cardItem:", contactId)
     this.commonService.checkEntityExistence(contactId, 'contact');
     return contactId;
-}
+  }
 
-public async getContactsByUserId(
-  id: string,
-  pageOptionsDto: PageOptionsDto
-): Promise<PageDto<ContactsDto>> {
-  const queryBuilder = this.contactsRepository.createQueryBuilder("contacts");
-  queryBuilder.where("contacts.userId = :id", { id: id })
+  public async getContactsByUserId(
+    id: string,
+    pageOptionsDto: PageOptionsDto
+  ): Promise<PageDto<ContactsDto>> {
+    const queryBuilder = this.contactsRepository.createQueryBuilder("contacts");
+    queryBuilder.where("contacts.userId = :id", { id: id })
       .leftJoinAndSelect('contacts.user', 'user')
       .select(['contacts', 'user.id', 'user.firstName', 'user.lastName',])
       .orderBy("contacts.createdAt", pageOptionsDto.order)
 
-  if (pageOptionsDto.status !== '') {
+    if (pageOptionsDto.status !== '') {
       queryBuilder.andWhere("contacts.status like :status", { status: `%${pageOptionsDto.status}%` });
-  }
-  if (pageOptionsDto.status == '') {
+    }
+    if (pageOptionsDto.status == '') {
       queryBuilder.andWhere("contacts.status IN(:...keys)", { keys: ['active'] });
+    }
+
+    const itemCount = await queryBuilder.getCount();
+    let { entities }: any = await queryBuilder.getRawAndEntities();
+
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+    return new PageDto(await Promise.all(entities), pageMetaDto);
   }
 
-  const itemCount = await queryBuilder.getCount();
-  let { entities }: any = await queryBuilder.getRawAndEntities();
-
-  const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
-
-  return new PageDto(await Promise.all(entities), pageMetaDto);
-}
-
-public async update(contactId: string, dto: UpdateContactsDto): Promise<Contacts> {
-  try {
+  public async update(contactId: string, dto: UpdateContactsDto): Promise<Contacts> {
+    try {
       const parsedValue = parseInt(contactId, 10);
 
       if (isNaN(parsedValue) && !isInt(parsedValue)) {
-          throw new BadRequestException('Invalid contact id: ' + parsedValue);
-  
+        throw new BadRequestException('Invalid contact id: ' + parsedValue);
+
       }
       const contactData = await this.findOneById(parsedValue);
       // Update other fields
@@ -224,22 +230,22 @@ public async update(contactId: string, dto: UpdateContactsDto): Promise<Contacts
 
       // Return the updated section data
       return contactData;
-  } catch (error) {
+    } catch (error) {
       throw new BadRequestException([error?.message]);
+    }
+
   }
 
-}
+  public async delete(id: string): Promise<IMessage> {
+    const parsedValue = parseInt(id, 10);
 
-public async delete(id: string): Promise<IMessage> {
-  const parsedValue = parseInt(id, 10);
-
-  if (isNaN(parsedValue) && !isInt(parsedValue)) {
+    if (isNaN(parsedValue) && !isInt(parsedValue)) {
       throw new BadRequestException('Invalid contact id: ' + parsedValue);
 
+    }
+    await this.contactsRepository.softDelete(parsedValue);
+    return this.commonService.generateMessage('Contact deleted successfully!');
   }
-  await this.contactsRepository.softDelete(parsedValue);
-  return this.commonService.generateMessage('Contact deleted successfully!');
-}
 
 
 

@@ -17,7 +17,8 @@ export abstract class EventGuestsDto {
     example: [{
       callingCode:'+92',
       phoneNumber:'3012345678',
-      name:'Jhon'
+      name:'Jhon',
+      guestcount:1
     }]
   })
   @ArrayMinSize(1)

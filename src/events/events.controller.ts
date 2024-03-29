@@ -163,7 +163,7 @@ export class EventsController {
         @Param() params: GetEventByUserIdParams,
         @Query() pageOptionsDto: PageOptionsDto
     ): Promise<any> {
-        return this.eventsService.categorizeEvents(Number(params.id));
+        return this.eventsService.categorizeEvents(Number(params.id),pageOptionsDto);
     }
 
     @Public(['admin', 'user'])
