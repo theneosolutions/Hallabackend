@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, Length, IsNumberString } from 'class-validator';
+import { IsString, Length, IsNumberString, IsNumber } from 'class-validator';
 
 export abstract class PhoneDto {
   @ApiProperty({
@@ -28,7 +28,6 @@ export abstract class PhoneDto {
   })
   public phoneNumber!: string;
 
-
   @ApiProperty({
     description: 'Contact Name',
     example: 'Jhon',
@@ -36,5 +35,13 @@ export abstract class PhoneDto {
   })
   @IsString()
   public name: string;
+
+  @ApiProperty({
+    description: 'Number of Guest',
+    example: 1,
+    type: Number,
+  })
+  @IsNumber()
+  public guestcount: number;
 
 }

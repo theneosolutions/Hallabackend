@@ -166,16 +166,19 @@ export class EventsService {
                 const newCandidates: any = contacts_ids.map(item => {
                     return {
                         eventId: eventDetail?.id,
-                        contactsId: Number(item),
+                        contactsId: Number(item?.id),
                         usersId: userId,
-                        haveChat: false
+                        haveChat: false,
+                        numberOfGuests: item?.guestcount ? item?.guestcount + 1 : 1
                     };
                 });
 
-                const values = newCandidates.map(candidate => `(${candidate.contactsId}, ${candidate.eventId}, ${candidate.usersId},${candidate.haveChat})`).join(', ');
+                const values = newCandidates.map(candidate => `(${candidate.contactsId}, ${candidate.eventId}, ${candidate.usersId},${candidate.haveChat},${candidate.numberOfGuests})`).join(', ');
                 // Construct the full INSERT query
-                const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId,haveChat) VALUES ${values};`;
+                console.log("🚀 ~ EventsService ~ addContactsIntoEvent ~ values:", values)
+                const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId,haveChat,numberOfGuests) VALUES ${values};`;
                 const results = await this.connection.query(query);
+                console.log("🚀 ~ EventsService ~ addContactsIntoEvent ~ query:", query)
                 console.log("🚀 ~ EventsService ~ update ~ results:", results)
                 eventDetail.status = 'active';
             }
@@ -361,7 +364,7 @@ export class EventsService {
         return new PageDto(await Promise.all(entities), pageMetaDto);
     }
 
-    public async categorizeEvents(userId: number): Promise<{
+    public async categorizeEvents(userId: number,pageOptionsDto: PageOptionsDto): Promise<{
         allEvents: Event[],
         drafts: Event[],
         upcoming: Event[],
@@ -386,6 +389,7 @@ export class EventsService {
                 'user.firstName',
                 'user.lastName',
             ])
+            .orderBy("events.createdAt", pageOptionsDto.order)
 
         let { entities }: any = await queryBuilder.getRawAndEntities();
         // Fetch all events for the user
@@ -419,7 +423,7 @@ export class EventsService {
         if (isNull(eventId) || isUndefined(eventId)) {
             throw new BadRequestException(['Event id cannot be null']);
         }
-    
+
         const rawQuery = `
             SELECT 
                 event_invitess_contacts.status AS event_invitess_contacts_status, 
@@ -466,7 +470,7 @@ export class EventsService {
             WHERE 
                 event_invitess_contacts.eventId = ? 
                 AND event_invitess_contacts.deletedAt IS NULL`;
-    
+
         const queryBuilder = this.eventInvitessContacts.createQueryBuilder();
         const entities = await this.connection.query(rawQuery, [eventId]);
         const formattedData = entities.map(entity => ({
@@ -505,13 +509,13 @@ export class EventsService {
                 updatedAt: entity.events_updatedAt
             }
         }));
-    
+
         const itemCount = formattedData.length;
         const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
-    
+
         return new PageDto(formattedData, pageMetaDto);
     }
-    
+
 
     async deleteRecordByEventAndContact(eventId: number, contactsId: number): Promise<IMessage> {
         const event: any = eventId;
@@ -694,9 +698,11 @@ export class EventsService {
                 const newCandidates: any = contacts_ids.map(item => {
                     return {
                         eventId: eventId,
-                        contactsId: Number(item),
+                        contactsId: Number(item?.id),
                         usersId: eventCreator?.id,
-                        haveChat: false
+                        haveChat: false,
+                        numberOfGuests: item?.guestcount ? item?.guestcount + 1 : 1
+
                     };
                 });
 
@@ -704,7 +710,7 @@ export class EventsService {
                 const values = newCandidates.map(candidate => `(${candidate.contactsId}, ${candidate.eventId}, ${candidate.usersId},${candidate.haveChat})`).join(', ');
 
                 // Construct the full INSERT query
-                const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId) VALUES ${values};`;
+                const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId,numberOfGuests) VALUES ${values};`;
                 const results = await this.connection.query(query);
                 console.log("🚀 ~ EventsService ~ update ~ results:", results)
 
