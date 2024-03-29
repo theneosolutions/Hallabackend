@@ -17,6 +17,7 @@ export interface IResponseUser {
     address?: string;
     latitude?: number;
     longitude?: number;
+    wallet?: number;
     createdAt: string;
     updatedAt: string;
 }

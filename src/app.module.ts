@@ -19,6 +19,7 @@ import { EventsModule } from './events/events.module';
 import { CardModule } from './cards/card.module';
 import { NotificationsModule } from './Notifications/notifications.module';
 import { SocketModule } from './socket/socket.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { SocketModule } from './socket/socket.module';
     EventsModule,
     CardModule,
     NotificationsModule,
+    TransactionsModule
     
   ],
   controllers: [AppController],

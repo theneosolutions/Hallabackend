@@ -95,7 +95,7 @@ export class ResponseUserMapper implements IResponseUser {
 
   @ApiProperty({
     description: 'Country calling code',
-    example:'+92',
+    example: '+92',
     minLength: 2,
     maxLength: 100,
     type: String,
@@ -104,7 +104,7 @@ export class ResponseUserMapper implements IResponseUser {
 
   @ApiProperty({
     description: 'The user phone number without country code',
-    example:'123456789',
+    example: '123456789',
     minLength: 5,
     maxLength: 100,
     type: Number,
@@ -133,6 +133,13 @@ export class ResponseUserMapper implements IResponseUser {
   public longitude: number;
 
   @ApiProperty({
+    description: 'wallet',
+    example: 100,
+    type: Number,
+  })
+  public wallet: number;
+
+  @ApiProperty({
     description: 'User creation date',
     example: '2021-01-01T00:00:00.000Z',
     type: String,
@@ -157,18 +164,19 @@ export class ResponseUserMapper implements IResponseUser {
       lastName: user.lastName,
       username: user.username,
       email: user.email,
-      status:user.status,
-      loginType:user.loginType,
-      profilePhoto:user.profilePhoto,
-      referenceCode:user.referenceCode,
-      roles:user.roles,
-      confirmed:user.confirmed,
-      isBanned:user.isBanned,
-      callingCode:user.callingCode,
-      phoneNumber:user.phoneNumber,
-      address:user.address,
-      latitude:user.latitude,
-      longitude:user.longitude,
+      status: user.status,
+      loginType: user.loginType,
+      profilePhoto: user.profilePhoto,
+      referenceCode: user.referenceCode,
+      roles: user.roles,
+      confirmed: user.confirmed,
+      isBanned: user.isBanned,
+      callingCode: user.callingCode,
+      phoneNumber: user.phoneNumber,
+      address: user.address,
+      latitude: user.latitude,
+      longitude: user.longitude,
+      wallet:user?.wallet,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     });
