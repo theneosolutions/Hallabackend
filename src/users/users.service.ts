@@ -226,7 +226,19 @@ export class UsersService {
     await this.checkUsernameUniqueness(formattedUsername);
     user.username = formattedUsername;
     // await this.commonService.saveEntity(this.usersRepository, user);
-    return user;
+    return await this.usersRepository.save(user);
+  }
+
+  public async updateWallet(
+    userId: number,
+    amount: number,
+  ): Promise<Users> {
+    const user = await this.findOneById(userId);
+    const finalAmount = Number(user.wallet) + amount
+    console.log("🚀 ~ UsersService ~ finalAmount:", finalAmount)
+    user.wallet = finalAmount;
+    // await this.commonService.saveEntity(this.usersRepository, user);
+    return await this.usersRepository.save(user);
   }
 
   public async update(userId: number, dto: any): Promise<Users> {

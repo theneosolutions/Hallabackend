@@ -26,6 +26,7 @@ export interface IUser {
   latitude?: number;
   longitude?: number;
   credentials: ICredentials;
+  wallet?: number;
   createdAt: Date;
   updatedAt: Date;
 }

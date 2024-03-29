@@ -104,6 +104,13 @@ export class AuthResponseUserMapper implements IAuthResponseUser {
     public isBanned: boolean;
 
     @ApiProperty({
+        description: 'wallet',
+        example: 100,
+        type: Number,
+    })
+    public wallet: number;
+
+    @ApiProperty({
         description: 'User creation date',
         example: '2021-01-01T00:00:00.000Z',
         type: String,
@@ -133,9 +140,10 @@ export class AuthResponseUserMapper implements IAuthResponseUser {
             profilePhoto: user.profilePhoto,
             referenceCode: user.referenceCode,
             roles: user.roles,
-            otp:user.otp,
+            otp: user.otp,
             confirmed: user.confirmed,
             isBanned: user.isBanned,
+            wallet: user?.wallet,
             createdAt: user.createdAt.toISOString(),
             updatedAt: user.updatedAt.toISOString(),
         });

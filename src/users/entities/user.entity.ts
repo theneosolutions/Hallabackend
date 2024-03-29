@@ -107,6 +107,11 @@ export class Users implements IUser {
   @Column({ type: 'int' })
   public otp: number;
 
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.0, nullable: true })
+  public wallet: number;
+
   @IsBoolean()
   @Column('boolean')
   public isPhoneVerified: true | false = false;
@@ -138,12 +143,12 @@ export class Users implements IUser {
 
   @IsOptional()
   @IsString()
-  @Column({ type: 'decimal', precision: 10, scale: 6 , nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   public latitude: number;
 
   @IsOptional()
   @IsString()
-  @Column({ type: 'decimal', precision: 10, scale: 6 , nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   public longitude: number;
 
   @Column(() => CredentialsEmbeddable, { prefix: false })

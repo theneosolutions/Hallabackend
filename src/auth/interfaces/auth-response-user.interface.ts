@@ -9,9 +9,10 @@ export interface IAuthResponseUser {
     profilePhoto?: string;
     referenceCode?: string;
     roles?: string;
-    otp?:number;
+    otp?: number;
     confirmed: boolean;
     isBanned: boolean;
+    wallet?: number;
     createdAt: string;
     updatedAt: string;
 }
