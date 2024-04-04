@@ -273,6 +273,33 @@ export class EventsService {
         return eventDetail;
     }
 
+    public async scanEventInvite(code: string): Promise<IMessage> {
+
+        if (isNull(code) || isUndefined(code)) {
+            throw new BadRequestException(['Event invite code cannot be null']);
+        }
+        const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
+        const inviteDetail = await queryBuilder.where("event_invitess_contacts.code = :code", { code: code })
+            .leftJoinAndSelect('event_invitess_contacts.invites', 'invites')
+            .leftJoinAndSelect('event_invitess_contacts.events', 'events')
+            .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getOne();
+
+        const totalAllowedGuests = +inviteDetail.numberOfGuests;
+        const totalArrivedGuests = +inviteDetail.numberOfScans
+        if (totalArrivedGuests >= totalAllowedGuests) {
+            throw new BadRequestException('Guests scanned amount is more then guests amount!');
+        }
+
+        if (totalArrivedGuests < totalAllowedGuests) {
+            inviteDetail.numberOfScans = totalArrivedGuests + 1;
+        }
+
+        await this.eventInvitessContacts.save(inviteDetail);
+
+        return this.commonService.generateMessage('Guest scan is successful!');
+
+    }
+
 
     public async findEventById(
         id: string,
@@ -315,8 +342,6 @@ export class EventsService {
         eventItem["stats"] = await Promise.all(stats);
         return eventItem;
     }
-
-
 
     public async findOneById(
         id: number,
@@ -364,7 +389,7 @@ export class EventsService {
         return new PageDto(await Promise.all(entities), pageMetaDto);
     }
 
-    public async categorizeEvents(userId: number,pageOptionsDto: PageOptionsDto): Promise<{
+    public async categorizeEvents(userId: number, pageOptionsDto: PageOptionsDto): Promise<{
         allEvents: Event[],
         drafts: Event[],
         upcoming: Event[],
@@ -414,7 +439,6 @@ export class EventsService {
             missed: missedEvents
         };
     }
-
 
     public async getGuestsByEventId(
         eventId: string,
@@ -531,7 +555,6 @@ export class EventsService {
         await this.eventInvitessContacts.delete({ eventId: event, invites: contact });
         return this.commonService.generateMessage('Guest deleted successfully!');
     }
-
 
     public async getAllChatMessagesOfEvent(
         eventId: string,

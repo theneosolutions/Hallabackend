@@ -56,6 +56,7 @@ import { ResponseEventsMapper } from './mappers/response-events.mapper';
 import { ResponseMediaMapper } from './mappers/response-media.mapper';
 import { IEventMedia } from './interfaces/media.interface';
 import { EventGuestsDto } from './dtos/create-guests-event.dto';
+import { GetInviteCodeParams } from './dtos/get-invite-code.params';
 
 @ApiTags('Events')
 @Controller('api/events')
@@ -148,6 +149,20 @@ export class EventsController {
     ): Promise<IResponseEvent> {
         const event = await this.eventsService.sendEventInvites(id,params?.id);
         return ResponseEventsMapper.map(event);
+    }
+
+    @Get('scan-qrcode/:id')
+    @ApiOkResponse({
+        type: ResponseEventsMapper,
+        description: 'Event invitations is scaned and returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    public async scanEventInvite(
+        @Param() params: GetInviteCodeParams
+    ): Promise<IMessage>  {
+        return await this.eventsService.scanEventInvite(params?.id);
     }
 
     @Public(['admin', 'user'])
