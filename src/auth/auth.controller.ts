@@ -166,11 +166,12 @@ export class AuthController {
         description: 'Invalid credentials or User is not found',
     })
     public async signInWithPhone(
-        @Res() res: Response,
         @Origin() origin: string | undefined,
         @Body() phoneDto: PhoneDto,
     ): Promise<IMessage> {
-        return await this.authService.signInWithPhone(phoneDto, origin);
+        const message = await this.authService.signInWithPhone(phoneDto, origin);
+        console.log("🚀 ~ AuthController ~ message:", message)
+        return message;
     }
 
    
