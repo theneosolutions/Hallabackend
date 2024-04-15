@@ -373,13 +373,15 @@ export class EventsService {
             .leftJoinAndSelect('events.user', 'user')
             .select(['events', 'user.id', 'user.firstName', 'user.lastName',])
             .orderBy("events.createdAt", pageOptionsDto.order)
+            .skip(pageOptionsDto.skip)
+            .take(pageOptionsDto.take);
 
         if (pageOptionsDto.status !== '') {
             queryBuilder.andWhere("events.status like :status", { status: `%${pageOptionsDto.status}%` });
         }
-        if (pageOptionsDto.status == '') {
-            queryBuilder.andWhere("events.status IN(:...keys)", { keys: ['active', 'draft'] });
-        }
+        // if (pageOptionsDto.status == '') {
+        //     queryBuilder.andWhere("events.status IN(:...keys)", { keys: ['active', 'draft'] });
+        // }
 
         const itemCount = await queryBuilder.getCount();
         let { entities }: any = await queryBuilder.getRawAndEntities();
