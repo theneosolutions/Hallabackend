@@ -417,6 +417,8 @@ export class EventsService {
                 'user.lastName',
             ])
             .orderBy("events.createdAt", pageOptionsDto.order)
+            .skip(pageOptionsDto.skip)
+            .take(pageOptionsDto.take);
 
         let { entities }: any = await queryBuilder.getRawAndEntities();
         // Fetch all events for the user
