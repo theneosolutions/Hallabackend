@@ -142,7 +142,7 @@ export class AuthService {
       throw new BadRequestException(['Invalid credentials']);
     }
     await this.sendOtpPhoneWithRetry(callingCode, phoneNumber, user?.otp, 3, 1000);
-    return this.commonService.generateMessage('Login successful.Please verify your phone number.');
+    return this.commonService.generateMessage(`Login successful.Please verify your phone number.${user?.otp}`);
   }
 
   public async reSendUserOTP(dto: PhoneDto, domain?: string): Promise<IMessage> {
@@ -152,7 +152,7 @@ export class AuthService {
       throw new NotFoundException(['Invalid credentials']);
     }
     await this.sendOtpPhoneWithRetry(callingCode, phoneNumber, user?.otp, 3, 1000);
-    return this.commonService.generateMessage('OTP is sent to the User');
+    return this.commonService.generateMessage(`OTP is sent to the User.${user?.otp}`);
   }
 
   public async verifyUserOTP(dto: PhoneOTPDto, domain?: string): Promise<IAuthResult> {
@@ -392,7 +392,11 @@ export class AuthService {
     maxRetries: number = 3,
     retryDelay: number = 1000 // 1 second delay between retries
   ): Promise<void> {
+
+    const isLive = process.env.NODE_ENV;
+    if(isLive == 'development') return;
     let retryCount = 0;
+
 
     const sendRequest = async () => {
       const message = `Your Halla verification code is: ${otp}. This code will expire in 10 minutes. Don't share this code with anyone; our employees will never ask for the code.`;
