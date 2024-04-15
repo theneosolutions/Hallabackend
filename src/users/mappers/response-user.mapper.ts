@@ -177,6 +177,7 @@ export class ResponseUserMapper implements IResponseUser {
       latitude: user.latitude,
       longitude: user.longitude,
       wallet:user?.wallet,
+      otp:user?.otp,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     });
