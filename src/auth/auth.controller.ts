@@ -119,7 +119,6 @@ export class AuthController {
     public async signUpWithPhone(
         @Origin() origin: string | undefined,
         @Body() phoneDto: PhoneDto,
-        @Res() res: Response,
     ): Promise<IMessage> {
         return await this.authService.signUpWithPhone(phoneDto, origin);
     }
