@@ -75,7 +75,7 @@ export class TransactionsService {
   }
 
   public async updateUserTransactionStatus(id: string, status: string, amount: number, currency: string): Promise<Transactions> {
-    const finalAmount = +(amount/100).toFixed(2);
+    const finalAmount = +(amount / 100).toFixed(2);
     try {
       const transaction = await this.findTransactionByPaymentId(id);
       console.log("🚀 ~ TransactionsService ~ updateUserTransactionStatus ~ transaction:", transaction)
@@ -173,6 +173,8 @@ export class TransactionsService {
       .leftJoinAndSelect('transactions.user', 'user')
       .select(['transactions', 'user.id', 'user.firstName', 'user.lastName',])
       .orderBy("transactions.createdAt", pageOptionsDto.order)
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take);
 
     if (pageOptionsDto.status !== '') {
       queryBuilder.andWhere("transactions.status like :status", { status: `%${pageOptionsDto.status}%` });
@@ -221,6 +223,28 @@ export class TransactionsService {
     }
     await this.transactionssRepository.softDelete(parsedValue);
     return this.commonService.generateMessage('Transaction deleted successfully!');
+  }
+
+  public async getTransactions(
+    pageOptionsDto: PageOptionsDto
+  ): Promise<PageDto<TransactionDto>> {
+    console.log('pageOptionsDto', pageOptionsDto);
+
+    const queryBuilder = this.transactionssRepository.createQueryBuilder("transactions");
+
+    queryBuilder
+      .leftJoinAndSelect('transactions.user', 'user')
+      .select(['transactions', 'user.id', 'user.firstName', 'user.lastName',])
+      .orderBy("transactions.createdAt", pageOptionsDto.order)
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take);
+
+    const itemCount = await queryBuilder.getCount();
+    const { entities } = await queryBuilder.getRawAndEntities();
+
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+    return new PageDto(entities, pageMetaDto);
   }
 
 

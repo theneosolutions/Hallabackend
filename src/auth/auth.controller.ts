@@ -100,11 +100,8 @@ export class AuthController {
         @Origin() origin: string | undefined,
         @Res() res: Response,
         @Body() signUpDto: SignUpDto,
-    ): Promise<any> {
-        const result = await this.authService.signUp(signUpDto, origin);
-        this.saveRefreshCookie(res, result.refreshToken)
-            .status(HttpStatus.OK)
-            .json(AuthResponseMapper.map(result));
+    ): Promise<IMessage> {
+        return await this.authService.signUp(signUpDto, origin);
     }
 
     
@@ -123,11 +120,8 @@ export class AuthController {
         @Origin() origin: string | undefined,
         @Body() phoneDto: PhoneDto,
         @Res() res: Response,
-    ): Promise<any> {
-        const result = await this.authService.signUpWithPhone(phoneDto, origin);
-        this.saveRefreshCookie(res, result.refreshToken)
-            .status(HttpStatus.OK)
-            .json(AuthResponseMapper.map(result));
+    ): Promise<IMessage> {
+        return await this.authService.signUpWithPhone(phoneDto, origin);
     }
 
     

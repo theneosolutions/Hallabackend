@@ -57,7 +57,7 @@ export class AuthService {
     this.loggerService = new Logger(AuthService.name);
   }
 
-  public async signUp(dto: SignUpDto, domain?: string): Promise<IAuthResult> {
+  public async signUp(dto: SignUpDto, domain?: string): Promise<IMessage> {
     const { firstName, lastName, email, password1, password2, referredBy } = dto;
     this.comparePasswords(password1, password2);
     const user = await this.usersService.create(email, firstName, lastName, password1, referredBy);
@@ -67,28 +67,14 @@ export class AuthService {
       domain,
     );
     this.mailerService.sendConfirmationEmail(user, confirmationToken);
-    if (isUndefined(user) || isNull(user)) {
-      throw new BadRequestException(['Invalid email or password.Please try again']);
-    }
-    const [accessToken, refreshToken] = await this.generateAuthTokens(
-      user,
-      domain,
-    );
-    return { user, accessToken, refreshToken };
+    return this.commonService.generateMessage(`Registration successful.${user?.otp}`);
   }
 
-  public async signUpWithPhone(dto: PhoneDto, domain?: string): Promise<IAuthResult> {
+  public async signUpWithPhone(dto: PhoneDto, domain?: string): Promise<IMessage> {
     const { callingCode, phoneNumber } = dto;
     const user = await this.usersService.createUserWithPhone(callingCode, phoneNumber);
     await this.sendOtpPhoneWithRetry(callingCode, phoneNumber, user?.otp, 3, 1000);
-    if (isUndefined(user) || isNull(user)) {
-      throw new BadRequestException(['Invalid email or password.Please try again']);
-    }
-    const [accessToken, refreshToken] = await this.generateAuthTokens(
-      user,
-      domain,
-    );
-    return { user, accessToken, refreshToken };
+    return this.commonService.generateMessage(`Registration successful.Please verify your phone number.${user?.otp}`);
   }
 
 
@@ -122,9 +108,9 @@ export class AuthService {
         domain,
       );
       this.mailerService.sendConfirmationEmail(user, confirmationToken);
-      // throw new UnauthorizedException(
-      //   ['Please confirm your email, a new email has been sent',]
-      // );
+      throw new UnauthorizedException(
+        ['Please confirm your email, a new email has been sent',]
+      );
     }
 
 
@@ -394,7 +380,7 @@ export class AuthService {
   ): Promise<void> {
 
     const isLive = process.env.NODE_ENV;
-    if(isLive == 'development') return;
+    if (isLive == 'development') return;
     let retryCount = 0;
 
 
