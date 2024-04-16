@@ -165,7 +165,7 @@ export class EventsController {
         return await this.eventsService.scanEventInvite(params?.id);
     }
 
-    @Public(['admin', 'user'])
+    // @Public(['admin', 'user'])
     @Get('/categorize/byUserId/:id')
     @ApiPaginatedResponse(ResponseEventsMapper)
     @ApiBadRequestResponse({
@@ -177,7 +177,7 @@ export class EventsController {
     async categorizeEvents(
         @Param() params: GetEventByUserIdParams,
         @Query() pageOptionsDto: PageOptionsDto
-    ): Promise<any> {
+    ): Promise<PageDto<EventDto>>  {
         return this.eventsService.categorizeEvents(Number(params.id),pageOptionsDto);
     }
 

@@ -8,9 +8,11 @@ export enum Order {
 }
 
 export enum Filterby {
-    DAILY = "daily",
-    WEEKLY = "weekly",
-    MONTH = "monthly",
+    DRAFT = "draft",
+    UPCOMING = "upcoming",
+    ATTENDED = "attended",
+    NEW = "new",
+    MISSED = 'missed',
     ALL = "all"
 }
 
@@ -50,10 +52,10 @@ export class PageOptionsDto {
         return (this.page - 1) * this.take;
     }
 
-    @ApiPropertyOptional({ enum: Filterby, default: Filterby.MONTH })
+    @ApiPropertyOptional({ enum: Filterby, default: Filterby.ALL })
     @IsEnum(Filterby)
     @IsOptional()
-    readonly filter?: Filterby = Filterby.MONTH;
+    readonly filter?: Filterby = Filterby.ALL;
 
     @ApiPropertyOptional({
         default: '',
