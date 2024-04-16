@@ -41,6 +41,7 @@ import { PhoneDto } from './dtos/phone.dto';
 import axios from 'axios';
 import { PhoneOTPDto } from './dtos/phone-otp.dto';
 import { ResetPasswordWithPhoneDto } from './dtos/reset-password-phone.dto';
+import { EmailOTPDto } from './dtos/email-otp.dto';
 
 @Injectable()
 export class AuthService {
@@ -154,7 +155,23 @@ export class AuthService {
       user,
       domain,
     );
-    console.log("🚀 ~ AuthService ~ verifyUserOTP ~ { user, accessToken, refreshToken }:", { user, accessToken, refreshToken })
+    return { user, accessToken, refreshToken };
+  }
+
+
+  public async verifyUserEmailOTP(dto: EmailOTPDto, domain?: string): Promise<IAuthResult> {
+    const { email, otp } = dto;
+    const user = await this.userByEmailOrUsername(email);
+    console.log("🚀 ~ AuthService ~ verifyUserOTP ~ user:", user)
+    if (!user?.id) {
+      throw new NotFoundException(['Invalid credentials']);
+    }
+    this.compareOTPs(user?.otp, otp);
+    await this.usersService.confirmEmail(user?.id, user?.credentials?.version);
+    const [accessToken, refreshToken] = await this.generateAuthTokens(
+      user,
+      domain,
+    );
     return { user, accessToken, refreshToken };
   }
 
