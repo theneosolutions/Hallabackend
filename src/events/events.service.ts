@@ -391,14 +391,7 @@ export class EventsService {
         return new PageDto(await Promise.all(entities), pageMetaDto);
     }
 
-    public async categorizeEvents(userId: number, pageOptionsDto: PageOptionsDto): Promise<{
-        allEvents: Event[],
-        drafts: Event[],
-        upcoming: Event[],
-        new: Event[],
-        attended: Event[],
-        missed: Event[]
-    }> {
+    public async categorizeEvents(userId: number, pageOptionsDto: PageOptionsDto): Promise<PageDto<EventDto>> {
         const currentDate = new Date();
         const tenMinutesAgo = new Date(currentDate.getTime() - 10 * 60 * 1000); // 10 minutes ago
         const queryBuilder = this.eventsRepository.createQueryBuilder("events");
@@ -415,33 +408,54 @@ export class EventsService {
                 'user.id',
                 'user.firstName',
                 'user.lastName',
-            ])
-            .orderBy("events.createdAt", pageOptionsDto.order)
-            .skip(pageOptionsDto.skip)
+            ]);
+
+        queryBuilder.skip(pageOptionsDto.skip)
             .take(pageOptionsDto.take);
 
-        let { entities }: any = await queryBuilder.getRawAndEntities();
-        // Fetch all events for the user
-        const allEvents = await entities;
+        // Search
+        if (pageOptionsDto.search) {
+            queryBuilder.andWhere('(events.name LIKE :search OR events.description LIKE :search)', { search: `%${pageOptionsDto.search}%` });
+        }
 
-        const upcomingEvents = allEvents.filter(event => new Date(event.eventDate) > currentDate);
+        let events: any[] = [];
 
-        const attendedEvents = allEvents.filter(event => event.invites.some(attendee => attendee.id === userId));
+        switch (pageOptionsDto?.filter) {
+            case 'all':
+                events = await queryBuilder.orderBy("events.createdAt", pageOptionsDto.order).getMany();
+                break;
+            case 'draft':
+                events = await queryBuilder.andWhere("events.status = :status", { status: 'draft' })
+                    .orderBy("events.createdAt", pageOptionsDto.order)
+                    .getMany();
+                break;
+            case 'upcoming':
+                events = await queryBuilder
+                .andWhere("events.eventDate > :currentDate", { currentDate: currentDate })
+                .orderBy("events.eventDate", pageOptionsDto.order)
+                .getMany();
+            break;
+            case 'new':
+                events = await queryBuilder.andWhere("events.createdAt > :tenMinutesAgo", { tenMinutesAgo: tenMinutesAgo }).getMany();
+                break;
+            case 'attended':
+                events = await queryBuilder.andWhere("invites.id = :userId", { userId: userId }).getMany();
+                break;
+            case 'missed':
+                events = []; // Implement missed events logic
+                break;
+            default:
+                throw new Error('Invalid event type');
+        }
 
-        const missedEvents = []//allEvents.filter(event => new Date(event.eventDate) < currentDate && !attendedEvents.includes(event));
+        const itemCount = await queryBuilder.getCount();
+        for (const event of events) {
+            event.guests = await this.getGuestsByEventId(event.id, pageOptionsDto); // Assuming 'event.id' is the event ID
+        }
 
-        const newEvents = allEvents.filter(event => event.createdAt > tenMinutesAgo);
+        const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 
-        const draftEvents = allEvents.filter(event => event.status === 'draft');
-
-        return {
-            allEvents: allEvents,
-            drafts: draftEvents,
-            upcoming: upcomingEvents,
-            new: newEvents,
-            attended: attendedEvents,
-            missed: missedEvents
-        };
+        return new PageDto(await Promise.all(events), pageMetaDto);
     }
 
     public async getGuestsByEventId(
