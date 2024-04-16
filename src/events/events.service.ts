@@ -431,10 +431,10 @@ export class EventsService {
                 break;
             case 'upcoming':
                 events = await queryBuilder
-                .andWhere("events.eventDate > :currentDate", { currentDate: currentDate })
-                .orderBy("events.eventDate", pageOptionsDto.order)
-                .getMany();
-            break;
+                    .andWhere("events.eventDate > :currentDate", { currentDate: currentDate })
+                    .orderBy("events.eventDate", pageOptionsDto.order)
+                    .getMany();
+                break;
             case 'new':
                 events = await queryBuilder.andWhere("events.createdAt > :tenMinutesAgo", { tenMinutesAgo: tenMinutesAgo }).getMany();
                 break;
@@ -450,7 +450,25 @@ export class EventsService {
 
         const itemCount = await queryBuilder.getCount();
         for (const event of events) {
-            event.guests = await this.getGuestsByEventId(event.id, pageOptionsDto); // Assuming 'event.id' is the event ID
+            const eventItem = await this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts").where("event_invitess_contacts.eventId = :id", { id: event?.id })
+                .select("SUM(event_invitess_contacts.status='pending')", "GuestNotInvited")
+                .addSelect("SUM(event_invitess_contacts.status='invited')", "GuestInvited")
+                .addSelect("SUM(event_invitess_contacts.status='confirmed')", "GuestConfirmed")
+                .addSelect("SUM(event_invitess_contacts.status='rejected')", "GuestRejected")
+                .addSelect("SUM(event_invitess_contacts.haveChat='1')", "GuestMessages")
+                .addSelect("SUM(event_invitess_contacts.numberOfScans)", "GuestScanned")
+                .addSelect("SUM(event_invitess_contacts.status='failed')", "GuestFailed")
+                .groupBy("event_invitess_contacts.eventId")
+                .getRawMany();
+            event.stats = eventItem.length > 0 ? eventItem : [{
+                "GuestNotInvited": "0",
+                "GuestInvited": "0",
+                "GuestConfirmed": "0",
+                "GuestRejected": "0",
+                "GuestMessages": "0",
+                "GuestScanned": "0",
+                "GuestFailed": "0"
+            }];
         }
 
         const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
