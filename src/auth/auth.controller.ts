@@ -99,7 +99,6 @@ export class AuthController {
     })
     public async signUp(
         @Origin() origin: string | undefined,
-        @Res() res: Response,
         @Body() signUpDto: SignUpDto,
     ): Promise<IMessage> {
         return await this.authService.signUp(signUpDto, origin);
