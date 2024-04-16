@@ -34,19 +34,19 @@ export class MailerService {
         templateName: string,
     ): Handlebars.TemplateDelegate<ITemplatedData | IRestPasswordTemplatedData> {
         const templateText = readFileSync(
-            join(__dirname, '..','mailer', 'templates', templateName),
+            join(__dirname, '..', 'mailer', 'templates', templateName),
             'utf-8',
         );
         return Handlebars.compile<ITemplatedData>(templateText, { strict: true });
     }
 
     public sendConfirmationEmail(user: IUser, token: string): void {
-        const { email, firstName, lastName } = user;
+        const { email, firstName, lastName, otp } = user;
         const name = `${firstName} ${lastName}`;
         const subject = 'Confirm your email';
         const html = this.templates.confirmation({
             name,
-            link: `https://${this.domain}/api/auth/confirm-email/${token}`,
+            link: `${otp}`,
         });
         this.sendEmail(email, subject, html, 'A new confirmation email was sent.');
     }
