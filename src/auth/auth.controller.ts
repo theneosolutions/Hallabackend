@@ -53,6 +53,7 @@ import { DiscordDto } from './dtos/discord.dto';
 import { PhoneDto } from './dtos/phone.dto';
 import { PhoneOTPDto } from './dtos/phone-otp.dto';
 import { ResetPasswordWithPhoneDto } from './dtos/reset-password-phone.dto';
+import { EmailOTPDto } from './dtos/email-otp.dto';
 
 const btoa = require('btoa');
 const qs = require('qs');
@@ -205,6 +206,28 @@ export class AuthController {
         @Body() phoneOTPDto: PhoneOTPDto,
     ): Promise<void> {
         const result = await this.authService.verifyUserOTP(phoneOTPDto, origin);
+        this.saveRefreshCookie(res, result.refreshToken)
+            .status(HttpStatus.OK)
+            .json(AuthResponseMapper.map(result));
+    }
+
+    @Post('/otp/verify/email')
+    @ApiOkResponse({
+        type: AuthResponseMapper,
+        description: 'Logs in the user and returns the access token',
+    })
+    @ApiNotFoundResponse({
+        description: 'No User found with this phone number',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    public async verifyUserEmail(
+        @Res() res: Response,
+        @Origin() origin: string | undefined,
+        @Body() emailOTPDto: EmailOTPDto,
+    ): Promise<void> {
+        const result = await this.authService.verifyUserEmailOTP(emailOTPDto, origin);
         this.saveRefreshCookie(res, result.refreshToken)
             .status(HttpStatus.OK)
             .json(AuthResponseMapper.map(result));
