@@ -96,7 +96,6 @@ export class UsersService {
     profilePhoto: string,
   ): Promise<Users> {
     const formattedEmail = email.toLowerCase();
-    await this.checkIsCompanyEmail(formattedEmail);
     const formattedFirstName = this.commonService.formatName(firstName);
     const formattedLastName = this.commonService.formatName(lastName);
     const user = await this.findOneByEmail(formattedEmail);
