@@ -11,6 +11,14 @@ export abstract class TransactionDto {
   public user: number;
 
   @ApiProperty({
+    description: 'Package id',
+    example: 123,
+    type: Number,
+  })
+  @IsNumber()
+  public package: number;
+
+  @ApiProperty({
     description: 'Transaction amount',
     type: String,
   })

@@ -19,6 +19,13 @@ export class ResponseTransactionsMapper implements IResponseTransactions {
   public user: number;
 
   @ApiProperty({
+    description: 'Package id',
+    example: 123,
+    type: Number,
+  })
+  public package: number;
+
+  @ApiProperty({
     description: 'Transaction amount',
     type: String,
   })
@@ -73,6 +80,7 @@ export class ResponseTransactionsMapper implements IResponseTransactions {
     return new ResponseTransactionsMapper({
       id: transaction.id,
       user: transaction.user,
+      package:transaction?.package,
       amount: transaction.amount,
       description: transaction.description,
       paymentId: transaction.paymentId,

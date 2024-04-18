@@ -32,7 +32,7 @@ export class TransactionsService {
   ) { }
 
   public async create(origin: string | undefined, dto: TransactionDto): Promise<Transactions> {
-    const { user: userId, amount, description, paymentId } = dto;
+    const { user: userId, amount, description, package: packageId, paymentId } = dto;
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
       throw new BadRequestException(['User cannot be null']);
@@ -56,12 +56,17 @@ export class TransactionsService {
       throw new BadRequestException(['paymentId cannot be null']);
     }
 
+    if (isNull(packageId) || isUndefined(packageId)) {
+      throw new BadRequestException(['paymentId cannot be null']);
+    }
+
     const transaction = this.transactionssRepository.create({
       amount: amount,
       description: description,
       paymentId: paymentId,
       status: 'Initiated',
       user: userId,
+      package: packageId
     });
     await this.transactionssRepository.insert(transaction);
     return transaction;
@@ -90,9 +95,10 @@ export class TransactionsService {
         throw new BadRequestException(['User not found with id: ' + transaction?.user?.id]);
       }
       transaction.status = status;
+      const invitations: number = Number(transaction?.package?.numberOfGuest) || 0;
       // Save the updated transaction
       await this.transactionssRepository.save(transaction);
-      await this.usersService.updateWallet(userDetail?.id, finalAmount);
+      await this.usersService.updateWallet(userDetail?.id, invitations);
       return transaction; // Return the updated transaction
     } catch (error) {
       // Handle any errors that occur during the transaction update process
@@ -115,8 +121,10 @@ export class TransactionsService {
       .createQueryBuilder("transactions")
       .where("transactions.paymentId = :paymentId", { paymentId: parsedValue })
       .leftJoinAndSelect('transactions.user', 'user')
+      .leftJoinAndSelect('transactions.package', 'package')
       .select([
         'transactions',
+        'package',
         'user.id',
         'user.firstName',
         'user.lastName',
@@ -143,8 +151,10 @@ export class TransactionsService {
       .createQueryBuilder("transactions")
       .where("transactions.id = :id", { id: parsedValue })
       .leftJoinAndSelect('transactions.user', 'user')
+      .leftJoinAndSelect('transactions.package', 'package')
       .select([
         'transactions',
+        'package',
         'user.id',
         'user.firstName',
         'user.lastName',

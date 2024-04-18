@@ -4,6 +4,7 @@ import { Column, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } f
 import { IsOptional, IsString} from 'class-validator';
 import { ITransactions } from '../interfaces/transactions.interface';
 import { Users } from 'src/users/entities/user.entity';
+import { Packages } from 'src/packages/entities/packages.entity';
 
 export type TransactionsStatus = "Initiated" | "Paid" | "Failed";
 
@@ -36,6 +37,9 @@ export class Transactions implements ITransactions {
 
   @ManyToOne(() => Users, (user) => user.id)
   public user: number;
+
+  @ManyToOne(() => Packages, (packages) => packages.id)
+  public package: number;
 
   @Column({ default: () => `now()`, nullable: false })
   public createdAt: Date;
