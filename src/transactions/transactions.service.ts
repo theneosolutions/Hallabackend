@@ -256,11 +256,96 @@ export class TransactionsService {
 
     return new PageDto(entities, pageMetaDto);
   }
+  
+  public async transactionStats(): Promise<any> {
+    const totalRevenue = await this.transactionssRepository
+      .createQueryBuilder('transaction')
+      .select('SUM(transaction.amount)', 'totalRevenue')
+      .where('transaction.status = :status', { status: 'Paid' })
+      .getRawOne();
 
+    const currentDate = new Date();
+    const twelveMonthsAgo = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - 11, 
+      1,
+    );
 
+    const revenueByMonth = await this.transactionssRepository
+      .createQueryBuilder('transaction')
+      .select(
+        'YEAR(transaction.createdAt) AS year, MONTH(transaction.createdAt) AS month, SUM(transaction.amount) AS revenue',
+      )
+      .where('transaction.status = :status', { status: 'Paid' })
+      .andWhere('transaction.createdAt >= :startDate', {
+        startDate: twelveMonthsAgo,
+      })
+      .groupBy('YEAR(transaction.createdAt), MONTH(transaction.createdAt)')
+      .orderBy('YEAR(transaction.createdAt), MONTH(transaction.createdAt)')
+      .getRawMany();
 
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
 
+    const chartData = [];
+    for (let i = 11; i >= 0; i--) {
+      // 12 months
+      const date = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - i,
+        1,
+      );
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      const monthLabel = `${monthNames[month - 1]}-${year}`;
 
+      let revenue = 0;
+      const foundEntry = revenueByMonth.find(
+        (entry) => entry.year === year && entry.month === month,
+      );
+      if (foundEntry) {
+        revenue = parseFloat(foundEntry.revenue);
+      }
+      chartData.push({
+        month: `${year}-${month.toString().padStart(2, '0')}`,
+        monthName: monthLabel,
+        revenue,
+      });
+    }
+
+    let growthRate = 0;
+    if (chartData.length >= 2) {
+      const currentMonthRevenue = chartData[chartData.length - 1].revenue;
+      const previousMonthRevenue = chartData[chartData.length - 2].revenue;
+      if (previousMonthRevenue !== 0) {
+        growthRate =
+          ((currentMonthRevenue - previousMonthRevenue) /
+            previousMonthRevenue) *
+          100;
+      }
+    }
+
+    return {
+      totalRevenue: totalRevenue.totalRevenue,
+      revenueChartData: {
+        chartData,
+        growthRate: +growthRate.toFixed(2),
+        currentMonthRevenue: chartData[chartData.length - 1].revenue,
+      },
+    };
+  }
 
 }
 

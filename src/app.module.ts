@@ -21,6 +21,7 @@ import { NotificationsModule } from './Notifications/notifications.module';
 import { SocketModule } from './socket/socket.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { PackagesModule } from './packages/packages.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -38,10 +39,12 @@ import { PackagesModule } from './packages/packages.module';
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: [/*...*/],
-        migrationsTableName: "custom_migration_table",
-        synchronize: false
-      })
+        migrations: [
+          /*...*/
+        ],
+        migrationsTableName: 'custom_migration_table',
+        synchronize: false,
+      }),
     }),
     AuthModule,
     CommonModule,
@@ -56,8 +59,8 @@ import { PackagesModule } from './packages/packages.module';
     CardModule,
     NotificationsModule,
     TransactionsModule,
-    PackagesModule
-    
+    PackagesModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -68,4 +71,4 @@ import { PackagesModule } from './packages/packages.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

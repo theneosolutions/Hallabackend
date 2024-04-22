@@ -81,6 +81,8 @@ export class PackagesService {
         pageOptionsDto: PageOptionsDto
     ): Promise<PageDto<PackagesDto>> {
         console.log('pageOptionsDto', pageOptionsDto);
+        console.log('there');
+        
 
         const queryBuilder = this.packageRepository.createQueryBuilder("packages");
 

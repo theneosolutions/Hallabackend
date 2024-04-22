@@ -811,6 +811,43 @@ export class EventsService {
 
     }
 
+    
+  public async eventsStats(): Promise<any> {
+    const totalEvents = await this.eventsRepository.count();
+    return { totalEvents };
+  }
 
+  
+  public async getAll(pageOptionsDto: PageOptionsDto): Promise<PageDto<Events>> {
+    const queryBuilder = this.eventsRepository.createQueryBuilder('events');
+
+    queryBuilder
+      .orderBy('events.createdAt', pageOptionsDto.order)
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take);
+
+    // if (pageOptionsDto.search !== '') {
+    //   queryBuilder.andWhere(
+    //     '(events.status like :search OR' +
+    //       ' events.firstName like :search OR' +
+    //       ' events.lastName like :search OR' +
+    //       ' events.email like :search)',
+    //     { search: `%${pageOptionsDto.search}%` },
+    //   );
+    // }
+
+    // if (pageOptionsDto.status !== '') {
+    //   queryBuilder.andWhere('events.status like :status', {
+    //     status: `%${pageOptionsDto.status}%`,
+    //   });
+    // }
+
+    const itemCount = await queryBuilder.getCount();
+    let { entities }: any = await queryBuilder.getRawAndEntities();
+
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+    return new PageDto(entities, pageMetaDto);
+  }
 
 }

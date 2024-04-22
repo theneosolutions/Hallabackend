@@ -1,4 +1,3 @@
-
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import {
@@ -17,8 +16,16 @@ import { PasswordDto } from './dtos/password.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { isInt } from 'class-validator';
 import { SLUG_REGEX } from '../common/consts/regex.const';
-import { APPLE_LOGIN, DISCORD_LOGIN, FACEBOOK_LOGIN, GOOGLE_LOGIN } from 'src/common/consts/login.const';
-import { default as disposeAbleDomain } from './../data/domains.json'
+import {
+  APPLE_LOGIN,
+  DISCORD_LOGIN,
+  FACEBOOK_LOGIN,
+  GOOGLE_LOGIN,
+} from 'src/common/consts/login.const';
+import { default as disposeAbleDomain } from './../data/domains.json';
+import { PageOptionsDto } from './dtos/page-option.dto';
+import { PageDto } from './dtos/page.dto';
+import { PageMetaDto } from './dtos/page-meta.dto';
 
 @Injectable()
 export class UsersService {
@@ -26,40 +33,54 @@ export class UsersService {
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
     private readonly commonService: CommonService,
-  ) { }
+  ) {}
 
   public async create(
     email: string,
     firstName: string,
     lastName: string,
     password: string,
-    referredBy?: string
+    referredBy?: string,
   ): Promise<Users> {
     const formattedEmail = email.toLowerCase();
     await this.checkEmailUniqueness(formattedEmail);
     const formattedFirstName = this.commonService.formatName(firstName);
     const formattedLastName = this.commonService.formatName(lastName);
-    console.log("🚀 ~ file: users.service.ts:54 ~ UsersService ~ user:", {
+    console.log('🚀 ~ file: users.service.ts:54 ~ UsersService ~ user:', {
       email: formattedEmail,
       firstName: formattedFirstName,
       lastName: formattedLastName,
-      username: await this.generateUsername(`${formattedFirstName} ${formattedLastName}`),
+      username: await this.generateUsername(
+        `${formattedFirstName} ${formattedLastName}`,
+      ),
       password: await hash(password, 10),
-      profilePhoto: "https://res.cloudinary.com/dogufahvv/image/upload/default.jpg", //default placeholder image
-      referenceCode: Math.random().toString(36).slice(2).slice(0, 5).toUpperCase(),
-      referredBy: referredBy
-    })
+      profilePhoto:
+        'https://res.cloudinary.com/dogufahvv/image/upload/default.jpg', //default placeholder image
+      referenceCode: Math.random()
+        .toString(36)
+        .slice(2)
+        .slice(0, 5)
+        .toUpperCase(),
+      referredBy: referredBy,
+    });
 
     const user = this.usersRepository.create({
       email: formattedEmail,
       firstName: formattedFirstName,
       lastName: formattedLastName,
-      username: await this.generateUsername(`${formattedFirstName} ${formattedLastName}`),
+      username: await this.generateUsername(
+        `${formattedFirstName} ${formattedLastName}`,
+      ),
       password: await hash(password, 10),
       otp: Math.floor(1000 + Math.random() * 9000),
-      profilePhoto: "https://res.cloudinary.com/dogufahvv/image/upload/default.jpg", //default placeholder image
-      referenceCode: Math.random().toString(36).slice(2).slice(0, 5).toUpperCase(),
-      referredBy: referredBy
+      profilePhoto:
+        'https://res.cloudinary.com/dogufahvv/image/upload/default.jpg', //default placeholder image
+      referenceCode: Math.random()
+        .toString(36)
+        .slice(2)
+        .slice(0, 5)
+        .toUpperCase(),
+      referredBy: referredBy,
     });
     await this.usersRepository.insert(user);
     return user;
@@ -67,7 +88,7 @@ export class UsersService {
 
   public async createUserWithPhone(
     callingCode: string,
-    phoneNumber: string
+    phoneNumber: string,
   ): Promise<Users> {
     const formattedPhone = phoneNumber.toLowerCase();
     await this.checkPhoneUniqueness(callingCode, formattedPhone);
@@ -80,10 +101,17 @@ export class UsersService {
       phoneNumber: formattedPhone,
       firstName: formattedFirstName,
       lastName: formattedLastName,
-      username: await this.generateUsername(`${formattedFirstName} ${formattedLastName}`),
+      username: await this.generateUsername(
+        `${formattedFirstName} ${formattedLastName}`,
+      ),
       otp: Math.floor(1000 + Math.random() * 9000),
-      profilePhoto: "https://res.cloudinary.com/dogufahvv/image/upload/default.jpg", //default placeholder image
-      referenceCode: Math.random().toString(36).slice(2).slice(0, 5).toUpperCase()
+      profilePhoto:
+        'https://res.cloudinary.com/dogufahvv/image/upload/default.jpg', //default placeholder image
+      referenceCode: Math.random()
+        .toString(36)
+        .slice(2)
+        .slice(0, 5)
+        .toUpperCase(),
     });
     await this.usersRepository.insert(user);
     return user;
@@ -108,15 +136,13 @@ export class UsersService {
         loginType: GOOGLE_LOGIN,
         profilePhoto: profilePhoto,
         confirmed: true,
-        referenceCode: Math.random().toString(36).slice(2).toUpperCase()
+        referenceCode: Math.random().toString(36).slice(2).toUpperCase(),
       });
       await this.usersRepository.insert(user);
       return user;
     } else {
       return user;
     }
-
-
   }
 
   public async findOneById(id: number): Promise<Users> {
@@ -129,7 +155,9 @@ export class UsersService {
     username: string,
     forAuth = false,
   ): Promise<Users> {
-    const user = await this.usersRepository.findOneBy({ username: username.toLowerCase() });
+    const user = await this.usersRepository.findOneBy({
+      username: username.toLowerCase(),
+    });
     if (forAuth) {
       this.throwUnauthorizedException(user);
     } else {
@@ -143,7 +171,10 @@ export class UsersService {
     callingCode: string,
     phoneNumber: string,
   ): Promise<Users> {
-    const user = await this.usersRepository.findOneBy({ callingCode: callingCode, phoneNumber: phoneNumber.toLowerCase() });
+    const user = await this.usersRepository.findOneBy({
+      callingCode: callingCode,
+      phoneNumber: phoneNumber.toLowerCase(),
+    });
     this.commonService.checkEntityExistence(user, 'User');
     return user;
   }
@@ -152,9 +183,7 @@ export class UsersService {
     return await this.usersRepository.findOne(options);
   }
 
-  public async findOneByIdOrUsername(
-    idOrUsername: string,
-  ): Promise<Users> {
+  public async findOneByIdOrUsername(idOrUsername: string): Promise<Users> {
     const parsedValue = parseInt(idOrUsername, 10);
 
     if (!isNaN(parsedValue) && parsedValue > 0 && isInt(parsedValue)) {
@@ -173,7 +202,9 @@ export class UsersService {
   }
 
   public async findOneByEmail(email: string): Promise<Users> {
-    const user = await this.usersRepository.findOneBy({ email: email.toLowerCase() });
+    const user = await this.usersRepository.findOneBy({
+      email: email.toLowerCase(),
+    });
     return user;
   }
 
@@ -188,9 +219,15 @@ export class UsersService {
     id: number,
     version: number,
   ): Promise<Users> {
-    console.log("🚀 ~ file: users.service.ts:112 ~ UsersService ~ version:", version)
+    console.log(
+      '🚀 ~ file: users.service.ts:112 ~ UsersService ~ version:',
+      version,
+    );
     const user = await this.usersRepository.findOneBy({ id: id });
-    console.log("🚀 ~ file: users.service.ts:113 ~ UsersService ~ user:", user.credentials.version)
+    console.log(
+      '🚀 ~ file: users.service.ts:113 ~ UsersService ~ user:',
+      user.credentials.version,
+    );
     this.throwUnauthorizedException(user);
 
     if (user.credentials.version !== version) {
@@ -200,10 +237,7 @@ export class UsersService {
     return user;
   }
 
-  public async confirmEmail(
-    userId: number,
-    version: number,
-  ): Promise<Users> {
+  public async confirmEmail(userId: number, version: number): Promise<Users> {
     const user = await this.findOneByCredentials(userId, version);
 
     if (user.confirmed) {
@@ -228,13 +262,10 @@ export class UsersService {
     return await this.usersRepository.save(user);
   }
 
-  public async updateWallet(
-    userId: number,
-    amount: number,
-  ): Promise<Users> {
+  public async updateWallet(userId: number, amount: number): Promise<Users> {
     const user = await this.findOneById(userId);
-    const finalAmount = Number(user.wallet) + amount
-    console.log("🚀 ~ UsersService ~ finalAmount:", finalAmount)
+    const finalAmount = Number(user.wallet) + amount;
+    console.log('🚀 ~ UsersService ~ finalAmount:', finalAmount);
     user.wallet = finalAmount;
     // await this.commonService.saveEntity(this.usersRepository, user);
     return await this.usersRepository.save(user);
@@ -244,11 +275,9 @@ export class UsersService {
     const user = await this.findOneById(userId);
     return await this.usersRepository.save({
       ...user, // existing
-      ...dto // updated fields
+      ...dto, // updated fields
     });
   }
-
-
 
   public async updatePassword(
     userId: number,
@@ -313,9 +342,7 @@ export class UsersService {
     return user;
   }
 
-  public async updateUserOTP(
-    userId: number,
-  ): Promise<Users> {
+  public async updateUserOTP(userId: number): Promise<Users> {
     const user = await this.findOneById(userId);
     user.otp = Math.floor(1000 + Math.random() * 9000);
     await this.usersRepository.update(userId, user);
@@ -331,13 +358,26 @@ export class UsersService {
 
     const deleteResponse = await this.usersRepository.softDelete(user.id);
     if (!deleteResponse.affected) {
-      throw new BadRequestException('Error while deleting user. Please try again');
+      throw new BadRequestException(
+        'Error while deleting user. Please try again',
+      );
     }
 
     return user;
   }
 
+  public async deleteByAdmin(userId: number): Promise<Users> {
+    const user = await this.findOneById(userId);
 
+    const deleteResponse = await this.usersRepository.softDelete(user.id);
+    if (!deleteResponse.affected) {
+      throw new BadRequestException(
+        'Error while deleting user. Please try again',
+      );
+    }
+
+    return user;
+  }
 
   private async checkUsernameUniqueness(username: string): Promise<void> {
     const count = await this.usersRepository.countBy({ username });
@@ -347,18 +387,21 @@ export class UsersService {
     }
   }
 
-  private async checkPhoneUniqueness(callingCode: string, phoneNumber: string): Promise<void> {
-    const count = await this.usersRepository.countBy({ callingCode, phoneNumber });
+  private async checkPhoneUniqueness(
+    callingCode: string,
+    phoneNumber: string,
+  ): Promise<void> {
+    const count = await this.usersRepository.countBy({
+      callingCode,
+      phoneNumber,
+    });
 
     if (count > 0) {
       throw new ConflictException(['Phone number already in use']);
     }
   }
 
-
-  private throwUnauthorizedException(
-    user: undefined | null | Users,
-  ): void {
+  private throwUnauthorizedException(user: undefined | null | Users): void {
     if (isUndefined(user) || isNull(user)) {
       throw new UnauthorizedException(['Invalid credentials']);
     }
@@ -370,20 +413,21 @@ export class UsersService {
     if (count > 0) {
       throw new ConflictException(['Email already in use']);
     }
-
-
   }
 
   private async checkIsCompanyEmail(email: string): Promise<void> {
-    const broken = email.split('@')
+    const broken = email.split('@');
     const domain = `${broken[broken.length - 1]}`;
 
-    console.log("🚀 ~ file: users.service.ts:397 ~ UsersService ~ checkIsCompanyEmail ~ disposeAbleDomain:", disposeAbleDomain)
+    console.log(
+      '🚀 ~ file: users.service.ts:397 ~ UsersService ~ checkIsCompanyEmail ~ disposeAbleDomain:',
+      disposeAbleDomain,
+    );
     if (disposeAbleDomain.includes(domain)) {
-      throw new ConflictException(["We don't accept personal emails. Please enter a work email."]);
+      throw new ConflictException([
+        "We don't accept personal emails. Please enter a work email.",
+      ]);
     }
-
-
   }
 
   /**
@@ -395,7 +439,7 @@ export class UsersService {
   private async generateUsername(name: string): Promise<string> {
     const pointSlug = this.commonService.generatePointSlug(name);
     const count = await this.usersRepository.countBy({
-      username: Like(`${pointSlug}%`)
+      username: Like(`${pointSlug}%`),
     });
 
     if (count > 0) {
@@ -403,5 +447,52 @@ export class UsersService {
     }
 
     return pointSlug;
+  }
+
+  public async userStats(): Promise<any> {
+    const totalUsers = await this.usersRepository.count();
+    const activeUsers = await this.usersRepository
+      .createQueryBuilder('user')
+      .where('user.status = :status', { status: 'active' })
+      .getCount();
+
+    const disabledUsers = await this.usersRepository
+      .createQueryBuilder('user')
+      .where('user.status = :status', { status: 'disabled' })
+      .getCount();
+
+    return { totalUsers, activeUsers, disabledUsers };
+  }
+
+  public async getAll(pageOptionsDto: PageOptionsDto): Promise<PageDto<Users>> {
+    const queryBuilder = this.usersRepository.createQueryBuilder('users');
+
+    queryBuilder
+      .orderBy('users.createdAt', pageOptionsDto.order)
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take);
+
+    if (pageOptionsDto.search !== '') {
+      queryBuilder.andWhere(
+        '(users.status like :search OR' +
+          ' users.firstName like :search OR' +
+          ' users.lastName like :search OR' +
+          ' users.email like :search)',
+        { search: `%${pageOptionsDto.search}%` },
+      );
+    }
+
+    if (pageOptionsDto.status !== '') {
+      queryBuilder.andWhere('users.status like :status', {
+        status: `%${pageOptionsDto.status}%`,
+      });
+    }
+
+    const itemCount = await queryBuilder.getCount();
+    let { entities }: any = await queryBuilder.getRawAndEntities();
+
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+    return new PageDto(entities, pageMetaDto);
   }
 }

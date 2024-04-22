@@ -88,6 +88,25 @@ export class EventsController {
         return ResponseEventsMapper.map(event);
     }
 
+    @Get()
+    // @Public(['admin'])
+    @ApiOkResponse({
+        type: AuthResponseUserMapper,
+        description: 'The email is updated, and the user is returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body, or wrong password.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in.',
+    })
+    public async getAll(
+        @CurrentUser() id: number,
+        @Query() pageOptionsDto: PageOptionsDto,
+    ): Promise<PageDto<Events>> {
+        return await this.eventsService.getAll(pageOptionsDto);
+    }
+
     @Get('/:id')
     @Public(['admin', 'user'])
     @ApiOkResponse({
