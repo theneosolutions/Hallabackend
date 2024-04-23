@@ -34,7 +34,7 @@ import { Origin } from 'src/auth/decorators/origin.decorator';
 import { ContactsDto } from './dtos/create-contacts';
 
 @ApiTags('Whatsapp')
-@Controller('api/whatsapp')
+@Controller('whatsapp')
 export class WhatsappController {
 
     constructor(

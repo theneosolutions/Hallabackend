@@ -50,7 +50,7 @@ import { UpdateCardDto } from './dtos/update-card.dto';
 import { GetCardByEventIdParams } from './dtos/get-card-by-EventId.params';
 
 @ApiTags('Cards')
-@Controller('api/cards')
+@Controller('cards')
 export class CardController {
 
     constructor(

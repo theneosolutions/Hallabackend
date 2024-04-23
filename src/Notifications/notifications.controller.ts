@@ -48,7 +48,7 @@ import { extname } from 'path';
 import { IMessage } from 'src/common/interfaces/message.interface';
 
 @ApiTags('Notifications')
-@Controller('api/notifications')
+@Controller('notifications')
 export class NotificationsController {
 
     constructor(

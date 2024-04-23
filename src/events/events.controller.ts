@@ -59,7 +59,7 @@ import { EventGuestsDto } from './dtos/create-guests-event.dto';
 import { GetInviteCodeParams } from './dtos/get-invite-code.params';
 
 @ApiTags('Events')
-@Controller('api/events')
+@Controller('events')
 export class EventsController {
 
     constructor(

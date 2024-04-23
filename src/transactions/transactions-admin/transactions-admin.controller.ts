@@ -39,7 +39,7 @@ import { Transactions } from '../entities/transactions.entity';
 import { ApiPaginatedResponse } from '../decorators/api-paginated-response.decorator';
 
 @ApiTags('Transactions | Admin')
-@Controller('api/admin/transactions')
+@Controller('/admin/transactions')
 export class TransactionsAdminController {
 
     constructor(

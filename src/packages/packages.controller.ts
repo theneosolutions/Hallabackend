@@ -39,7 +39,7 @@ import { PageOptionsDto } from './dtos/page-option.dto';
 import { PageDto } from './dtos/page.dto';
 
 @ApiTags('Packages')
-@Controller('api/admin/packages')
+@Controller('admin/packages')
 export class PackagesController {
 
     constructor(

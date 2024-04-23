@@ -36,7 +36,7 @@ import { PageDto } from './dtos/page.dto';
 import { IMessage } from 'src/common/interfaces/message.interface';
 
 @ApiTags('Contacts')
-@Controller('api/contacts')
+@Controller('contacts')
 export class ContactsController {
 
     constructor(
