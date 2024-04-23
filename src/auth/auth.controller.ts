@@ -65,7 +65,7 @@ const client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_SECRET,
 );
 @ApiTags('Auth')
-@Controller('api/auth')
+@Controller('auth')
 export class AuthController {
     private readonly cookiePath = '/api/auth';
     private readonly cookieName: string;

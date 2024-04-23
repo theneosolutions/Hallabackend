@@ -39,7 +39,7 @@ import { Packages } from '../entities/packages.entity';
 import { ApiPaginatedResponse } from '../decorators/api-paginated-response.decorator';
 
 @ApiTags('Packages')
-@Controller('api/packages')
+@Controller('packages')
 export class PackagesUsersController {
 
     constructor(

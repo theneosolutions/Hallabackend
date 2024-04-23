@@ -32,7 +32,7 @@ import { UsersService } from './users.service';
 import { UsernameDto } from './dtos/username.dto';
 
 @ApiTags('Users')
-@Controller('api/users')
+@Controller('users')
 export class UsersController {
     private cookiePath = '/api/auth';
     private cookieName: string;
