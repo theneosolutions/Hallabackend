@@ -31,7 +31,7 @@ import { GetContactsByUserIdParams } from 'src/contacts/dtos/get-contacts-by-use
 import { IMessage } from 'src/common/interfaces/message.interface';
 
 @ApiTags('Stats')
-@Controller('api/stats')
+@Controller('stats')
 export class StatsController {
   constructor(
     private readonly StatsService: StatsService,
