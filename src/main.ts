@@ -35,7 +35,7 @@ async function bootstrap() {
   const theme = new SwaggerTheme();
   // @ts-ignore
   const options= theme.getDefaultConfig('newspaper');
-  SwaggerModule.setup('api/docs', app, document, options);
+  SwaggerModule.setup('docs', app, document, options);
 
   await app.listen(configService.get<number>('port'));
 }
