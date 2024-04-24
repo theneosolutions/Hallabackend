@@ -39,6 +39,7 @@ import { EventGuestsDto } from './dtos/create-guests-event.dto';
 import { EventsChats } from './entities/events_chats.entity';
 import { all } from 'axios';
 import { Contacts } from '../contacts/entities/contacts.entity';
+import { ContactsPageOptionsDto } from './dtos/contacts-page-option.dto';
 
 @Injectable()
 export class EventsService {
@@ -348,54 +349,10 @@ export class EventsService {
         return eventItem;
     }
 
-    // public async getContactList(
-    //     eventId: string,
-    //     pageOptionsDto: PageOptionsDto
-    // ): Promise<any> {
-    //     console.log('pageOptionsDto',pageOptionsDto);
-        
-    //     const parsedValue = parseInt(eventId, 10);
-
-    //     if (isNaN(parsedValue) && !isInt(parsedValue)) {
-    //         throw new BadRequestException('Invalid event id: ' + parsedValue);
-
-    //     }
-
-    //     const queryBuilder = this
-    //     .eventInvitessContacts
-    //     .createQueryBuilder("event_invitess_contacts")
-    //     .where("event_invitess_contacts.eventId = :eventId", { eventId: eventId })
-    //     .leftJoinAndSelect('event_invitess_contacts.invites', 'invites')
-    //     .orderBy("event_invitess_contacts.createdAt", pageOptionsDto.order)
-    //     .skip(pageOptionsDto.skip)
-    //     .take(pageOptionsDto.take);
-
-    //     if(pageOptionsDto?.status != '' && pageOptionsDto?.status == 'pending'){
-            
-    //     }
-
-
-    //     const queryString = queryBuilder.getQuery();
-    //     console.log('SQL Query:', queryString);
-        
-        
-    //     const itemCount = await queryBuilder.getCount();
-    //     console.log('itemCount', itemCount);
-        
-    //     let { entities }: any = await queryBuilder.getRawAndEntities();
-    //     console.log('entities', entities);
-        
-    //     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
-
-    //     return new PageDto(await Promise.all(entities), pageMetaDto);
-       
-       
-    // }
-
     public async getContactList(
         eventId: string,
-        pageOptionsDto: PageOptionsDto,
-        ): Promise<any> {
+        pageOptionsDto: ContactsPageOptionsDto,
+        ): Promise<PageDto<Contacts>> {
         console.log('pageOptionsDto', pageOptionsDto);
 
         const parsedValue = parseInt(eventId, 10);
@@ -413,25 +370,28 @@ export class EventsService {
                 eic.eventId = ?
             `;
 
-        if (pageOptionsDto?.status !== '' && pageOptionsDto?.status !== 'all') {
+        if (pageOptionsDto?.status !== 'all') {
             query += ` AND eic.status = ?`;
         }
+
+        // console.log('query', query);
+        
         const results = await this.connection.query(query, [
             parseInt(eventId, 10),
             pageOptionsDto?.status,
         ]);
 
-        // Extract contact IDs from results
         const contactIds = results.map(
             (result: any) => result.event_invitess_contacts_contactsId,
         );
 
-        const contacts = await this.contacts.findBy({
+        const contacts = await this.contacts.find({where: {
             id: In(contactIds),
-            // order: { createdAt: pageOptionsDto.order },
-            // take: pageOptionsDto.take,
-            // skip: pageOptionsDto.skip,
-        });
+        },
+        order: { createdAt: pageOptionsDto.order },
+        take: pageOptionsDto.take,
+        skip: pageOptionsDto.skip,
+    });
 
         const totalCount = await this.contacts.count({where :{id: In(contactIds)}}); 
 
