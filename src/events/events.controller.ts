@@ -381,5 +381,33 @@ export class EventsController {
     }
 
     
+    
+    @Get('/get-contact-list/:id')
+    // @Public(['admin', 'user'])
+    @ApiOkResponse({
+        type: ResponseEventsMapper,
+        description: 'event is found and returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiNotFoundResponse({
+        description: 'eventItem is not found.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'User is not logged in.',
+    })
+    public async getContactList(
+        @Param() params: GetEventParams,
+        @Query() pageOptionsDto: PageOptionsDto,
+    ): Promise<any> {
+        console.log('there');
+        
+        const eventItem = await this.eventsService.getContactList(params.id, pageOptionsDto);
+        return (eventItem);
+    }
+
+
+    
 }
 
