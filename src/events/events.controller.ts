@@ -57,6 +57,8 @@ import { ResponseMediaMapper } from './mappers/response-media.mapper';
 import { IEventMedia } from './interfaces/media.interface';
 import { EventGuestsDto } from './dtos/create-guests-event.dto';
 import { GetInviteCodeParams } from './dtos/get-invite-code.params';
+import { Contacts } from 'src/contacts/entities/contacts.entity';
+import { ContactsPageOptionsDto } from './dtos/contacts-page-option.dto';
 
 @ApiTags('Events')
 @Controller('events')
@@ -383,9 +385,9 @@ export class EventsController {
     
     
     @Get('/get-contact-list/:id')
-    // @Public(['admin', 'user'])
+    @Public(['admin', 'user'])
     @ApiOkResponse({
-        type: ResponseEventsMapper,
+        type: PageDto<Contacts>,
         description: 'event is found and returned.',
     })
     @ApiBadRequestResponse({
@@ -399,12 +401,12 @@ export class EventsController {
     })
     public async getContactList(
         @Param() params: GetEventParams,
-        @Query() pageOptionsDto: PageOptionsDto,
-    ): Promise<any> {
-        console.log('there');
+        @Query() pageOptionsDto: ContactsPageOptionsDto,
+    ): Promise<PageDto<Contacts>> {
+        // console.log('there');
         
-        const eventItem = await this.eventsService.getContactList(params.id, pageOptionsDto);
-        return (eventItem);
+        return await this.eventsService.getContactList(params.id, pageOptionsDto);
+        
     }
 
 
