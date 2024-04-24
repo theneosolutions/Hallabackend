@@ -380,7 +380,7 @@ export class EventsService {
             queryBuilder.andWhere("events.status like :status", { status: `%${pageOptionsDto.status}%` });
         }
         if (pageOptionsDto.search) {
-            queryBuilder.andWhere('(events.name LIKE :search OR events.description LIKE :search)', { search: `%${pageOptionsDto.search}%` });
+            queryBuilder.andWhere('(events.name LIKE :search OR events.address LIKE :search)', { search: `%${pageOptionsDto.search}%` });
         }
 
         const itemCount = await queryBuilder.getCount();
