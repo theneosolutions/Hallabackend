@@ -12,9 +12,10 @@ import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
 import { Users } from 'src/users/entities/user.entity';
 import { EventsChats } from './entities/events_chats.entity';
+import { Contacts } from 'src/contacts/entities/contacts.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Events, EventInvitessContacts, Users,EventsChats]), UsersModule,UploaderModule,CardModule,ContactsModule,forwardRef(() => WhatsappModule)],
+  imports: [TypeOrmModule.forFeature([Events, EventInvitessContacts, Users,EventsChats, Contacts]), UsersModule,UploaderModule,CardModule,ContactsModule,forwardRef(() => WhatsappModule)],
   providers: [EventsService],
   exports: [EventsService],
   controllers: [EventsController],
