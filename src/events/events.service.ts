@@ -379,9 +379,9 @@ export class EventsService {
         if (pageOptionsDto.status !== '') {
             queryBuilder.andWhere("events.status like :status", { status: `%${pageOptionsDto.status}%` });
         }
-        // if (pageOptionsDto.status == '') {
-        //     queryBuilder.andWhere("events.status IN(:...keys)", { keys: ['active', 'draft'] });
-        // }
+        if (pageOptionsDto.search) {
+            queryBuilder.andWhere('(events.name LIKE :search OR events.description LIKE :search)', { search: `%${pageOptionsDto.search}%` });
+        }
 
         const itemCount = await queryBuilder.getCount();
         let { entities }: any = await queryBuilder.getRawAndEntities();
