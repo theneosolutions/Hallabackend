@@ -22,6 +22,7 @@ import { SocketModule } from './socket/socket.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { PackagesModule } from './packages/packages.module';
 import { StatsModule } from './stats/stats.module';
+import { PagesModule } from './pages/pages.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { StatsModule } from './stats/stats.module';
     TransactionsModule,
     PackagesModule,
     StatsModule,
+    PagesModule,
   ],
   controllers: [AppController],
   providers: [
