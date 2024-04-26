@@ -24,6 +24,7 @@ import {
     ApiUnauthorizedResponse,
     ApiConsumes,
     ApiBody,
+    ApiOperation,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -46,6 +47,7 @@ import { GetNotificationByResourceTypeParams } from './dtos/get-notifications-by
 import { NotificationDto } from './dtos/create-notification.dto';
 import { extname } from 'path';
 import { IMessage } from 'src/common/interfaces/message.interface';
+import { PushNotificationDto } from './dtos/send-push-notification.dto';
 
 @ApiTags('Notifications')
 @Controller('notifications')
@@ -97,6 +99,31 @@ export class NotificationsController {
     }
 
 
+    
+  @Post('/send-push-notification')
+  @ApiOperation({ summary: 'Send multiple notifications' })
+  @ApiOkResponse({ description: 'Notifications sent successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid request or missing data' })
+  async sendNotifications(
+    @Origin() origin: string | undefined,
+    @Body() pushNotificationDto: PushNotificationDto,
+  ): Promise<void> {
+    const { userIds, content } = pushNotificationDto;
+
+    console.log('userIds, content', userIds, content);
+    
+    userIds?.map((userId) => {
+        this.notificationsService.create(origin, {
+        user: userId,
+        content: content,
+        sendNotificationTo: userId,
+        resourceId: userId,
+        resourceType: 'custom-notification',
+        parentType: 'custom-notification',
+        parent: null,
+      });
+    });
+  }
 
     @Get('/:id')
     @Public(['admin', 'user'])
