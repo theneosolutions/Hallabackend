@@ -243,10 +243,90 @@ export class EventsService {
         }
 
         const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
-        const invitesList = await queryBuilder.where("event_invitess_contacts.eventId = :id", { id: eventDetail.id })
-            .andWhere("event_invitess_contacts.status = :status", { status: 'pending' })
-            .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
-            .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getMany();
+        const rawQuery = `
+            SELECT 
+                event_invitess_contacts.status AS event_invitess_contacts_status, 
+                event_invitess_contacts.numberOfScans AS event_invitess_contacts_numberOfScans, 
+                event_invitess_contacts.numberOfGuests AS event_invitess_contacts_numberOfGuests, 
+                event_invitess_contacts.usersId AS event_invitess_contacts_usersId, 
+                event_invitess_contacts.eventId AS event_invitess_contacts_eventId, 
+                event_invitess_contacts.code AS event_invitess_contacts_code, 
+                event_invitess_contacts.notes AS event_invitess_contacts_notes, 
+                event_invitess_contacts.haveChat AS event_invitess_contacts_haveChat, 
+                event_invitess_contacts.selectedEvent AS event_invitess_contacts_selectedEvent, 
+                event_invitess_contacts.sendList AS event_invitess_contacts_sendList, 
+                event_invitess_contacts.createdAt AS event_invitess_contacts_createdAt, 
+                event_invitess_contacts.updatedAt AS event_invitess_contacts_updatedAt, 
+                event_invitess_contacts.deletedAt AS event_invitess_contacts_deletedAt, 
+                event_invitess_contacts.contactsId AS event_invitess_contacts_contactsId, 
+                invites.id AS invites_id, 
+                invites.name AS invites_name, 
+                invites.email AS invites_email, 
+                invites.callingCode AS invites_callingCode, 
+                invites.phoneNumber AS invites_phoneNumber, 
+                events.id AS events_id, 
+                events.name AS events_name, 
+                events.image AS events_image, 
+                events.status AS events_status, 
+                events.notes AS events_notes, 
+                events.eventDate AS events_eventDate, 
+                events.showQRCode AS events_showQRCode, 
+                events.nearby AS events_nearby, 
+                events.address AS events_address, 
+                events.latitude AS events_latitude, 
+                events.longitude AS events_longitude, 
+                events.code AS events_code, 
+                events.createdAt AS events_createdAt, 
+                events.updatedAt AS events_updatedAt, 
+                events.deletedAt AS events_deletedAt, 
+                events.userId AS events_userId 
+            FROM 
+                event_invitess_contacts 
+            LEFT JOIN 
+                contacts invites ON invites.id = event_invitess_contacts.contactsId AND invites.deletedAt IS NULL
+            LEFT JOIN 
+                events ON events.id = event_invitess_contacts.eventId AND events.deletedAt IS NULL 
+            WHERE 
+                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status = ? 
+                AND event_invitess_contacts.deletedAt IS NULL`;
+        const entities = await this.connection.query(rawQuery, [eventDetail.id, 'pending']);
+        const invitesList = entities.map(entity => ({
+            status: entity.event_invitess_contacts_status,
+            numberOfScans: entity.event_invitess_contacts_numberOfScans,
+            numberOfGuests: entity.event_invitess_contacts_numberOfGuests,
+            usersId: entity.event_invitess_contacts_usersId,
+            eventId: entity.event_invitess_contacts_eventId,
+            code: entity.event_invitess_contacts_code,
+            notes: entity.event_invitess_contacts_notes,
+            haveChat: entity.event_invitess_contacts_haveChat,
+            selectedEvent: entity.event_invitess_contacts_selectedEvent,
+            sendList: entity.event_invitess_contacts_sendList,
+            createdAt: entity.event_invitess_contacts_createdAt,
+            updatedAt: entity.event_invitess_contacts_updatedAt,
+            invites: {
+                id: entity.invites_id,
+                name: entity.invites_name,
+                email: entity.invites_email,
+                callingCode: entity.invites_callingCode,
+                phoneNumber: entity.invites_phoneNumber
+            },
+            events: {
+                id: entity.events_id,
+                name: entity.events_name,
+                image: entity.events_image,
+                status: entity.events_status,
+                notes: entity.events_notes,
+                eventDate: entity.events_eventDate,
+                showQRCode: entity.events_showQRCode,
+                address: entity.events_address,
+                latitude: entity.events_latitude,
+                longitude: entity.events_longitude,
+                code: entity.events_code,
+                createdAt: entity.events_createdAt,
+                updatedAt: entity.events_updatedAt
+            }
+        }));
+
         invitesList?.map(async (invite) => {
             console.log("🚀 ~ EventsService ~ invitesList?.map ~ invite:", invite)
             const { invites, events }: any = invite;
@@ -274,7 +354,6 @@ export class EventsService {
 
             await this.eventInvitessContacts.save(invite);
         })
-
 
         return eventDetail;
     }
@@ -352,7 +431,7 @@ export class EventsService {
     public async getContactList(
         eventId: string,
         pageOptionsDto: ContactsPageOptionsDto,
-        ): Promise<PageDto<Contacts>> {
+    ): Promise<PageDto<Contacts>> {
         console.log('pageOptionsDto', pageOptionsDto);
 
         const parsedValue = parseInt(eventId, 10);
@@ -375,7 +454,7 @@ export class EventsService {
         }
 
         // console.log('query', query);
-        
+
         const results = await this.connection.query(query, [
             parseInt(eventId, 10),
             pageOptionsDto?.status,
@@ -385,15 +464,16 @@ export class EventsService {
             (result: any) => result.event_invitess_contacts_contactsId,
         );
 
-        const contacts = await this.contacts.find({where: {
-            id: In(contactIds),
-        },
-        order: { createdAt: pageOptionsDto.order },
-        take: pageOptionsDto.take,
-        skip: pageOptionsDto.skip,
-    });
+        const contacts = await this.contacts.find({
+            where: {
+                id: In(contactIds),
+            },
+            order: { createdAt: pageOptionsDto.order },
+            take: pageOptionsDto.take,
+            skip: pageOptionsDto.skip,
+        });
 
-        const totalCount = await this.contacts.count({where :{id: In(contactIds)}}); 
+        const totalCount = await this.contacts.count({ where: { id: In(contactIds) } });
 
         const pageMetaDto = new PageMetaDto({
             itemCount: totalCount,
@@ -873,43 +953,43 @@ export class EventsService {
 
     }
 
-    
-  public async eventsStats(): Promise<any> {
-    const totalEvents = await this.eventsRepository.count();
-    return { totalEvents };
-  }
 
-  
-  public async getAll(pageOptionsDto: PageOptionsDto): Promise<PageDto<Events>> {
-    const queryBuilder = this.eventsRepository.createQueryBuilder('events');
+    public async eventsStats(): Promise<any> {
+        const totalEvents = await this.eventsRepository.count();
+        return { totalEvents };
+    }
 
-    queryBuilder
-      .orderBy('events.createdAt', pageOptionsDto.order)
-      .skip(pageOptionsDto.skip)
-      .take(pageOptionsDto.take);
 
-    // if (pageOptionsDto.search !== '') {
-    //   queryBuilder.andWhere(
-    //     '(events.status like :search OR' +
-    //       ' events.firstName like :search OR' +
-    //       ' events.lastName like :search OR' +
-    //       ' events.email like :search)',
-    //     { search: `%${pageOptionsDto.search}%` },
-    //   );
-    // }
+    public async getAll(pageOptionsDto: PageOptionsDto): Promise<PageDto<Events>> {
+        const queryBuilder = this.eventsRepository.createQueryBuilder('events');
 
-    // if (pageOptionsDto.status !== '') {
-    //   queryBuilder.andWhere('events.status like :status', {
-    //     status: `%${pageOptionsDto.status}%`,
-    //   });
-    // }
+        queryBuilder
+            .orderBy('events.createdAt', pageOptionsDto.order)
+            .skip(pageOptionsDto.skip)
+            .take(pageOptionsDto.take);
 
-    const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+        // if (pageOptionsDto.search !== '') {
+        //   queryBuilder.andWhere(
+        //     '(events.status like :search OR' +
+        //       ' events.firstName like :search OR' +
+        //       ' events.lastName like :search OR' +
+        //       ' events.email like :search)',
+        //     { search: `%${pageOptionsDto.search}%` },
+        //   );
+        // }
 
-    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+        // if (pageOptionsDto.status !== '') {
+        //   queryBuilder.andWhere('events.status like :status', {
+        //     status: `%${pageOptionsDto.status}%`,
+        //   });
+        // }
 
-    return new PageDto(entities, pageMetaDto);
-  }
+        const itemCount = await queryBuilder.getCount();
+        let { entities }: any = await queryBuilder.getRawAndEntities();
+
+        const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+        return new PageDto(entities, pageMetaDto);
+    }
 
 }
