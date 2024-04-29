@@ -172,6 +172,26 @@ export class EventsController {
         return ResponseEventsMapper.map(event);
     }
 
+    @Get('send-reminder/:id')
+    // @Public(['admin', 'user'])
+    @ApiOkResponse({
+        type: ResponseEventsMapper,
+        description: 'Event invitations is sent and returned.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Something is invalid on the request body',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'User is not logged in.',
+    })
+    public async sendEventsReminder(
+        @CurrentUser() id: number,
+        @Param() params: GetEventParams
+    ): Promise<IResponseEvent> {
+        const event = await this.eventsService.sendEventsReminder(id,params?.id);
+        return ResponseEventsMapper.map(event);
+    }
+
     @Get('scan-qrcode/:id')
     @ApiOkResponse({
         type: ResponseEventsMapper,

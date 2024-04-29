@@ -13,6 +13,7 @@ export enum StatusType {
   CONFIRMED = 'confirmed',
   REJECTED = 'rejected',
   FAILED = 'failed',
+  SCANNED = 'scanned',
   ALL = 'all',
 }
 

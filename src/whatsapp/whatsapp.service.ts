@@ -584,6 +584,32 @@ export class WhatsappService {
     }
   }
 
+  
+  public async sendEventReminder(body: any): Promise<any> {
+    const {
+      callingCode,
+      phoneNumber,
+      text,
+    } = body;
+    const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
+
+    try {
+      const response = await this.sendText({
+        message: text,
+        recipientPhone: recipientPhone,
+      });
+
+      console.log(
+        '🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:',
+        response,
+      );
+      return response;
+    } catch (error) {
+      console.error('Error sending invite to guest:', error);
+      return error;
+    }
+  }
+
 
   public async findEventOneById(
     id: number,

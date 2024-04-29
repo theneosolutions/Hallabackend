@@ -358,6 +358,125 @@ export class EventsService {
         return eventDetail;
     }
 
+    public async sendEventsReminder(userId: number, id: string): Promise<Events> {
+
+        if (isNull(id) || isUndefined(id)) {
+            throw new BadRequestException(['Event id cannot be null']);
+        }
+
+        const eventDetail = await this.findOneById(Number(id));
+
+
+        if (isNull(eventDetail) || isUndefined(eventDetail)) {
+            throw new BadRequestException(['Event not found with id: ' + id]);
+        }
+
+        const rawQuery = `
+            SELECT 
+                event_invitess_contacts.status AS event_invitess_contacts_status, 
+                event_invitess_contacts.numberOfScans AS event_invitess_contacts_numberOfScans, 
+                event_invitess_contacts.numberOfGuests AS event_invitess_contacts_numberOfGuests, 
+                event_invitess_contacts.usersId AS event_invitess_contacts_usersId, 
+                event_invitess_contacts.eventId AS event_invitess_contacts_eventId, 
+                event_invitess_contacts.code AS event_invitess_contacts_code, 
+                event_invitess_contacts.notes AS event_invitess_contacts_notes, 
+                event_invitess_contacts.haveChat AS event_invitess_contacts_haveChat, 
+                event_invitess_contacts.selectedEvent AS event_invitess_contacts_selectedEvent, 
+                event_invitess_contacts.sendList AS event_invitess_contacts_sendList, 
+                event_invitess_contacts.createdAt AS event_invitess_contacts_createdAt, 
+                event_invitess_contacts.updatedAt AS event_invitess_contacts_updatedAt, 
+                event_invitess_contacts.deletedAt AS event_invitess_contacts_deletedAt, 
+                event_invitess_contacts.contactsId AS event_invitess_contacts_contactsId, 
+                invites.id AS invites_id, 
+                invites.name AS invites_name, 
+                invites.email AS invites_email, 
+                invites.callingCode AS invites_callingCode, 
+                invites.phoneNumber AS invites_phoneNumber, 
+                events.id AS events_id, 
+                events.name AS events_name, 
+                events.image AS events_image, 
+                events.status AS events_status, 
+                events.notes AS events_notes, 
+                events.eventDate AS events_eventDate, 
+                events.showQRCode AS events_showQRCode, 
+                events.nearby AS events_nearby, 
+                events.address AS events_address, 
+                events.latitude AS events_latitude, 
+                events.longitude AS events_longitude, 
+                events.code AS events_code, 
+                events.createdAt AS events_createdAt, 
+                events.updatedAt AS events_updatedAt, 
+                events.deletedAt AS events_deletedAt, 
+                events.userId AS events_userId 
+            FROM 
+                event_invitess_contacts 
+            LEFT JOIN 
+                contacts invites ON invites.id = event_invitess_contacts.contactsId AND invites.deletedAt IS NULL
+            LEFT JOIN 
+                events ON events.id = event_invitess_contacts.eventId AND events.deletedAt IS NULL 
+            WHERE 
+                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status IN ('invited', 'confirmed') 
+                AND event_invitess_contacts.deletedAt IS NULL`;
+
+        const entities = await this.connection.query(rawQuery, [eventDetail.id]);
+
+        const invitesList = entities.map(entity => ({
+            status: entity.event_invitess_contacts_status,
+            numberOfScans: entity.event_invitess_contacts_numberOfScans,
+            numberOfGuests: entity.event_invitess_contacts_numberOfGuests,
+            usersId: entity.event_invitess_contacts_usersId,
+            eventId: entity.event_invitess_contacts_eventId,
+            code: entity.event_invitess_contacts_code,
+            notes: entity.event_invitess_contacts_notes,
+            haveChat: entity.event_invitess_contacts_haveChat,
+            selectedEvent: entity.event_invitess_contacts_selectedEvent,
+            sendList: entity.event_invitess_contacts_sendList,
+            createdAt: entity.event_invitess_contacts_createdAt,
+            updatedAt: entity.event_invitess_contacts_updatedAt,
+            invites: {
+                id: entity.invites_id,
+                name: entity.invites_name,
+                email: entity.invites_email,
+                callingCode: entity.invites_callingCode,
+                phoneNumber: entity.invites_phoneNumber
+            },
+            events: {
+                id: entity.events_id,
+                name: entity.events_name,
+                image: entity.events_image,
+                status: entity.events_status,
+                notes: entity.events_notes,
+                eventDate: entity.events_eventDate,
+                showQRCode: entity.events_showQRCode,
+                address: entity.events_address,
+                latitude: entity.events_latitude,
+                longitude: entity.events_longitude,
+                code: entity.events_code,
+                createdAt: entity.events_createdAt,
+                updatedAt: entity.events_updatedAt
+            }
+        }));
+
+        invitesList?.map(async (invite) => {
+            console.log("🚀 ~ EventsService ~ invitesList?.map ~ invite:", invite)
+            const { invites, events }: any = invite;
+            const { image, name: eventName, id }: any = events
+            const { callingCode, phoneNumber, name: recipientName, } = invites;
+            await this.whatsappService.sendEventReminder({
+                callingCode,
+                phoneNumber,
+                text: `Hey ${recipientName}, \nPlease don't forget to join the upcoming event ${eventName}`,
+                image,
+                recipientName,
+                eventName,
+                eventId: id,
+                contactId: invites?.id
+            });
+        })
+
+        return eventDetail;
+    }
+
     public async scanEventInvite(code: string): Promise<IMessage> {
 
         if (isNull(code) || isUndefined(code)) {
@@ -450,7 +569,11 @@ export class EventsService {
             `;
 
         if (pageOptionsDto?.status !== 'all') {
-            query += ` AND eic.status = ?`;
+            if (pageOptionsDto.status === 'scanned') {
+                query += ` AND eic.numberOfScans > 0`;
+            } else {
+                query += ` AND eic.status = ?`;
+            }
         }
 
         // console.log('query', query);
