@@ -30,3 +30,8 @@ export interface IUser {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface UserStats {
+  revenueGeneratedByUser: number;
+  userEventCount: number;
+}

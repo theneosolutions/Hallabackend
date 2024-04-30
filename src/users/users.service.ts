@@ -3,15 +3,18 @@ import { Like, Repository } from 'typeorm';
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
+  forwardRef,
 } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { CommonService } from '../common/common.service';
 import { isNull, isUndefined } from '../common/utils/validation.util';
 import { ChangeEmailDto } from './dtos/change-email.dto';
 import { UsernameDto } from './dtos/username.dto';
-import { Users } from './entities/user.entity';
+import { UserStatus, Users } from './entities/user.entity';
 import { PasswordDto } from './dtos/password.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { isInt } from 'class-validator';
@@ -26,6 +29,11 @@ import { default as disposeAbleDomain } from './../data/domains.json';
 import { PageOptionsDto } from './dtos/page-option.dto';
 import { PageDto } from './dtos/page.dto';
 import { PageMetaDto } from './dtos/page-meta.dto';
+import { TransactionsService } from 'src/transactions/transactions.service';
+import { EventsService } from 'src/events/events.service';
+
+import { UserStats } from './interfaces/user.interface';
+
 
 @Injectable()
 export class UsersService {
@@ -33,6 +41,12 @@ export class UsersService {
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
     private readonly commonService: CommonService,
+
+    @Inject(forwardRef(() => EventsService))
+    private readonly eventsService: EventsService,
+
+    @Inject(forwardRef(() => TransactionsService))
+    private readonly transactionsService: TransactionsService,
   ) {}
 
   public async create(
@@ -200,6 +214,30 @@ export class UsersService {
 
     return this.findOneByUsername(idOrUsername);
   }
+
+  public async getUserStats(userId: string): Promise<UserStats> {
+    const parsedValue = parseInt(userId, 10);
+  
+    if (isNaN(parsedValue) || parsedValue < 1 || !isInt(parsedValue)) {
+      throw new BadRequestException('User Id must be a positive integer');
+    }
+  
+    const user = await this.findOneById(parsedValue);
+  
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found!`);
+    }
+  
+    const revenueGeneratedByUser = await this.transactionsService.revenueGenereatedByUser(parsedValue);
+  
+    const userEventCount = await this.eventsService.getUserEventCount(parsedValue);
+  
+    return {
+      revenueGeneratedByUser,
+      userEventCount,
+    };
+  }
+  
 
   public async findOneByEmail(email: string): Promise<Users> {
     const user = await this.usersRepository.findOneBy({

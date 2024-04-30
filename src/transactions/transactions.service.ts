@@ -4,8 +4,10 @@ import { Like, Repository } from 'typeorm';
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
+  forwardRef,
 } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { CommonService } from '../common/common.service';
@@ -27,8 +29,10 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transactions)
     private readonly transactionssRepository: Repository<Transactions>,
-    private readonly usersService: UsersService,
     private readonly commonService: CommonService,
+
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
   ) { }
 
   public async create(origin: string | undefined, dto: TransactionDto): Promise<Transactions> {
@@ -78,6 +82,20 @@ export class TransactionsService {
     const contactsItems = await this.transactionssRepository.findBy(where)
     return contactsItems;
   }
+
+  public async revenueGenereatedByUser(userId: number): Promise<number> {
+    const revenueGenerated = await this.transactionssRepository
+      .createQueryBuilder('transaction')
+      .select('SUM(transaction.amount)', 'revenueGenerated')
+      .where('transaction.status = :status', { status: 'Paid' })
+      .andWhere('transaction.userId = :userId', { userId:  userId })
+      .getRawOne();
+      // console.log('revenueGenerated', revenueGenerated);
+
+      return revenueGenerated?.revenueGenerated;
+      
+  }
+
 
   public async updateUserTransactionStatus(id: string, status: string, amount: number, currency: string): Promise<Transactions> {
     const finalAmount = +(amount / 100).toFixed(2);

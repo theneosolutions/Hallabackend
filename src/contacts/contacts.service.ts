@@ -4,8 +4,10 @@ import { Like, Repository } from 'typeorm';
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
+  forwardRef,
 } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { CommonService } from '../common/common.service';
@@ -27,6 +29,9 @@ export class ContactsService {
   constructor(
     @InjectRepository(Contacts)
     private readonly contactsRepository: Repository<Contacts>,
+
+      
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
     private readonly commonService: CommonService,
   ) { }

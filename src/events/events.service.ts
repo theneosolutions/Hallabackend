@@ -54,13 +54,20 @@ export class EventsService {
 
         @InjectRepository(EventsChats)
         private readonly eventsChats: Repository<EventsChats>,
+
+        @Inject(forwardRef(() => UsersService))
         private readonly usersService: UsersService,
+        
+        // private readonly usersService: UsersService,
         private readonly cardService: CardService,
         private readonly uploaderService: UploaderService,
         private readonly contactsService: ContactsService,
         private readonly whatsappService: WhatsappService,
         private readonly commonService: CommonService,
-        private readonly connection: Connection
+        private readonly connection: Connection,
+
+        
+      
 
     ) { }
 
@@ -1114,5 +1121,15 @@ export class EventsService {
 
         return new PageDto(entities, pageMetaDto);
     }
+
+
+    public async getUserEventCount(userId: number): Promise<number> {
+        const queryBuilder = this.eventsRepository.createQueryBuilder('events');
+        queryBuilder.where('events.userId = :id', { id: userId });
+    
+        const itemCount = await queryBuilder.getCount();
+    
+        return itemCount;
+      }
 
 }

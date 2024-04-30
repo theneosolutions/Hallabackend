@@ -1,5 +1,3 @@
- 
-
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module, forwardRef } from '@nestjs/common';
 import { Contacts } from './entities/contacts.entity';
@@ -13,10 +11,22 @@ import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketModule } from 'src/socket/socket.module';
 import { SocketGateway } from 'src/socket/socket.gateway';
 
-
 @Module({
-  imports: [TypeOrmModule.forFeature([Contacts,Events,EventInvitessContacts,EventsChats]),UsersModule, forwardRef(() => EventsModule), forwardRef(() => EventInvitessContacts),forwardRef(() => EventsChats),forwardRef(() => SocketModule)],
-  providers: [WhatsappService,SocketGateway],
+  imports: [
+    TypeOrmModule.forFeature([
+      Contacts,
+      Events,
+      EventInvitessContacts,
+      EventsChats,
+    ]),
+    // UsersModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => EventsModule),
+    forwardRef(() => EventInvitessContacts),
+    forwardRef(() => EventsChats),
+    forwardRef(() => SocketModule),
+  ],
+  providers: [WhatsappService, SocketGateway],
   exports: [WhatsappService],
   controllers: [WhatsappController],
 })

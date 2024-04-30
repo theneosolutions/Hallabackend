@@ -64,7 +64,11 @@ export class WhatsappService {
     private readonly eventInvitessContacts: Repository<EventInvitessContacts>,
     @InjectRepository(EventsChats)
     private readonly eventsChats: Repository<EventsChats>,
+
+    
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+    
     private readonly commonService: CommonService,
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => SocketGateway))

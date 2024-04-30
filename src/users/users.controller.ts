@@ -15,6 +15,7 @@ import {
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -34,6 +35,8 @@ import { UsernameDto } from './dtos/username.dto';
 import { PageOptionsDto } from './dtos/page-option.dto';
 import { Users } from './entities/user.entity';
 import { PageDto } from './dtos/page.dto';
+import { GetUserIdParams } from './dtos/get-user-id.params';
+import { UserStats } from './interfaces/user.interface';
 
 @ApiTags('Users')
 @Controller('users')
@@ -170,5 +173,24 @@ export class UsersController {
       params.idOrUsername,
     );
     return ResponseUserMapper.map(user);
+  }
+
+  @Get('/get-user-stats/:id')
+  @ApiOkResponse({
+    description: 'User statistics fetched successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        revenueGeneratedByUser: { type: 'number', example: 0 },
+        userEventCount: { type: 'number', example: 0 },
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: 'Invalid user ID' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  public async getUserStats(
+    @Param() params: GetUserIdParams,
+  ): Promise<UserStats> {
+    return await this.usersService.getUserStats(params?.id);
   }
 }

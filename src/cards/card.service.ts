@@ -3,9 +3,11 @@ import { In, Like, Repository } from 'typeorm';
 import {
     BadRequestException,
     ConflictException,
+    Inject,
     Injectable,
     InternalServerErrorException,
     UnauthorizedException,
+    forwardRef,
 } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { CommonService } from '../common/common.service';
@@ -34,7 +36,10 @@ export class CardService {
         @InjectRepository(Users)
         private readonly usersRepository: Repository<Users>,
         private readonly commonService: CommonService,
+        
+        @Inject(forwardRef(() => UsersService))
         private readonly usersService: UsersService,
+
         private readonly uploaderService: UploaderService,
 
     ) { }
