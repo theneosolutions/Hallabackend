@@ -176,6 +176,7 @@ export class UsersController {
   }
 
   @Get('/get-user-stats/:id')
+  @Public(['admin', 'user'])
   @ApiOkResponse({
     description: 'User statistics fetched successfully',
     schema: {
