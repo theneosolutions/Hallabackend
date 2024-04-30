@@ -6,12 +6,14 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Post,
   Query,
   Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiBadRequestResponse,
+  ApiBody,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -193,5 +195,27 @@ export class UsersController {
     @Param() params: GetUserIdParams,
   ): Promise<UserStats> {
     return await this.usersService.getUserStats(params?.id);
+  }
+
+  @Public(['user'])
+  @Post('/update-device-token/:id')
+  @ApiParam({ name: 'id', description: 'User ID', type: 'number' })
+  @ApiBody({
+    description: 'Device token',
+    type: String,
+    schema: {
+      type: 'object',
+      properties: {
+        deviceToken: { type: 'string' },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiBadRequestResponse({ description: 'Invalid user ID or device token' })
+  public async updateDeviceToken(
+    @Param('id') userId: number,
+    @Body('deviceToken') deviceToken: string,
+  ): Promise<void> {
+    await this.usersService.updateUserDeviceToken(userId, deviceToken);
   }
 }

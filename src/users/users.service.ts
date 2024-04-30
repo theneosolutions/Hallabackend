@@ -34,7 +34,6 @@ import { EventsService } from 'src/events/events.service';
 
 import { UserStats } from './interfaces/user.interface';
 
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -217,27 +216,29 @@ export class UsersService {
 
   public async getUserStats(userId: string): Promise<UserStats> {
     const parsedValue = parseInt(userId, 10);
-  
+
     if (isNaN(parsedValue) || parsedValue < 1 || !isInt(parsedValue)) {
       throw new BadRequestException('User Id must be a positive integer');
     }
-  
+
     const user = await this.findOneById(parsedValue);
-  
+
     if (!user) {
       throw new NotFoundException(`User with id ${userId} not found!`);
     }
-  
-    const revenueGeneratedByUser = await this.transactionsService.revenueGenereatedByUser(parsedValue);
-  
-    const userEventCount = await this.eventsService.getUserEventCount(parsedValue);
-  
+
+    const revenueGeneratedByUser =
+      await this.transactionsService.revenueGenereatedByUser(parsedValue);
+
+    const userEventCount = await this.eventsService.getUserEventCount(
+      parsedValue,
+    );
+
     return {
       revenueGeneratedByUser,
       userEventCount,
     };
   }
-  
 
   public async findOneByEmail(email: string): Promise<Users> {
     const user = await this.usersRepository.findOneBy({
@@ -532,5 +533,23 @@ export class UsersService {
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 
     return new PageDto(entities, pageMetaDto);
+  }
+
+  async updateUserDeviceToken(
+    userId: number,
+    deviceToken: string,
+  ): Promise<void> {
+    const user = await this.usersRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User with ID ' + userId + ' not found!');
+    }
+
+    user.deviceToken = deviceToken;
+    await this.usersRepository.save(user);
   }
 }
