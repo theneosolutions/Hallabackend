@@ -38,7 +38,7 @@ export class ResponseContactsMapper implements IResponseContacts {
 
   @ApiProperty({
     description: 'Country calling code',
-    example:'+92',
+    example: '+92',
     minLength: 2,
     maxLength: 100,
     type: String,
@@ -47,7 +47,7 @@ export class ResponseContactsMapper implements IResponseContacts {
 
   @ApiProperty({
     description: 'The user phone number without country code',
-    example:'123456789',
+    example: '123456789',
     minLength: 5,
     maxLength: 100,
     type: Number,

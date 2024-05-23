@@ -1,4 +1,3 @@
-
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import {
@@ -27,13 +26,11 @@ import Handlebars from 'handlebars';
 import { join } from 'path';
 import { EventInvitessContacts } from 'src/events/entities/events_invites_contacts.entity';
 import * as qrcode from 'qrcode';
-import nodeHtmlToImage from 'node-html-to-image'
+import nodeHtmlToImage from 'node-html-to-image';
 import { ConfigService } from '@nestjs/config';
 import { eventNames } from 'process';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
-
-
 
 const unirest = require('unirest');
 const signale = require('signale');
@@ -41,19 +38,17 @@ const fs = require('fs');
 const messageParser = require('./msg_parser');
 const WhatsappCloudAPI = require('whatsappcloudapi_wrapper');
 
-
 @Injectable()
 export class WhatsappService {
-
   private readonly accessToken = process.env.Meta_WA_accessToken;
   private readonly graphAPIVersion = 'v18.0';
-  private readonly senderPhoneNumberId = process.env.Meta_WA_SenderPhoneNumberId;
+  private readonly senderPhoneNumberId =
+    process.env.Meta_WA_SenderPhoneNumberId;
   private baseUrl: any = `https://graph.facebook.com/${this.graphAPIVersion}/${this.senderPhoneNumberId}`;
   private readonly WABA_ID = process.env.Meta_WA_wabaId;
   private readonly templates: ITemplates;
   private readonly domain: string;
   private newMessage = 0;
-
 
   constructor(
     @InjectRepository(Contacts)
@@ -65,16 +60,14 @@ export class WhatsappService {
     @InjectRepository(EventsChats)
     private readonly eventsChats: Repository<EventsChats>,
 
-    
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
-    
+
     private readonly commonService: CommonService,
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => SocketGateway))
-    private readonly socketGateway: SocketGateway
+    private readonly socketGateway: SocketGateway,
   ) {
-
     this.domain = this.configService.get<string>('domain');
     this.templates = {
       invite: WhatsappService.parseTemplate('invite.hbs'),
@@ -91,11 +84,9 @@ export class WhatsappService {
     return Handlebars.compile<ITemplatedData>(templateText, { strict: true });
   }
 
-
   public async create(origin: string | undefined, body: any): Promise<any> {
     let data = this.parseMessage(body);
     try {
-
       if (data?.isMessage) {
         let incomingMessage = data.message;
         let recipientPhone = incomingMessage.from.phone; // extract the phone number of sender
@@ -105,30 +96,53 @@ export class WhatsappService {
 
         switch (incomingMessage.type) {
           case 'text_message':
-            await this.processTextMessage(incomingMessage, recipientPhone, recipientName, typeOfMsg, message_id);
+            await this.processTextMessage(
+              incomingMessage,
+              recipientPhone,
+              recipientName,
+              typeOfMsg,
+              message_id,
+            );
             break;
           case 'simple_button_message':
-            await this.processButtonMessage(incomingMessage, recipientPhone, recipientName, typeOfMsg, message_id);
+            await this.processButtonMessage(
+              incomingMessage,
+              recipientPhone,
+              recipientName,
+              typeOfMsg,
+              message_id,
+            );
             break;
           case 'radio_button_message':
-            await this.processRadioButtonMessage(incomingMessage, recipientPhone, recipientName, typeOfMsg, message_id);
+            await this.processRadioButtonMessage(
+              incomingMessage,
+              recipientPhone,
+              recipientName,
+              typeOfMsg,
+              message_id,
+            );
             break;
           default:
             break;
         }
-
       }
-
     } catch (error) {
-      console.log("🚀 ~ WhatsappService ~ create ~ error:", error)
+      console.log('🚀 ~ WhatsappService ~ create ~ error:', error);
     }
-
   }
 
-  private async processTextMessage(incomingMessage: any, recipientPhone: any, recipientName: any, typeOfMsg: any, message_id: any): Promise<void> {
+  private async processTextMessage(
+    incomingMessage: any,
+    recipientPhone: any,
+    recipientName: any,
+    typeOfMsg: any,
+    message_id: any,
+  ): Promise<void> {
     if (typeOfMsg === 'text_message') {
       this.newMessage = 1;
-      const contactInfo: any = await this.findByCombinedPhoneNumber(recipientPhone);
+      const contactInfo: any = await this.findByCombinedPhoneNumber(
+        recipientPhone,
+      );
       const userEvents: any = await this.findInviteByContactId(contactInfo?.id);
       if (userEvents.length == 1) {
         const invite = userEvents[0];
@@ -163,7 +177,7 @@ export class WhatsappService {
                     id: `other_${invite?.eventId}_${invite?.invites?.id}`,
                   },
                 ],
-              }
+              },
             ],
           });
           invite.sendList = false;
@@ -171,7 +185,7 @@ export class WhatsappService {
           setTimeout(async () => {
             invite.sendList = true;
             await this.eventInvitessContacts.save(invite);
-          }, 2000)
+          }, 2000);
         } else {
           const message = {
             action: 'message',
@@ -180,9 +194,9 @@ export class WhatsappService {
             actionUser: invite?.usersId,
             contact: invite?.invites?.id,
             event: invite?.eventId,
-            sentBy:invite?.invites?.id
-          }
-          console.log("🚀 ~ WhatsappService ~ create ~ message:", message)
+            sentBy: invite?.invites?.id,
+          };
+          console.log('🚀 ~ WhatsappService ~ create ~ message:', message);
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
           this.emitEvent('chat', chat);
@@ -198,18 +212,17 @@ export class WhatsappService {
             invite.sendList = true;
             invite.selectedEvent = false;
             await this.eventInvitessContacts.save(invite);
-          })
-
+          });
         }
       } else {
-        const sendMessage = []
+        const sendMessage = [];
         userEvents?.map((invite: any) => {
           if (invite?.selectedEvent) {
-            sendMessage.push(invite)
+            sendMessage.push(invite);
           }
-        })
+        });
         if (sendMessage.length == 1) {
-          const inviteDetail = sendMessage[0]
+          const inviteDetail = sendMessage[0];
           const message = {
             action: 'message',
             actionData: incomingMessage?.text?.body,
@@ -217,9 +230,9 @@ export class WhatsappService {
             actionUser: inviteDetail?.usersId,
             contact: inviteDetail?.invites?.id,
             event: inviteDetail?.eventId,
-            sentBy:inviteDetail?.invites?.id
-          }
-          console.log("🚀 ~ WhatsappService ~ create ~ message:", message)
+            sentBy: inviteDetail?.invites?.id,
+          };
+          console.log('🚀 ~ WhatsappService ~ create ~ message:', message);
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
           this.emitEvent('chat', chat);
@@ -234,16 +247,15 @@ export class WhatsappService {
             inviteDetail.sendList = true;
             inviteDetail.selectedEvent = false;
             await this.eventInvitessContacts.save(inviteDetail);
-          })
-
+          });
         } else {
           const rows = userEvents?.map((invite: any) => {
             return {
               title: invite?.events?.name,
               description: ' ',
               id: `event-selected_${invite?.eventId}_${invite?.invites?.id}`,
-            }
-          })
+            };
+          });
 
           await this.sendRadioButtons({
             recipientPhone: recipientPhone,
@@ -254,14 +266,11 @@ export class WhatsappService {
               {
                 title: ' ',
                 rows: rows,
-              }
+              },
             ],
           });
         }
-
-
       }
-
     }
   }
 
@@ -270,7 +279,7 @@ export class WhatsappService {
     recipientPhone: string,
     recipientName: string,
     typeOfMsg: string,
-    message_id: string
+    message_id: string,
   ): Promise<void> {
     try {
       if (typeOfMsg === 'simple_button_message') {
@@ -313,13 +322,19 @@ export class WhatsappService {
     }
   }
 
-  private async handleConfirmEventButton(button_event: any[], recipientPhone: string): Promise<void> {
-    const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
+  private async handleConfirmEventButton(
+    button_event: any[],
+    recipientPhone: string,
+  ): Promise<void> {
+    const invite: any = await this.findInviteOneById(
+      button_event[2],
+      button_event[1],
+    );
     if (!invite) {
       console.error('Invite not found for confirmation button event.');
       return;
     }
-    const url = `https://${this.domain}/api/events/scan-qrcode/${invite?.code}`
+    const url = `https://${this.domain}/api/events/scan-qrcode/${invite?.code}`;
     const qrCodeDataURL = await this.generateQrCode(url);
     const html = this.templates.invite({
       guests: String(invite?.numberOfGuests),
@@ -327,28 +342,25 @@ export class WhatsappService {
     });
     nodeHtmlToImage({
       output: join(__dirname, '..', '..', 'qrcodes', `${invite?.code}.png`),
-      html: html
-    })
-      .then(async () => {
-        const imageResponse: any = await this.sendImage({
-          recipientPhone: recipientPhone,
-          caption: `Please use this code to access (${invite?.events?.name}),make sure to save the image before it expire.`,
-          url: `https://${this.domain}/api/events/qrcodes/${invite?.code}.png`,
-        });
-        if (imageResponse && imageResponse?.error) {
-          console.error("Error sending image:", imageResponse?.error);
-        }
-        invite.status = 'confirmed'
-        await this.eventInvitessContacts.save(invite);
-
-      })
-
-
-
-
+      html: html,
+    }).then(async () => {
+      const imageResponse: any = await this.sendImage({
+        recipientPhone: recipientPhone,
+        caption: `Please use this code to access (${invite?.events?.name}),make sure to save the image before it expire.`,
+        url: `https://${this.domain}/api/events/qrcodes/${invite?.code}.png`,
+      });
+      if (imageResponse && imageResponse?.error) {
+        console.error('Error sending image:', imageResponse?.error);
+      }
+      invite.status = 'confirmed';
+      await this.eventInvitessContacts.save(invite);
+    });
   }
 
-  private async handleLocationEventButton(button_event: any[], recipientPhone: string): Promise<void> {
+  private async handleLocationEventButton(
+    button_event: any[],
+    recipientPhone: string,
+  ): Promise<void> {
     const event = await this.findEventOneById(button_event[1]);
     if (!event) {
       console.error('Event not found for location button event.');
@@ -364,8 +376,14 @@ export class WhatsappService {
     });
   }
 
-  private async handleDelineEventButton(button_event: any[], recipientPhone: string): Promise<void> {
-    const invite: any = await this.findInviteOneById(button_event[2], button_event[1]);
+  private async handleDelineEventButton(
+    button_event: any[],
+    recipientPhone: string,
+  ): Promise<void> {
+    const invite: any = await this.findInviteOneById(
+      button_event[2],
+      button_event[1],
+    );
     if (!invite) {
       console.error('Invite not found for delineation button event.');
       return;
@@ -388,7 +406,9 @@ export class WhatsappService {
     await this.eventInvitessContacts.save(invite);
   }
 
-  private async handleDelineNoEventButton(recipientPhone: string): Promise<void> {
+  private async handleDelineNoEventButton(
+    recipientPhone: string,
+  ): Promise<void> {
     // Send thank you message for declining...
     await this.sendText({
       message: 'Thank you',
@@ -396,8 +416,14 @@ export class WhatsappService {
     });
   }
 
-  private async handleDelineYesEventButton(button_event: any[], recipientPhone: string): Promise<void> {
-    const invite = await this.findInviteOneById(button_event[2], button_event[1]);
+  private async handleDelineYesEventButton(
+    button_event: any[],
+    recipientPhone: string,
+  ): Promise<void> {
+    const invite = await this.findInviteOneById(
+      button_event[2],
+      button_event[1],
+    );
     if (!invite) {
       console.error('Invite not found for delineation (yes) button event.');
       return;
@@ -417,7 +443,8 @@ export class WhatsappService {
 
   private async handleOtherButton(recipientPhone: string): Promise<void> {
     this.sendText({
-      message: 'Welcome to Halla Electronic invitaions! We are here to assist you.To speek with our customer serviceteam, please click on the link below.',
+      message:
+        'Welcome to Halla Electronic invitaions! We are here to assist you.To speek with our customer serviceteam, please click on the link below.',
       recipientPhone: recipientPhone,
     });
   }
@@ -427,7 +454,7 @@ export class WhatsappService {
     recipientPhone: any,
     recipientName: any,
     typeOfMsg: any,
-    message_id: any
+    message_id: any,
   ): Promise<void> {
     if (typeOfMsg !== 'radio_button_message') return;
 
@@ -439,16 +466,29 @@ export class WhatsappService {
     try {
       switch (button_event[0]) {
         case 'event-selected':
-          await this.handleEventSelected(button_event[1], button_event[2], recipientPhone);
+          await this.handleEventSelected(
+            button_event[1],
+            button_event[2],
+            recipientPhone,
+          );
           break;
         case 'event-location':
           await this.handleEventLocation(button_event[1], recipientPhone);
           break;
         case 'event-message':
-          await this.handleEventMessage(button_event[1], button_event[2], recipientPhone);
+          await this.handleEventMessage(
+            button_event[1],
+            button_event[2],
+            recipientPhone,
+          );
           break;
         case 'event-invitaion':
-          await this.handleEventInvitation(button_event[1], button_event[2], recipientPhone, recipientName);
+          await this.handleEventInvitation(
+            button_event[1],
+            button_event[2],
+            recipientPhone,
+            recipientName,
+          );
           break;
         case 'other':
           this.handleOther(recipientPhone);
@@ -461,8 +501,15 @@ export class WhatsappService {
     }
   }
 
-  private async handleEventSelected(eventId: string, inviteId: string, recipientPhone: any): Promise<void> {
-    const invite: any = await this.findInviteOneById(Number(inviteId), Number(eventId));
+  private async handleEventSelected(
+    eventId: string,
+    inviteId: string,
+    recipientPhone: any,
+  ): Promise<void> {
+    const invite: any = await this.findInviteOneById(
+      Number(inviteId),
+      Number(eventId),
+    );
     invite.selectedEvent = true;
     invite.sendList = false;
     await this.eventInvitessContacts.save(invite);
@@ -476,13 +523,29 @@ export class WhatsappService {
         {
           title: ' ',
           rows: [
-            { title: 'Send message', description: ' ', id: `event-message_${invite?.eventId}_${invite?.invites?.id}` },
-            { title: 'Re-send the invitation', description: ' ', id: `event-invitaion_${invite?.eventId}_${invite?.invites?.id}` },
-            { title: 'Re-send the location', description: ' ', id: `event-location_${invite?.eventId}_${invite?.invites?.id}` },
-            { title: 'Other', description: ' ', id: `other_${invite?.eventId}_${invite?.invites?.id}` }
-          ]
-        }
-      ]
+            {
+              title: 'Send message',
+              description: ' ',
+              id: `event-message_${invite?.eventId}_${invite?.invites?.id}`,
+            },
+            {
+              title: 'Re-send the invitation',
+              description: ' ',
+              id: `event-invitaion_${invite?.eventId}_${invite?.invites?.id}`,
+            },
+            {
+              title: 'Re-send the location',
+              description: ' ',
+              id: `event-location_${invite?.eventId}_${invite?.invites?.id}`,
+            },
+            {
+              title: 'Other',
+              description: ' ',
+              id: `other_${invite?.eventId}_${invite?.invites?.id}`,
+            },
+          ],
+        },
+      ],
     });
 
     invite.sendList = false;
@@ -494,7 +557,10 @@ export class WhatsappService {
     }, 2000);
   }
 
-  private async handleEventLocation(eventId: string, recipientPhone: any): Promise<void> {
+  private async handleEventLocation(
+    eventId: string,
+    recipientPhone: any,
+  ): Promise<void> {
     const event = await this.findEventOneById(Number(eventId));
     if (!event) return;
 
@@ -507,8 +573,15 @@ export class WhatsappService {
     });
   }
 
-  private async handleEventMessage(eventId: string, inviteId: string, recipientPhone: any): Promise<void> {
-    const invite: any = await this.findInviteOneById(Number(inviteId), Number(eventId));
+  private async handleEventMessage(
+    eventId: string,
+    inviteId: string,
+    recipientPhone: any,
+  ): Promise<void> {
+    const invite: any = await this.findInviteOneById(
+      Number(inviteId),
+      Number(eventId),
+    );
     invite.selectedEvent = true;
     invite.sendList = false;
     await this.eventInvitessContacts.save(invite);
@@ -519,8 +592,16 @@ export class WhatsappService {
     });
   }
 
-  private async handleEventInvitation(eventId: string, inviteId: string, recipientPhone: any, recipientName: any): Promise<void> {
-    const invite: any = await this.findInviteOneById(Number(inviteId), Number(eventId));
+  private async handleEventInvitation(
+    eventId: string,
+    inviteId: string,
+    recipientPhone: any,
+    recipientName: any,
+  ): Promise<void> {
+    const invite: any = await this.findInviteOneById(
+      Number(inviteId),
+      Number(eventId),
+    );
     const { invites, events }: any = invite;
     const { image, name: eventName, id }: any = events;
     const { callingCode, phoneNumber, name }: any = invites;
@@ -531,29 +612,48 @@ export class WhatsappService {
     });
 
     if (imageResponse && imageResponse?.error) {
-      console.error("Error sending image:", imageResponse?.error);
+      console.error('Error sending image:', imageResponse?.error);
     }
 
     await this.sendSimpleButtons({
       message: `Hey ${recipientName}, \nWe are pleased to invite you to ${eventName}.`,
       recipientPhone: recipientPhone,
       listOfButtons: [
-        { title: 'Confirm', id: `event-confirm_${invite?.eventId}_${invite?.invites?.id}` },
-        { title: 'Decline', id: `event-decline_${invite?.eventId}_${invite?.invites?.id}` },
-        { title: 'Event Location', id: `event-location_${invite?.eventId}_${invite?.invites?.id}` },
+        {
+          title: 'Confirm',
+          id: `event-confirm_${invite?.eventId}_${invite?.invites?.id}`,
+        },
+        {
+          title: 'Decline',
+          id: `event-decline_${invite?.eventId}_${invite?.invites?.id}`,
+        },
+        {
+          title: 'Event Location',
+          id: `event-location_${invite?.eventId}_${invite?.invites?.id}`,
+        },
       ],
     });
   }
 
   private async handleOther(recipientPhone: any): Promise<void> {
     this.sendText({
-      message: 'Welcome to Halla Electronic invitations! We are here to assist you. To speak with our customer service team, please click on the link below.',
+      message:
+        'Welcome to Halla Electronic invitations! We are here to assist you. To speak with our customer service team, please click on the link below.',
       recipientPhone: recipientPhone,
     });
   }
 
   public async sendInviteToGuest(body: any): Promise<any> {
-    const { callingCode, phoneNumber, text, image, recipientName, eventName, eventId, contactId } = body;
+    const {
+      callingCode,
+      phoneNumber,
+      text,
+      image,
+      recipientName,
+      eventName,
+      eventId,
+      contactId,
+    } = body;
     const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
 
     try {
@@ -566,7 +666,7 @@ export class WhatsappService {
 
         // Check if there's any error in sending image
         if (imageResponse && imageResponse?.error) {
-          console.error("Error sending image:", imageResponse?.error);
+          console.error('Error sending image:', imageResponse?.error);
         }
       }
 
@@ -576,25 +676,26 @@ export class WhatsappService {
         listOfButtons: [
           { title: 'Confirm', id: `event-confirm_${eventId}_${contactId}` },
           { title: 'Decline', id: `event-decline_${eventId}_${contactId}` },
-          { title: 'Event Location', id: `event-location_${eventId}_${contactId}` },
+          {
+            title: 'Event Location',
+            id: `event-location_${eventId}_${contactId}`,
+          },
         ],
       });
 
-      console.log("🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:", response);
+      console.log(
+        '🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:',
+        response,
+      );
       return response;
     } catch (error) {
-      console.error("Error sending invite to guest:", error);
+      console.error('Error sending invite to guest:', error);
       return error;
     }
   }
 
-  
   public async sendEventReminder(body: any): Promise<any> {
-    const {
-      callingCode,
-      phoneNumber,
-      text,
-    } = body;
+    const { callingCode, phoneNumber, text } = body;
     const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
 
     try {
@@ -614,84 +715,126 @@ export class WhatsappService {
     }
   }
 
-
-  public async findEventOneById(
-    id: number,
-  ): Promise<Events> {
+  public async findEventOneById(id: number): Promise<Events> {
     const eventId = await this.eventsRepository.findOneBy({ id });
-    console.log("🚀 ~ CardService ~ cardItem:", eventId)
+    console.log('🚀 ~ CardService ~ cardItem:', eventId);
     this.commonService.checkEntityExistence(eventId, 'event');
     return eventId;
   }
 
-  public async saveAndSendMessage(payload:any): Promise<any> {
-   try {
-     const {event,contact,actionUser} = payload;
-    const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
-    const invite:any = await queryBuilder.where("event_invitess_contacts.eventId = :eventId", { eventId: event })
-      .andWhere("event_invitess_contacts.contactsId = :contactsId", { contactsId: contact })
-      .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
-      .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getOne();
-    
-    const chat = this.eventsChats.create(payload);
-    await this.eventsChats.insert(chat);
-    this.sendText({
-      message: payload?.actionData,
-      recipientPhone: `${invite?.invites?.callingCode}${invite?.invites?.phoneNumber}`,
-    });
-    return chat;
-   } catch (error) {
-    console.log("🚀 ~ WhatsappService ~ saveAndSendMessage ~ error:", error)
-    
-   }
+  public async saveAndSendMessage(payload: any): Promise<any> {
+    try {
+      const { event, contact, actionUser } = payload;
+      const queryBuilder = this.eventInvitessContacts.createQueryBuilder(
+        'event_invitess_contacts',
+      );
+      const invite: any = await queryBuilder
+        .where('event_invitess_contacts.eventId = :eventId', { eventId: event })
+        .andWhere('event_invitess_contacts.contactsId = :contactsId', {
+          contactsId: contact,
+        })
+        .leftJoinAndSelect('event_invitess_contacts.invites', 'invites')
+        .leftJoinAndSelect('event_invitess_contacts.events', 'events')
+        .select([
+          'event_invitess_contacts',
+          'events',
+          'invites.id',
+          'invites.name',
+          'invites.callingCode',
+          'invites.phoneNumber',
+          'invites.email',
+        ])
+        .getOne();
+
+      const chat = this.eventsChats.create(payload);
+      await this.eventsChats.insert(chat);
+      this.sendText({
+        message: payload?.actionData,
+        recipientPhone: `${invite?.invites?.callingCode}${invite?.invites?.phoneNumber}`,
+      });
+      return chat;
+    } catch (error) {
+      console.log('🚀 ~ WhatsappService ~ saveAndSendMessage ~ error:', error);
+    }
   }
 
   public async findInviteOneById(
     id: number,
-    eventId: number
+    eventId: number,
   ): Promise<EventInvitessContacts> {
-    const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
-    const invite = await queryBuilder.where("event_invitess_contacts.eventId = :eventId", { eventId: eventId })
-      .andWhere("event_invitess_contacts.contactsId = :contactsId", { contactsId: id })
-      .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
-      .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getOne();
-    console.log("🚀 ~ WhatsappService ~ invite:", invite)
+    const queryBuilder = this.eventInvitessContacts.createQueryBuilder(
+      'event_invitess_contacts',
+    );
+    const invite = await queryBuilder
+      .where('event_invitess_contacts.eventId = :eventId', { eventId: eventId })
+      .andWhere('event_invitess_contacts.contactsId = :contactsId', {
+        contactsId: id,
+      })
+      .leftJoinAndSelect('event_invitess_contacts.invites', 'invites')
+      .leftJoinAndSelect('event_invitess_contacts.events', 'events')
+      .select([
+        'event_invitess_contacts',
+        'events',
+        'invites.id',
+        'invites.name',
+        'invites.callingCode',
+        'invites.phoneNumber',
+        'invites.email',
+      ])
+      .getOne();
+    console.log('🚀 ~ WhatsappService ~ invite:', invite);
     return invite;
   }
 
-  public async findInviteByContactId(id: number): Promise<EventInvitessContacts[]> {
-    const queryBuilder = this.eventInvitessContacts.createQueryBuilder("event_invitess_contacts");
-    const invite = await queryBuilder.where("event_invitess_contacts.contactsId = :contactsId", { contactsId: id })
-      .leftJoinAndSelect('event_invitess_contacts.invites', 'invites').leftJoinAndSelect('event_invitess_contacts.events', 'events')
-      .select(['event_invitess_contacts', 'events', 'invites.id', 'invites.name', 'invites.callingCode', 'invites.phoneNumber', 'invites.email']).getMany();
+  public async findInviteByContactId(
+    id: number,
+  ): Promise<EventInvitessContacts[]> {
+    const queryBuilder = this.eventInvitessContacts.createQueryBuilder(
+      'event_invitess_contacts',
+    );
+    const invite = await queryBuilder
+      .where('event_invitess_contacts.contactsId = :contactsId', {
+        contactsId: id,
+      })
+      .leftJoinAndSelect('event_invitess_contacts.invites', 'invites')
+      .leftJoinAndSelect('event_invitess_contacts.events', 'events')
+      .select([
+        'event_invitess_contacts',
+        'events',
+        'invites.id',
+        'invites.name',
+        'invites.callingCode',
+        'invites.phoneNumber',
+        'invites.email',
+      ])
+      .getMany();
     return invite;
   }
 
   public async sendText({ message, recipientPhone }) {
-   try {
-    this._mustHaverecipientPhone(recipientPhone);
-    this._mustHaveMessage(message);
-    let body = {
-      messaging_product: 'whatsapp',
-      to: recipientPhone,
-      type: 'text',
-      text: {
-        preview_url: false,
-        body: message,
-      },
-    };
+    try {
+      this._mustHaverecipientPhone(recipientPhone);
+      this._mustHaveMessage(message);
+      let body = {
+        messaging_product: 'whatsapp',
+        to: recipientPhone,
+        type: 'text',
+        text: {
+          preview_url: false,
+          body: message,
+        },
+      };
 
-    let response = await this._fetchAssistant({
-      url: '/messages',
-      method: 'POST',
-      body,
-    });
+      let response = await this._fetchAssistant({
+        url: '/messages',
+        method: 'POST',
+        body,
+      });
 
-    return response;
-   } catch (error) {
-    console.log("🚀 ~ WhatsappService ~ sendText ~ error:", error)
-    
-   }
+      return response;
+    } catch (error) {
+      console.log('🚀 ~ WhatsappService ~ sendText ~ error:', error);
+    }
   }
 
   public async emitEvent(event: string, data: any): Promise<void> {
@@ -727,32 +870,32 @@ export class WhatsappService {
         let rows = section.rows?.map((row) => {
           if (!row.id) {
             throw new Error(
-              '"row.id" of an item is required in list of radio buttons.'
+              '"row.id" of an item is required in list of radio buttons.',
             );
           }
           if (row.id.length > 200) {
             throw new Error(
-              'The row id must be between 1 and 200 characters long.'
+              'The row id must be between 1 and 200 characters long.',
             );
           }
           if (!row.title) {
             throw new Error(
-              '"row.title" of an item is required in list of radio buttons.'
+              '"row.title" of an item is required in list of radio buttons.',
             );
           }
           if (row.title.length > 24) {
             throw new Error(
-              'The row title must be between 1 and 24 characters long.'
+              'The row title must be between 1 and 24 characters long.',
             );
           }
           if (!row.description) {
             throw new Error(
-              '"row.description" of an item is required in list of radio buttons.'
+              '"row.description" of an item is required in list of radio buttons.',
             );
           }
           if (row.description.length > 72) {
             throw new Error(
-              'The row description must be between 1 and 72 characters long.'
+              'The row description must be between 1 and 72 characters long.',
             );
           }
 
@@ -766,7 +909,7 @@ export class WhatsappService {
         });
         if (!title) {
           throw new Error(
-            '"title" of a section is required in list of radio buttons.'
+            '"title" of a section is required in list of radio buttons.',
           );
         }
         return {
@@ -778,7 +921,7 @@ export class WhatsappService {
 
     if (totalNumberOfItems > 10) {
       throw new Error(
-        'The total number of items in the rows must be equal or less than 10.'
+        'The total number of items in the rows must be equal or less than 10.',
       );
     }
 
@@ -819,12 +962,17 @@ export class WhatsappService {
     return response;
   }
 
-  public async findByCombinedPhoneNumber(phoneNumber: string): Promise<Contacts> {
+  public async findByCombinedPhoneNumber(
+    phoneNumber: string,
+  ): Promise<Contacts> {
     const combinedPhoneNumber = `+${phoneNumber}`;
 
     return await this.contactsRepository
-      .createQueryBuilder("contacts")
-      .where("CONCAT(contacts.callingCode, contacts.phoneNumber) = :combinedPhoneNumber", { combinedPhoneNumber })
+      .createQueryBuilder('contacts')
+      .where(
+        'CONCAT(contacts.callingCode, contacts.phoneNumber) = :combinedPhoneNumber',
+        { combinedPhoneNumber },
+      )
       .getOne();
   }
 
@@ -836,7 +984,6 @@ export class WhatsappService {
       throw new Error('Failed to generate QR code.');
     }
   }
-
 
   private async _fetchAssistant({ baseUrl, url, method, headers, body }: any) {
     return new Promise((resolve, reject) => {
@@ -860,7 +1007,7 @@ export class WhatsappService {
 
       if (!method) {
         signale.warn(
-          `WARNING: "method" is missing. The default method will default to ${defaultMethod}. If this is not what you want, please specify the method.`
+          `WARNING: "method" is missing. The default method will default to ${defaultMethod}. If this is not what you want, please specify the method.`,
         );
       }
 
@@ -871,8 +1018,8 @@ export class WhatsappService {
       if (method?.toUpperCase() === 'POST' && !body) {
         signale.warn(
           `WARNING: "body" is missing. The default body will default to ${JSON.stringify(
-            defaultBody
-          )}. If this is not what you want, please specify the body.`
+            defaultBody,
+          )}. If this is not what you want, please specify the body.`,
         );
       }
 
@@ -892,10 +1039,7 @@ export class WhatsappService {
           if (res.error) {
             let errorObject = () => {
               try {
-                return (
-                  res.body?.error ||
-                  JSON.parse(res.raw_body)
-                );
+                return res.body?.error || JSON.parse(res.raw_body);
               } catch (e) {
                 return {
                   error: res.raw_body,
@@ -914,15 +1058,15 @@ export class WhatsappService {
           }
         });
     });
-  };
-
+  }
 
   async sendSimpleButtons({ recipientPhone, message, listOfButtons }) {
     this._mustHaveMessage(message);
     this._mustHaverecipientPhone(recipientPhone);
 
     if (!listOfButtons) throw new Error('listOfButtons cannot be empty');
-    if (listOfButtons.length > 3) throw new Error('listOfButtons cannot be bigger than 3 elements');
+    if (listOfButtons.length > 3)
+      throw new Error('listOfButtons cannot be bigger than 3 elements');
 
     let validButtons = listOfButtons
       .map((button) => {
@@ -931,7 +1075,7 @@ export class WhatsappService {
         }
         if (button.title.length > 20) {
           throw new Error(
-            'The button title must be between 1 and 20 characters long.'
+            'The button title must be between 1 and 20 characters long.',
           );
         }
         if (!button.id) {
@@ -939,7 +1083,7 @@ export class WhatsappService {
         }
         if (button.id.length > 256) {
           throw new Error(
-            'The button id must be between 1 and 256 characters long.'
+            'The button id must be between 1 and 256 characters long.',
           );
         }
 
@@ -1008,14 +1152,12 @@ export class WhatsappService {
     this._mustHaverecipientPhone(recipientPhone);
     if (!latitude || !longitude) {
       throw new Error(
-        '"latitude" and "longitude" are required in making a request'
+        '"latitude" and "longitude" are required in making a request',
       );
     }
 
     if (!name || !address) {
-      throw new Error(
-        '"name" and "address" are required in making a request'
-      );
+      throw new Error('"name" and "address" are required in making a request');
     }
 
     let body = {
@@ -1040,43 +1182,39 @@ export class WhatsappService {
     return response;
   }
 
-
   private _mustHaverecipientPhone(recipientPhone) {
     if (!recipientPhone) {
-      throw new Error(
-        '"recipientPhone" is required in making a request'
-      );
+      throw new Error('"recipientPhone" is required in making a request');
     }
-  };
+  }
   private _mustHaveMessage(message) {
     if (!message) {
       throw new Error('"message" is required in making a request');
     }
-  };
+  }
 
   private _mustHaveTemplateName(templateName) {
     if (!templateName) {
       throw new Error('"templateName" is required in making a request');
     }
-  };
+  }
   private _mustHaveComponents(components) {
     if (!components) {
       throw new Error('"components" is required in making a request');
     }
-  };
+  }
   private _mustHaveLanguageCode(languageCode) {
     if (!languageCode) {
       throw new Error('"languageCode" is required in making a request');
     }
-  };
+  }
   private _mustHaveMessageId(messageId) {
     if (!messageId) {
       throw new Error('"messageId" is required in making a request');
     }
-  };
+  }
 
   private parseMessage(requestBody: any) {
     return messageParser({ requestBody, currentWABA_ID: this.WABA_ID });
   }
-
 }

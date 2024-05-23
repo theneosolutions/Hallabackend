@@ -44,5 +44,4 @@ export abstract class TransactionDto {
   })
   @IsString()
   public paymentId: string;
-
 }

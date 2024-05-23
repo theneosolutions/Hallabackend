@@ -1,4 +1,4 @@
 export interface ITemplatedData {
-    qrCodeDataURL: string;
-    guests: string;
+  qrCodeDataURL: string;
+  guests: string;
 }

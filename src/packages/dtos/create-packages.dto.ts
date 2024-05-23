@@ -28,7 +28,7 @@ export abstract class PackagesDto {
 
   @ApiProperty({
     description: 'Package price',
-    example:80,
+    example: 80,
     minLength: 3,
     maxLength: 100,
     type: Number,
@@ -38,7 +38,7 @@ export abstract class PackagesDto {
 
   @ApiProperty({
     description: 'Number of guest',
-    example:10,
+    example: 10,
     type: Number,
   })
   @IsNumber()
@@ -65,5 +65,4 @@ export abstract class PackagesDto {
   @IsOptional()
   @IsString()
   public description: string;
-
 }

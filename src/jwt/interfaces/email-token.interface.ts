@@ -1,5 +1,3 @@
- 
-
 import { IAccessPayload } from './access-token.interface';
 import { ITokenBase } from './token-base.interface';
 

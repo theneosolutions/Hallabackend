@@ -1,11 +1,8 @@
- 
-
 import { IsString, Length, Matches } from 'class-validator';
 import { SLUG_REGEX } from '../../common/consts/regex.const';
 import { ApiProperty } from '@nestjs/swagger';
 
 export abstract class UsernameDto {
-  
   @ApiProperty({
     description: 'The username of the user',
     minLength: 3,

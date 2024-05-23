@@ -1,4 +1,3 @@
-
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import {
@@ -23,20 +22,21 @@ import { PageDto } from './dtos/page.dto';
 import { PageMetaDto } from './dtos/page-meta.dto';
 import { IMessage } from 'src/common/interfaces/message.interface';
 
-
 @Injectable()
 export class ContactsService {
   constructor(
     @InjectRepository(Contacts)
     private readonly contactsRepository: Repository<Contacts>,
 
-      
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
     private readonly commonService: CommonService,
-  ) { }
+  ) {}
 
-  public async create(origin: string | undefined, dto: ContactsDto): Promise<Contacts> {
+  public async create(
+    origin: string | undefined,
+    dto: ContactsDto,
+  ): Promise<Contacts> {
     const { user: userId, name, suffix, email, callingCode, phoneNumber } = dto;
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
@@ -79,31 +79,42 @@ export class ContactsService {
     return constact;
   }
 
-  public async getOrCreateContacts(contacts: any[], userId: number): Promise<number[]> {
-    const ContactsIds = await Promise.all(contacts.map(async (contact: any) => {
-      const phone = await this.findOneByPhone(contact.callingCode, contact.phoneNumber);
-      if (phone && phone.id) {
-        return {
-          id: phone.id,
-          ...contact
-        };
-      } else {
-        const newPhone = await this.createContact(contact, userId);
-        return {
-          id: newPhone.id,
-          ...contact
-        };
-      }
-    }));
+  public async getOrCreateContacts(
+    contacts: any[],
+    userId: number,
+  ): Promise<number[]> {
+    const ContactsIds = await Promise.all(
+      contacts.map(async (contact: any) => {
+        const phone = await this.findOneByPhone(
+          contact.callingCode,
+          contact.phoneNumber,
+        );
+        if (phone && phone.id) {
+          return {
+            id: phone.id,
+            ...contact,
+          };
+        } else {
+          const newPhone = await this.createContact(contact, userId);
+          return {
+            id: newPhone.id,
+            ...contact,
+          };
+        }
+      }),
+    );
 
     return ContactsIds;
   }
 
   public async findOneByPhone(
     callingCode: string,
-    phoneNumber: string
+    phoneNumber: string,
   ): Promise<Contacts> {
-    return await this.contactsRepository.findOneBy({ callingCode, phoneNumber });
+    return await this.contactsRepository.findOneBy({
+      callingCode,
+      phoneNumber,
+    });
   }
 
   public async createContact(contact: any, userId: any): Promise<Contacts> {
@@ -114,7 +125,10 @@ export class ContactsService {
     }
 
     const userDetail = await this.usersService.findOneById(userId);
-    console.log("🚀 ~ ContactsService ~ createContact ~ userDetail:", userDetail)
+    console.log(
+      '🚀 ~ ContactsService ~ createContact ~ userDetail:',
+      userDetail,
+    );
 
     if (isNull(userDetail) || isUndefined(userDetail)) {
       throw new BadRequestException(['User not found with id: ' + userId]);
@@ -142,72 +156,69 @@ export class ContactsService {
     return constact;
   }
 
-  public async findOneByWhere(
-    where: any,
-  ): Promise<Contacts[]> {
-    const contactsItems = await this.contactsRepository.findBy(where)
+  public async findOneByWhere(where: any): Promise<Contacts[]> {
+    const contactsItems = await this.contactsRepository.findBy(where);
     return contactsItems;
   }
 
-  private async checkPhoneUniqueness(callingCode: string, phoneNumber: string): Promise<void> {
-    const count = await this.contactsRepository.countBy({ callingCode, phoneNumber });
+  private async checkPhoneUniqueness(
+    callingCode: string,
+    phoneNumber: string,
+  ): Promise<void> {
+    const count = await this.contactsRepository.countBy({
+      callingCode,
+      phoneNumber,
+    });
 
     if (count > 0) {
       throw new ConflictException(['Phone number already in use']);
     }
   }
 
-  public async findContactById(
-    id: string,
-  ): Promise<any> {
+  public async findContactById(id: string): Promise<any> {
     const parsedValue = parseInt(id, 10);
 
     if (isNaN(parsedValue) && !isInt(parsedValue)) {
       throw new BadRequestException('Invalid contact id: ' + parsedValue);
-
     }
 
-    const contactId: any = await this
-      .contactsRepository
-      .createQueryBuilder("contacts")
-      .where("contacts.id = :id", { id: parsedValue })
+    const contactId: any = await this.contactsRepository
+      .createQueryBuilder('contacts')
+      .where('contacts.id = :id', { id: parsedValue })
       .leftJoinAndSelect('contacts.user', 'user')
-      .select([
-        'contacts',
-        'user.id',
-        'user.firstName',
-        'user.lastName',
-      ])
+      .select(['contacts', 'user.id', 'user.firstName', 'user.lastName'])
       .getOne();
 
     return contactId;
   }
 
-
-  public async findOneById(
-    id: number,
-  ): Promise<Contacts> {
+  public async findOneById(id: number): Promise<Contacts> {
     const contactId = await this.contactsRepository.findOneBy({ id });
-    console.log("🚀 ~ CardService ~ cardItem:", contactId)
+    console.log('🚀 ~ CardService ~ cardItem:', contactId);
     this.commonService.checkEntityExistence(contactId, 'contact');
     return contactId;
   }
 
   public async getContactsByUserId(
     id: string,
-    pageOptionsDto: PageOptionsDto
+    pageOptionsDto: PageOptionsDto,
   ): Promise<PageDto<ContactsDto>> {
-    const queryBuilder = this.contactsRepository.createQueryBuilder("contacts");
-    queryBuilder.where("contacts.userId = :id", { id: id })
+    const queryBuilder = this.contactsRepository.createQueryBuilder('contacts');
+    queryBuilder
+      .where('contacts.userId = :id', { id: id })
       .leftJoinAndSelect('contacts.user', 'user')
-      .select(['contacts', 'user.id', 'user.firstName', 'user.lastName',])
-      .orderBy("contacts.createdAt", pageOptionsDto.order)
+      .select(['contacts', 'user.id', 'user.firstName', 'user.lastName'])
+      .orderBy('contacts.createdAt', pageOptionsDto.order);
 
     if (pageOptionsDto.status !== '') {
-      queryBuilder.andWhere("contacts.status like :status", { status: `%${pageOptionsDto.status}%` });
+      queryBuilder.andWhere('contacts.status like :status', {
+        status: `%${pageOptionsDto.status}%`,
+      });
     }
     if (pageOptionsDto.status == '') {
-      queryBuilder.andWhere("contacts.status IN(:...keys)", { keys: ['active'] });
+      queryBuilder.andWhere('contacts.status IN(:...keys)', {
+        keys: ['active'],
+      });
     }
 
     const itemCount = await queryBuilder.getCount();
@@ -218,13 +229,15 @@ export class ContactsService {
     return new PageDto(await Promise.all(entities), pageMetaDto);
   }
 
-  public async update(contactId: string, dto: UpdateContactsDto): Promise<Contacts> {
+  public async update(
+    contactId: string,
+    dto: UpdateContactsDto,
+  ): Promise<Contacts> {
     try {
       const parsedValue = parseInt(contactId, 10);
 
       if (isNaN(parsedValue) && !isInt(parsedValue)) {
         throw new BadRequestException('Invalid contact id: ' + parsedValue);
-
       }
       const contactData = await this.findOneById(parsedValue);
       // Update other fields
@@ -238,7 +251,6 @@ export class ContactsService {
     } catch (error) {
       throw new BadRequestException([error?.message]);
     }
-
   }
 
   public async delete(id: string): Promise<IMessage> {
@@ -246,17 +258,8 @@ export class ContactsService {
 
     if (isNaN(parsedValue) && !isInt(parsedValue)) {
       throw new BadRequestException('Invalid contact id: ' + parsedValue);
-
     }
     await this.contactsRepository.softDelete(parsedValue);
     return this.commonService.generateMessage('Contact deleted successfully!');
   }
-
-
-
-
-
-
 }
-
-

@@ -4,7 +4,7 @@ import { IsString, Length, IsNumberString } from 'class-validator';
 export abstract class PhoneDto {
   @ApiProperty({
     description: 'Country calling code',
-    example:'+92',
+    example: '+92',
     minLength: 2,
     maxLength: 100,
     type: String,
@@ -17,7 +17,7 @@ export abstract class PhoneDto {
 
   @ApiProperty({
     description: 'The user phone number without country code',
-    example:'123456789',
+    example: '123456789',
     minLength: 5,
     maxLength: 100,
     type: Number,
@@ -27,5 +27,4 @@ export abstract class PhoneDto {
     message: 'phone number has to be between 5 and 100 characters.',
   })
   public phoneNumber!: string;
-
 }

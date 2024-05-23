@@ -6,7 +6,10 @@ import { Events } from 'src/events/entities/event.entity';
 import { WhatsappModule } from 'src/whatsapp/whatsapp.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Events]),forwardRef(() => WhatsappModule)],
+  imports: [
+    TypeOrmModule.forFeature([Events]),
+    forwardRef(() => WhatsappModule),
+  ],
   providers: [SocketGateway, SocketService],
   exports: [SocketService],
 })

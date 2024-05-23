@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNumber, IsNumberString, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsNumber,
+  IsNumberString,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 import { NAME_REGEX } from '../../common/consts/regex.const';
 
 export abstract class ContactsDto {
@@ -56,7 +64,7 @@ export abstract class ContactsDto {
 
   @ApiProperty({
     description: 'Country calling code',
-    example:'+92',
+    example: '+92',
     minLength: 2,
     maxLength: 100,
     type: String,
@@ -69,7 +77,7 @@ export abstract class ContactsDto {
 
   @ApiProperty({
     description: 'The user phone number without country code',
-    example:'123456789',
+    example: '123456789',
     minLength: 5,
     maxLength: 100,
     type: Number,
@@ -79,5 +87,4 @@ export abstract class ContactsDto {
     message: 'phone number has to be between 5 and 100 characters.',
   })
   public phoneNumber!: string;
-  
 }

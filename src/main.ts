@@ -9,14 +9,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log']
+    logger: ['error', 'warn', 'log'],
   });
   const configService = app.get(ConfigService);
   app.use(cookieParser(configService.get<string>('COOKIE_SECRET')));
   app.use(helmet());
   app.enableCors({
     credentials: true,
-    origin: '*'  //`https://${configService.get<string>('domain')}`,
+    origin: '*', //`https://${configService.get<string>('domain')}`,
   });
   app.useGlobalPipes(
     new ValidationPipe({
@@ -34,7 +34,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   const theme = new SwaggerTheme();
   // @ts-ignore
-  const options= theme.getDefaultConfig('newspaper');
+  const options = theme.getDefaultConfig('newspaper');
   SwaggerModule.setup('docs', app, document, options);
 
   await app.listen(configService.get<number>('port'));

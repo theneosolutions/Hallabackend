@@ -20,13 +20,9 @@ export class ResponseEventsMapper implements IResponseEvent {
 
   @ApiProperty({
     type: String,
-    example: [
-      '+923012345678',
-      '+962245234234',
-    ]
+    example: ['+923012345678', '+962245234234'],
   })
   public contacts?: String[];
-
 
   @ApiProperty({
     description: 'Event Name',
@@ -37,7 +33,8 @@ export class ResponseEventsMapper implements IResponseEvent {
 
   @ApiProperty({
     description: 'Event Image',
-    example: 'https://www.shutterstock.com/shutterstock/photos/1883117047/display_1500/stock-vector-vector-grand-opening-invitation-or-flyer-design-with-event-details-for-restaurant-1883117047.jpg',
+    example:
+      'https://www.shutterstock.com/shutterstock/photos/1883117047/display_1500/stock-vector-vector-grand-opening-invitation-or-flyer-design-with-event-details-for-restaurant-1883117047.jpg',
     type: String,
   })
   public image: string;
@@ -112,7 +109,7 @@ export class ResponseEventsMapper implements IResponseEvent {
       eventDate: event?.eventDate,
       status: event?.status,
       notes: event?.notes,
-      showQRCode:event?.showQRCode,
+      showQRCode: event?.showQRCode,
       latitude: event?.latitude,
       longitude: event?.longitude,
       code: event?.code,

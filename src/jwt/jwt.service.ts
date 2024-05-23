@@ -1,5 +1,3 @@
-
-
 import {
   BadRequestException,
   Injectable,
@@ -102,11 +100,15 @@ export class JwtService {
       case TokenTypeEnum.ACCESS:
         const { privateKey, time: accessTime } = this.jwtConfig.access;
         return this.commonService.throwInternalError(
-          JwtService.generateTokenAsync({ id: user.id,type:user.roles }, privateKey, {
-            ...jwtOptions,
-            expiresIn: accessTime,
-            algorithm: 'RS256',
-          }),
+          JwtService.generateTokenAsync(
+            { id: user.id, type: user.roles },
+            privateKey,
+            {
+              ...jwtOptions,
+              expiresIn: accessTime,
+              algorithm: 'RS256',
+            },
+          ),
         );
       case TokenTypeEnum.REFRESH:
         const { secret: refreshSecret, time: refreshTime } =
@@ -115,7 +117,7 @@ export class JwtService {
           JwtService.generateTokenAsync(
             {
               id: user.id,
-              type:user.roles,
+              type: user.roles,
               version: user.credentials.version,
               tokenId: tokenId ?? v4(),
             },
@@ -131,7 +133,11 @@ export class JwtService {
         const { secret, time } = this.jwtConfig[tokenType];
         return this.commonService.throwInternalError(
           JwtService.generateTokenAsync(
-            { id: user.id,type:user.roles, version: user.credentials.version },
+            {
+              id: user.id,
+              type: user.roles,
+              version: user.credentials.version,
+            },
             secret,
             {
               ...jwtOptions,

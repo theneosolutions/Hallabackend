@@ -1,14 +1,23 @@
-
-
-import { Column, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { IsEmail, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 import { NAME_REGEX } from '../../common/consts/regex.const';
 import { IContacts } from '../interfaces/contacts.interface';
 import { v4 as uuidV4 } from 'uuid';
 import { Users } from 'src/users/entities/user.entity';
 
-export type ContactsStatus = "active" | "disabled";
-
+export type ContactsStatus = 'active' | 'disabled';
 
 @Entity()
 export class Contacts implements IContacts {
@@ -35,8 +44,8 @@ export class Contacts implements IContacts {
   @IsString()
   @Column({
     type: 'enum',
-    enum: ["active", "disabled"],
-    default: "active"
+    enum: ['active', 'disabled'],
+    default: 'active',
   })
   public status: ContactsStatus;
 

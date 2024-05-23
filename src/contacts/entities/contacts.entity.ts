@@ -1,7 +1,20 @@
-
-
-import { Column, DeleteDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { IsEmail, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 import { NAME_REGEX } from '../../common/consts/regex.const';
 import { IContacts } from '../interfaces/contacts.interface';
 import { v4 as uuidV4 } from 'uuid';
@@ -9,8 +22,7 @@ import { Users } from 'src/users/entities/user.entity';
 import { Events } from 'src/events/entities/event.entity';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 
-export type ContactsStatus = "active" | "disabled";
-
+export type ContactsStatus = 'active' | 'disabled';
 
 @Entity()
 export class Contacts implements IContacts {
@@ -37,8 +49,8 @@ export class Contacts implements IContacts {
   @IsString()
   @Column({
     type: 'enum',
-    enum: ["active", "disabled"],
-    default: "active"
+    enum: ['active', 'disabled'],
+    default: 'active',
   })
   public status: ContactsStatus;
 
@@ -78,13 +90,14 @@ export class Contacts implements IContacts {
   @DeleteDateColumn()
   public deletedAt: Date;
 
-  @OneToMany(() => EventsChats, eventsChats => eventsChats.contact)
+  @OneToMany(() => EventsChats, (eventsChats) => eventsChats.contact)
   eventsChats: EventsChats[];
 
   @ManyToMany(
     () => Events,
-    event => event.invites, //optional
-    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' })
+    (event) => event.invites, //optional
+    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' },
+  )
   @JoinTable({
     name: 'event_invitess_contacts',
     joinColumn: {

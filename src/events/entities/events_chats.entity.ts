@@ -1,5 +1,11 @@
-
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, DeleteDateColumn, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  DeleteDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { Users } from 'src/users/entities/user.entity';
 import { Events } from './event.entity';
 import { Contacts } from 'src/contacts/entities/contacts.entity';
@@ -24,13 +30,13 @@ export class EventsChats {
   @Column({ type: 'varchar', default: '', nullable: true })
   public mediaCaption: string;
 
-  @Column({ type: 'boolean', default: false})
+  @Column({ type: 'boolean', default: false })
   public isRead: true | false = false;
 
   @Column({ type: 'text', nullable: true })
   additionalInfo: string;
 
-  @Column({ type: "int" , nullable: true})
+  @Column({ type: 'int', nullable: true })
   sentBy: number;
 
   @Column({ default: () => `now()`, nullable: false })
@@ -39,12 +45,12 @@ export class EventsChats {
   @Column({ default: () => `now()`, nullable: false })
   public updatedAt: Date;
 
-  @ManyToOne(() => Users, user => user.eventsChats)
+  @ManyToOne(() => Users, (user) => user.eventsChats)
   actionUser: Users;
 
-  @ManyToOne(() => Contacts, contact => contact.eventsChats)
+  @ManyToOne(() => Contacts, (contact) => contact.eventsChats)
   contact: Contacts;
 
-  @ManyToOne(() => Events, events => events.eventschats)
+  @ManyToOne(() => Events, (events) => events.eventschats)
   event: Events;
 }

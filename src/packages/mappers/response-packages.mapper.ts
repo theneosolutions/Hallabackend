@@ -47,7 +47,6 @@ export class ResponsePackagesMapper implements IResponsePackages {
   })
   public notes: string;
 
-
   @ApiProperty({
     description: 'Package full description',
     example: '',
@@ -63,7 +62,6 @@ export class ResponsePackagesMapper implements IResponsePackages {
     type: String,
   })
   public status: string;
-
 
   @ApiProperty({
     description: 'User creation date',

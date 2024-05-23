@@ -1,4 +1,3 @@
-
 export interface INotifications {
   id: number;
   user: number;
@@ -6,8 +5,8 @@ export interface INotifications {
   status: boolean;
   resourceId: number;
   resourceType: string;
-  parentType?: string,
-  parent?: number,
+  parentType?: string;
+  parent?: number;
   createdAt: Date;
   updatedAt: Date;
 }

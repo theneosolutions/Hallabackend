@@ -1,6 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsBoolean, IsDateString, IsLatitude, IsLongitude, IsNumber, IsOptional, IsString, ValidateNested} from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsLatitude,
+  IsLongitude,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { PhoneDto } from './../dtos/phone.dto';
 
 export abstract class EventGuestsDto {
@@ -14,12 +25,14 @@ export abstract class EventGuestsDto {
 
   @ApiProperty({
     type: String,
-    example: [{
-      callingCode:'+92',
-      phoneNumber:'3012345678',
-      name:'Jhon',
-      guestcount:1
-    }]
+    example: [
+      {
+        callingCode: '+92',
+        phoneNumber: '3012345678',
+        name: 'Jhon',
+        guestcount: 1,
+      },
+    ],
   })
   @ArrayMinSize(1)
   @IsOptional()
@@ -27,6 +40,4 @@ export abstract class EventGuestsDto {
   @ValidateNested({ each: true })
   @Type(() => PhoneDto)
   public contacts?: PhoneDto[];
-
-
 }

@@ -1,4 +1,3 @@
-
 export interface ISingleJwt {
   secret: string;
   time: number;

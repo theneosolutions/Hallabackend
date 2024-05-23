@@ -1,12 +1,16 @@
-
-
-import { Column, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { IsOptional, IsString} from 'class-validator';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { IsOptional, IsString } from 'class-validator';
 import { ITransactions } from '../interfaces/transactions.interface';
 import { Users } from 'src/users/entities/user.entity';
 import { Packages } from 'src/packages/entities/packages.entity';
 
-export type TransactionsStatus = "Initiated" | "Paid" | "Failed";
+export type TransactionsStatus = 'Initiated' | 'Paid' | 'Failed';
 
 @Entity()
 export class Transactions implements ITransactions {
@@ -25,8 +29,8 @@ export class Transactions implements ITransactions {
   @IsString()
   @Column({
     type: 'enum',
-    enum: ["Initiated", "Paid", "Failed"],
-    default: "Initiated"
+    enum: ['Initiated', 'Paid', 'Failed'],
+    default: 'Initiated',
   })
   public status: TransactionsStatus;
 

@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IResponseNotifications } from '../interfaces/response-notifications.interface';
 import { INotifications } from '../interfaces/notifications.interface';
 
-
 export class ResponseNotificationMapper implements IResponseNotifications {
   @ApiProperty({
     description: 'Notification id',
@@ -11,7 +10,6 @@ export class ResponseNotificationMapper implements IResponseNotifications {
     type: Number,
   })
   public id: number;
-
 
   @ApiProperty({
     description: 'User id',
@@ -33,7 +31,6 @@ export class ResponseNotificationMapper implements IResponseNotifications {
     type: String,
   })
   public resourceType: string;
-
 
   @ApiProperty({
     description: 'notification content',

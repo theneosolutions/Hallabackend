@@ -37,5 +37,4 @@ export abstract class PhoneOTPDto {
   })
   @IsNumber()
   public otp!: number;
-
 }

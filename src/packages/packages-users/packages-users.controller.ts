@@ -1,23 +1,23 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpStatus,
-    Param,
-    Patch,
-    Post,
-    Query,
-    Res,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-    ApiBadRequestResponse,
-    ApiNoContentResponse,
-    ApiNotFoundResponse,
-    ApiOkResponse,
-    ApiTags,
-    ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
@@ -41,48 +41,43 @@ import { ApiPaginatedResponse } from '../decorators/api-paginated-response.decor
 @ApiTags('Packages')
 @Controller('packages')
 export class PackagesUsersController {
+  constructor(
+    private readonly packagesService: PackagesService,
+    private readonly configService: ConfigService,
+  ) {}
 
-    constructor(
-        private readonly packagesService: PackagesService,
-        private readonly configService: ConfigService,
-    ) { }
-    
-    @Get()
-    @ApiPaginatedResponse(ResponsePackagesMapper)
-    @ApiBadRequestResponse({
-        description: 'Something is invalid on the request body',
-    })
-    @ApiNotFoundResponse({
-        description: 'The printer is not found.',
-    })
-    async getPackages(
-        @Query() pageOptionsDto: PageOptionsDto
-    ): Promise<PageDto<PackagesDto>> {
+  @Get()
+  @ApiPaginatedResponse(ResponsePackagesMapper)
+  @ApiBadRequestResponse({
+    description: 'Something is invalid on the request body',
+  })
+  @ApiNotFoundResponse({
+    description: 'The printer is not found.',
+  })
+  async getPackages(
+    @Query() pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<PackagesDto>> {
+    return this.packagesService.getPackages(pageOptionsDto);
+  }
 
-        return this.packagesService.getPackages(pageOptionsDto);
-    }
-
-
-    @Get('/:id')
-    @ApiOkResponse({
-        type: ResponsePackagesMapper,
-        description: 'Package is found and returned.',
-    })
-    @ApiBadRequestResponse({
-        description: 'Something is invalid on the request body',
-    })
-    @ApiNotFoundResponse({
-        description: 'Package is not found.',
-    })
-    @ApiUnauthorizedResponse({
-        description: 'User is not logged in.',
-    })
-    public async getByPackageId(@Param() params: GetPackageParams): Promise<IResponsePackages> {
-        const packageInfo = await this.packagesService.findOneById(params.id);
-        return ResponsePackagesMapper.map(packageInfo);
-    }
-
-
-
+  @Get('/:id')
+  @ApiOkResponse({
+    type: ResponsePackagesMapper,
+    description: 'Package is found and returned.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Something is invalid on the request body',
+  })
+  @ApiNotFoundResponse({
+    description: 'Package is not found.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User is not logged in.',
+  })
+  public async getByPackageId(
+    @Param() params: GetPackageParams,
+  ): Promise<IResponsePackages> {
+    const packageInfo = await this.packagesService.findOneById(params.id);
+    return ResponsePackagesMapper.map(packageInfo);
+  }
 }
-

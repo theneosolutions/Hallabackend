@@ -1,5 +1,13 @@
-
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, DeleteDateColumn, OneToMany, JoinTable, ManyToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  DeleteDateColumn,
+  OneToMany,
+  JoinTable,
+  ManyToMany,
+} from 'typeorm';
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { IEvent } from '../interfaces/event.interface';
 import { Contacts } from '../../contacts/entities/contacts.entity';
@@ -17,7 +25,6 @@ export class Events implements IEvent {
   @Column({ type: 'varchar', default: 'active', nullable: false })
   public name: string;
 
-
   @IsString()
   @Column({ type: 'varchar', default: '', nullable: true })
   public image: string;
@@ -26,7 +33,6 @@ export class Events implements IEvent {
   @IsString()
   @Column({ type: 'varchar', default: 'draft' })
   public status: string;
-
 
   @IsOptional()
   @IsString()
@@ -55,12 +61,12 @@ export class Events implements IEvent {
 
   @IsOptional()
   @IsString()
-  @Column({ type: 'decimal', precision: 10, scale: 6 , nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   public latitude: number;
 
   @IsOptional()
   @IsString()
-  @Column({ type: 'decimal', precision: 10, scale: 6 , nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   public longitude: number;
 
   @IsOptional()
@@ -71,21 +77,18 @@ export class Events implements IEvent {
   @ManyToOne(() => Users, (user) => user.id)
   public user: number;
 
-  
   @ManyToMany(() => Card)
   @JoinTable()
-  card: Card[]
+  card: Card[];
 
-  @ManyToMany(
-    () => Contacts,
-    contacts => contacts.events,
-    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION', },
-  )
+  @ManyToMany(() => Contacts, (contacts) => contacts.events, {
+    onDelete: 'NO ACTION',
+    onUpdate: 'NO ACTION',
+  })
   invites?: Contacts[];
 
-  @OneToMany(() => EventsChats, eventschats => eventschats.event)
+  @OneToMany(() => EventsChats, (eventschats) => eventschats.event)
   eventschats: EventsChats[];
-
 
   @Column({ default: () => `now()`, nullable: false })
   public createdAt: Date;

@@ -1,7 +1,20 @@
-
-
-import { Column, DeleteDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { IsBoolean, IsEmail, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import {
+  IsBoolean,
+  IsEmail,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 import {
   BCRYPT_HASH,
   NAME_REGEX,
@@ -14,9 +27,9 @@ import { EventInvitessContacts } from 'src/events/entities/events_invites_contac
 import { Events } from 'src/events/entities/event.entity';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 
-export type UserStatus = "active" | "disabled";
+export type UserStatus = 'active' | 'disabled';
 
-export type UserRole = "admin" | "moderator" | "user";
+export type UserRole = 'admin' | 'moderator' | 'user';
 
 @Entity()
 export class Users implements IUser {
@@ -60,17 +73,17 @@ export class Users implements IUser {
   @IsString()
   @Column({
     type: 'enum',
-    enum: ["admin", "moderator", "user"],
-    default: "user"
+    enum: ['admin', 'moderator', 'user'],
+    default: 'user',
   })
-  public roles: UserRole
+  public roles: UserRole;
 
   @IsOptional()
   @IsString()
   @Column({
     type: 'enum',
-    enum: ["active", "disabled"],
-    default: "active"
+    enum: ['active', 'disabled'],
+    default: 'active',
   })
   public status: UserStatus;
 
@@ -109,7 +122,13 @@ export class Users implements IUser {
 
   @IsOptional()
   @IsString()
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.0, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0.0,
+    nullable: true,
+  })
   public wallet: number;
 
   @IsBoolean()
@@ -154,7 +173,7 @@ export class Users implements IUser {
   @Column(() => CredentialsEmbeddable, { prefix: false })
   public credentials: CredentialsEmbeddable;
 
-  @OneToMany(() => EventsChats, eventsChats => eventsChats.actionUser)
+  @OneToMany(() => EventsChats, (eventsChats) => eventsChats.actionUser)
   eventsChats: EventsChats[];
 
   @Column({ default: () => `now()`, nullable: false })
@@ -165,5 +184,4 @@ export class Users implements IUser {
 
   @DeleteDateColumn()
   public deletedAt: Date;
-
 }

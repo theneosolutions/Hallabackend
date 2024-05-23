@@ -1,8 +1,6 @@
-
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { IConfig } from './interfaces/config.interface';
-
 
 export function config(): IConfig {
   const publicKey = readFileSync(
@@ -10,7 +8,7 @@ export function config(): IConfig {
     'utf-8',
   );
   const privateKey = readFileSync(
-    join(__dirname, '..', '..',  'keys/private.key'),
+    join(__dirname, '..', '..', 'keys/private.key'),
     'utf-8',
   );
   const testing = process.env.NODE_ENV !== 'production';

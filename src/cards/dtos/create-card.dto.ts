@@ -1,8 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNumber, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 
 export abstract class CardDto {
-
   @ApiProperty({
     description: 'Card Name',
     example: 'Birthday invitation',
@@ -37,6 +43,4 @@ export abstract class CardDto {
   @IsOptional()
   @IsString()
   public file: string;
-
-
 }

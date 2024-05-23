@@ -13,12 +13,12 @@ export class SocketService {
     @InjectRepository(Events)
     private readonly eventsRepository: Repository<Events>,
     @Inject(forwardRef(() => WhatsappService))
-    private readonly whatsappService: WhatsappService
+    private readonly whatsappService: WhatsappService,
   ) {}
 
   handleConnection(socket: Socket): void {
     const clientId = socket.id;
-    console.log("🚀 ~ SocketService ~ handleConnection ~ clientId:", clientId)
+    console.log('🚀 ~ SocketService ~ handleConnection ~ clientId:', clientId);
     this.connectedClients.set(clientId, socket);
 
     socket.on('disconnect', () => {
@@ -28,11 +28,11 @@ export class SocketService {
     // Handle other events and messages from the client
   }
 
-  async handleMessages(payload:any): Promise<any> {
-   try {
-    // console.log("🚀 ~ handleSendMessage ~ payload:", payload)
-    const sms:any = await this.whatsappService.saveAndSendMessage(payload);
-    const chat:any ={
+  async handleMessages(payload: any): Promise<any> {
+    try {
+      // console.log("🚀 ~ handleSendMessage ~ payload:", payload)
+      const sms: any = await this.whatsappService.saveAndSendMessage(payload);
+      const chat: any = {
         isRead: false,
         action: sms?.action,
         actionData: sms?.actionData,
@@ -43,15 +43,14 @@ export class SocketService {
         event: sms?.event,
         id: sms?.id,
         createdAt: sms?.createdAt,
-        updatedAt: sms?.createdAt
-      }
+        updatedAt: sms?.createdAt,
+      };
       // console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ sms:", chat)
-   
-    return chat;
-   } catch (error) {
-    console.log("🚀 ~ SocketService ~ handleMessages ~ error:", error)
-    
-   }
+
+      return chat;
+    } catch (error) {
+      console.log('🚀 ~ SocketService ~ handleMessages ~ error:', error);
+    }
   }
 
   // Add more methods for handling events, messages, etc.

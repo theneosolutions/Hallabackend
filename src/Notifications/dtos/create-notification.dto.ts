@@ -1,7 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNumber, IsObject, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 import { NAME_REGEX } from '../../common/consts/regex.const';
-import { ContentDto } from '../dtos/notification-content.dto'
+import { ContentDto } from '../dtos/notification-content.dto';
 
 export abstract class NotificationDto {
   @ApiProperty({
@@ -54,7 +62,6 @@ export abstract class NotificationDto {
   @IsString()
   public parentType: string;
 
-
   @ApiProperty({
     description: 'notification content',
     // example: 'You have a new meeting request with LINKEDIN',
@@ -62,6 +69,4 @@ export abstract class NotificationDto {
   })
   @IsObject()
   public content: ContentDto;
-
-
 }

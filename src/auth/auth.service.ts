@@ -1,4 +1,3 @@
-
 import {
   BadRequestException,
   CACHE_MANAGER,
@@ -59,25 +58,47 @@ export class AuthService {
   }
 
   public async signUp(dto: SignUpDto, domain?: string): Promise<IMessage> {
-    const { firstName, lastName, email, password1, password2, referredBy } = dto;
+    const { firstName, lastName, email, password1, password2, referredBy } =
+      dto;
     this.comparePasswords(password1, password2);
-    const user = await this.usersService.create(email, firstName, lastName, password1, referredBy);
+    const user = await this.usersService.create(
+      email,
+      firstName,
+      lastName,
+      password1,
+      referredBy,
+    );
     const confirmationToken = await this.jwtService.generateToken(
       user,
       TokenTypeEnum.CONFIRMATION,
       domain,
     );
     this.mailerService.sendConfirmationEmail(user, confirmationToken);
-    return this.commonService.generateMessage(`Registration successful.${user?.otp}`);
+    return this.commonService.generateMessage(
+      `Registration successful.${user?.otp}`,
+    );
   }
 
-  public async signUpWithPhone(dto: PhoneDto, domain?: string): Promise<IMessage> {
+  public async signUpWithPhone(
+    dto: PhoneDto,
+    domain?: string,
+  ): Promise<IMessage> {
     const { callingCode, phoneNumber } = dto;
-    const user = await this.usersService.createUserWithPhone(callingCode, phoneNumber);
-    await this.sendOtpPhoneWithRetry(callingCode, phoneNumber, user?.otp, 3, 1000);
-    return this.commonService.generateMessage(`Registration successful.Please verify your phone number.${user?.otp}`);
+    const user = await this.usersService.createUserWithPhone(
+      callingCode,
+      phoneNumber,
+    );
+    await this.sendOtpPhoneWithRetry(
+      callingCode,
+      phoneNumber,
+      user?.otp,
+      3,
+      1000,
+    );
+    return this.commonService.generateMessage(
+      `Registration successful.Please verify your phone number.${user?.otp}`,
+    );
   }
-
 
   public async confirmEmail(dto: ConfirmEmailDto): Promise<IAuthResult> {
     const { confirmationToken } = dto;
@@ -89,7 +110,6 @@ export class AuthService {
     const [accessToken, refreshToken] = await this.generateAuthTokens(user);
     return { user, accessToken, refreshToken };
   }
-
 
   public async signIn(dto: SignInDto, domain?: string): Promise<IAuthResult> {
     const { emailOrUsername, password } = dto;
@@ -109,11 +129,10 @@ export class AuthService {
         domain,
       );
       this.mailerService.sendConfirmationEmail(user, confirmationToken);
-      throw new UnauthorizedException(
-        ['Please confirm your email, a new email has been sent',]
-      );
+      throw new UnauthorizedException([
+        'Please confirm your email, a new email has been sent',
+      ]);
     }
-
 
     const [accessToken, refreshToken] = await this.generateAuthTokens(
       user,
@@ -122,35 +141,60 @@ export class AuthService {
     return { user, accessToken, refreshToken };
   }
 
-  public async signInWithPhone(dto: PhoneDto, domain?: string): Promise<IMessage> {
+  public async signInWithPhone(
+    dto: PhoneDto,
+    domain?: string,
+  ): Promise<IMessage> {
     const { callingCode, phoneNumber } = dto;
     const user = await this.userByPhoneNumber(callingCode, phoneNumber);
     if (!user?.id) {
       throw new BadRequestException(['Invalid credentials']);
     }
-    await this.sendOtpPhoneWithRetry(callingCode, phoneNumber, user?.otp, 3, 1000);
-    return this.commonService.generateMessage(`Login successful.Please verify your phone number.${user?.otp}`);
+    await this.sendOtpPhoneWithRetry(
+      callingCode,
+      phoneNumber,
+      user?.otp,
+      3,
+      1000,
+    );
+    return this.commonService.generateMessage(
+      `Login successful.Please verify your phone number.${user?.otp}`,
+    );
   }
 
-  public async reSendUserOTP(dto: PhoneDto, domain?: string): Promise<IMessage> {
+  public async reSendUserOTP(
+    dto: PhoneDto,
+    domain?: string,
+  ): Promise<IMessage> {
     const { callingCode, phoneNumber } = dto;
     const user = await this.userByPhoneNumber(callingCode, phoneNumber);
     if (!user?.id) {
       throw new NotFoundException(['Invalid credentials']);
     }
-    await this.sendOtpPhoneWithRetry(callingCode, phoneNumber, user?.otp, 3, 1000);
-    return this.commonService.generateMessage(`OTP is sent to the User.${user?.otp}`);
+    await this.sendOtpPhoneWithRetry(
+      callingCode,
+      phoneNumber,
+      user?.otp,
+      3,
+      1000,
+    );
+    return this.commonService.generateMessage(
+      `OTP is sent to the User.${user?.otp}`,
+    );
   }
 
-  public async verifyUserOTP(dto: PhoneOTPDto, domain?: string): Promise<IAuthResult> {
+  public async verifyUserOTP(
+    dto: PhoneOTPDto,
+    domain?: string,
+  ): Promise<IAuthResult> {
     const { callingCode, phoneNumber, otp } = dto;
     const user = await this.userByPhoneNumber(callingCode, phoneNumber);
-    console.log("🚀 ~ AuthService ~ verifyUserOTP ~ user:", user)
+    console.log('🚀 ~ AuthService ~ verifyUserOTP ~ user:', user);
     if (!user?.id) {
       throw new NotFoundException(['Invalid credentials']);
     }
     this.compareOTPs(user?.otp, otp);
-    await this.usersService.updateUserOTP(user?.id)
+    await this.usersService.updateUserOTP(user?.id);
     const [accessToken, refreshToken] = await this.generateAuthTokens(
       user,
       domain,
@@ -158,11 +202,13 @@ export class AuthService {
     return { user, accessToken, refreshToken };
   }
 
-
-  public async verifyUserEmailOTP(dto: EmailOTPDto, domain?: string): Promise<IAuthResult> {
+  public async verifyUserEmailOTP(
+    dto: EmailOTPDto,
+    domain?: string,
+  ): Promise<IAuthResult> {
     const { email, otp } = dto;
     const user = await this.userByEmailOrUsername(email);
-    console.log("🚀 ~ AuthService ~ verifyUserOTP ~ user:", user)
+    console.log('🚀 ~ AuthService ~ verifyUserOTP ~ user:', user);
     if (!user?.id) {
       throw new NotFoundException(['Invalid credentials']);
     }
@@ -194,30 +240,36 @@ export class AuthService {
     return { user, accessToken, refreshToken: newRefreshToken };
   }
 
-
   public async googleLogin(newUser: any, domain?: string) {
-    let email: string, firstName: string, lastName: string, picture: string = '';
+    let email: string,
+      firstName: string,
+      lastName: string,
+      picture: string = '';
     if (newUser.hasOwnProperty('email')) {
       email = newUser.email;
     }
     if (newUser.hasOwnProperty('picture')) {
       picture = newUser.picture;
     }
-    if (newUser.hasOwnProperty('firstName') | newUser.hasOwnProperty('lastName')) {
+    if (
+      newUser.hasOwnProperty('firstName') | newUser.hasOwnProperty('lastName')
+    ) {
       lastName = `${newUser.lastName}`;
       firstName = `${newUser.firstName}`;
-
     }
 
-    const user = await this.usersService.loginWithGoogle(email, firstName, lastName, picture);
+    const user = await this.usersService.loginWithGoogle(
+      email,
+      firstName,
+      lastName,
+      picture,
+    );
     const [accessToken, refreshToken] = await this.generateAuthTokens(
       user,
       domain,
     );
     return { user, accessToken, refreshToken };
-
   }
-
 
   public async logout(refreshToken: string): Promise<IMessage> {
     const { id, tokenId } = await this.jwtService.verifyToken<IRefreshToken>(
@@ -227,7 +279,6 @@ export class AuthService {
     await this.blacklistToken(id, tokenId);
     return this.commonService.generateMessage('Logout successful');
   }
-
 
   public async resetPasswordEmail(
     dto: EmailDto,
@@ -252,16 +303,26 @@ export class AuthService {
     const user = await this.userByEmailOrUsername(email);
     this.comparePasswords(password1, password2);
     this.compareOTPs(user?.otp, otp);
-    await this.usersService.resetPassword(user?.id, user.credentials.version, password1);
+    await this.usersService.resetPassword(
+      user?.id,
+      user.credentials.version,
+      password1,
+    );
     return this.commonService.generateMessage('Password reset successful');
   }
 
-  public async resetPasswordWithPhone(dto: ResetPasswordWithPhoneDto): Promise<IMessage> {
-    const { password1, password2, otp, callingCode, phoneNumber, } = dto;
+  public async resetPasswordWithPhone(
+    dto: ResetPasswordWithPhoneDto,
+  ): Promise<IMessage> {
+    const { password1, password2, otp, callingCode, phoneNumber } = dto;
     const user = await this.userByPhoneNumber(callingCode, phoneNumber);
     this.comparePasswords(password1, password2);
     this.compareOTPs(user?.otp, otp);
-    await this.usersService.resetPasswordWithPhone(user?.id, user.credentials.version, password1);
+    await this.usersService.resetPasswordWithPhone(
+      user?.id,
+      user.credentials.version,
+      password1,
+    );
     return this.commonService.generateMessage('Password reset successful');
   }
 
@@ -358,9 +419,7 @@ export class AuthService {
     }
   }
 
-  private async userByEmailOrUsername(
-    emailOrUsername: string,
-  ): Promise<Users> {
+  private async userByEmailOrUsername(emailOrUsername: string): Promise<Users> {
     if (emailOrUsername.includes('@')) {
       if (!isEmail(emailOrUsername)) {
         throw new BadRequestException(['Invalid email']);
@@ -387,25 +446,22 @@ export class AuthService {
     return this.usersService.findOneByPhoneNumber(callingCode, phoneNumber);
   }
 
-
   private async sendOtpPhoneWithRetry(
     callingCode: string,
     phoneNumber: string,
     otp: number,
     maxRetries: number = 3,
-    retryDelay: number = 1000 // 1 second delay between retries
+    retryDelay: number = 1000, // 1 second delay between retries
   ): Promise<void> {
-
     const isLive = process.env.NODE_ENV;
     if (isLive == 'development') return;
     let retryCount = 0;
-
 
     const sendRequest = async () => {
       const message = `Your Halla verification code is: ${otp}. This code will expire in 10 minutes. Don't share this code with anyone; our employees will never ask for the code.`;
 
       const data = JSON.stringify({
-        src: "halla",
+        src: 'halla',
         dests: [`${callingCode}${phoneNumber}`],
         body: message,
         priority: 0,
@@ -414,7 +470,7 @@ export class AuthService {
         maxParts: 0,
         dlr: 0,
         prevDups: 0,
-        msgClass: "transactional"
+        msgClass: 'transactional',
       });
 
       const config = {
@@ -423,11 +479,11 @@ export class AuthService {
         url: `${process.env.OUR_SMS_BASE_URL}/msgs/sms`,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.OUR_SMS_API_KEY}`
+          Authorization: `Bearer ${process.env.OUR_SMS_API_KEY}`,
         },
-        data: data
+        data: data,
       };
-      console.log("🚀 ~ AuthService ~ sendRequest ~ config:", config)
+      console.log('🚀 ~ AuthService ~ sendRequest ~ config:', config);
 
       try {
         const response = await axios.request(config);
@@ -441,7 +497,7 @@ export class AuthService {
           console.log(error.response.headers);
         } else if (error.request) {
           // The request was made but no response was received
-          // `error.request` is an instance of XMLHttpRequest in the browser 
+          // `error.request` is an instance of XMLHttpRequest in the browser
           // and an instance of http.ClientRequest in node.js
           console.log(error.request);
         } else {
@@ -451,7 +507,7 @@ export class AuthService {
         retryCount++;
         if (retryCount <= maxRetries) {
           console.log(`Retrying (${retryCount}/${maxRetries})...`);
-          await new Promise(resolve => setTimeout(resolve, retryDelay)); // wait for retryDelay milliseconds before retrying
+          await new Promise((resolve) => setTimeout(resolve, retryDelay)); // wait for retryDelay milliseconds before retrying
           await sendRequest();
         } else {
           console.error(`Max retries exceeded. Failed to send OTP via SMS.`);
@@ -462,7 +518,6 @@ export class AuthService {
 
     await sendRequest();
   }
-
 
   public async updatePassword(
     userId: number,
@@ -504,5 +559,3 @@ export class AuthService {
     ]);
   }
 }
-
-

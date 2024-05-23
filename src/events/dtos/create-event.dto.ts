@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayMinSize, IsBoolean, IsDateString, IsLatitude, IsLongitude, IsNumber, IsOptional, IsString} from 'class-validator';
+import {
+  ArrayMinSize,
+  IsBoolean,
+  IsDateString,
+  IsLatitude,
+  IsLongitude,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export abstract class EventDto {
   @ApiProperty({
@@ -20,16 +29,12 @@ export abstract class EventDto {
 
   @ApiProperty({
     type: String,
-    example: [
-      '+923012345678',
-      '+962245234234',
-    ]
+    example: ['+923012345678', '+962245234234'],
   })
   @ArrayMinSize(1)
   @IsOptional()
   // @IsNumber()
   public contacts?: String[];
-
 
   @ApiProperty({
     description: 'Event Name',
@@ -41,7 +46,8 @@ export abstract class EventDto {
 
   @ApiProperty({
     description: 'Event Image',
-    example: 'https://www.shutterstock.com/shutterstock/photos/1883117047/display_1500/stock-vector-vector-grand-opening-invitation-or-flyer-design-with-event-details-for-restaurant-1883117047.jpg',
+    example:
+      'https://www.shutterstock.com/shutterstock/photos/1883117047/display_1500/stock-vector-vector-grand-opening-invitation-or-flyer-design-with-event-details-for-restaurant-1883117047.jpg',
     type: String,
   })
   @IsOptional()
@@ -113,5 +119,4 @@ export abstract class EventDto {
   })
   @IsLongitude()
   public longitude: number;
-
 }

@@ -1,6 +1,16 @@
-
-import { Column, Entity, PrimaryGeneratedColumn, DeleteDateColumn } from 'typeorm';
-import { IsNumber, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  DeleteDateColumn,
+} from 'typeorm';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 import { NAME_REGEX } from '../../common/consts/regex.const';
 import { IPackages } from '../interfaces/packages.interface';
 
@@ -54,5 +64,4 @@ export class Packages implements IPackages {
 
   @DeleteDateColumn()
   public deletedAt: Date;
-
 }

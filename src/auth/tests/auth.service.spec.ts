@@ -1,5 +1,3 @@
- 
-
 import { faker } from '@faker-js/faker';
 import { MikroORM } from '@mikro-orm/core';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
@@ -51,7 +49,7 @@ describe('AuthService', () => {
         CommonModule,
         UsersModule,
         JwtModule,
-        MikroOrmModule.forFeature([BlacklistedTokenEntity])
+        MikroOrmModule.forFeature([BlacklistedTokenEntity]),
       ],
       providers: [AuthService, CommonModule],
     }).compile();
@@ -63,7 +61,6 @@ describe('AuthService', () => {
     // cacheManager = module.get<Cache>(CACHE_MANAGER);
     orm = module.get<MikroORM>(MikroORM);
     await orm.getSchemaGenerator().createSchema();
-
   });
 
   const name = faker.name.firstName();
@@ -89,7 +86,6 @@ describe('AuthService', () => {
 
   describe('sign up', () => {
     it('should create a new user', async () => {
-
       const message = await authService.signUp({
         name,
         email,
@@ -112,8 +108,6 @@ describe('AuthService', () => {
       ).rejects.toThrowError('Passwords do not match');
     });
   });
-
- 
 
   describe('sign in', () => {
     it('should sign in an user by email', async () => {
@@ -175,7 +169,6 @@ describe('AuthService', () => {
         }),
       ).rejects.toThrowError('Invalid username');
     });
-
   });
 
   describe('refresh token', () => {
@@ -221,7 +214,7 @@ describe('AuthService', () => {
         token,
         TokenTypeEnum.REFRESH,
       );
-     
+
       const message = await authService.logout(token);
       expect(message.message).toStrictEqual('Logout successful');
       expect(isUUID(message.id)).toBe(true);
@@ -231,7 +224,6 @@ describe('AuthService', () => {
       );
     });
   });
-
 
   const newPassword = faker.internet.password();
   describe('reset password', () => {
@@ -293,8 +285,11 @@ describe('AuthService', () => {
     });
 
     it('old password should not work', async () => {
-      console.log("🚀 ~ file: auth.service.spec.ts:295 ~ it ~ password", password)
-      
+      console.log(
+        '🚀 ~ file: auth.service.spec.ts:295 ~ it ~ password',
+        password,
+      );
+
       await expect(
         authService.signIn({
           emailOrUsername: email,

@@ -1,5 +1,3 @@
-
-
 import { ICredentials } from './credentials.interface';
 
 export interface IUser {
@@ -22,7 +20,7 @@ export interface IUser {
   confirmed: boolean;
   isBanned: boolean;
   deviceToken?: string;
-  address?:string;
+  address?: string;
   latitude?: number;
   longitude?: number;
   credentials: ICredentials;

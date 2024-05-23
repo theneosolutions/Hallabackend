@@ -1,37 +1,37 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpStatus,
-    Param,
-    Patch,
-    Post,
-    Query,
-    Res,
-    UploadedFile,
-    UseGuards,
-    UseInterceptors,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-    ApiBadRequestResponse,
-    ApiNoContentResponse,
-    ApiNotFoundResponse,
-    ApiCreatedResponse,
-    ApiOkResponse,
-    ApiTags,
-    ApiConflictResponse,
-    ApiUnauthorizedResponse,
-    ApiConsumes,
-    ApiBody,
+  ApiBadRequestResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiConflictResponse,
+  ApiUnauthorizedResponse,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { IAuthResponseUser } from '../auth/interfaces/auth-response-user.interface';
 import { AuthResponseUserMapper } from '../auth/mappers/auth-response-user.mapper';
-import { FileInterceptor } from "@nestjs/platform-express";
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { IResponseCard } from './interfaces/response-card.interface';
 import { CardService } from './card.service';
@@ -52,70 +52,65 @@ import { GetCardByEventIdParams } from './dtos/get-card-by-EventId.params';
 @ApiTags('Cards')
 @Controller('cards')
 export class CardController {
+  constructor(
+    private readonly cardService: CardService,
+    private readonly configService: ConfigService,
+  ) {}
 
-    constructor(
-        private readonly cardService: CardService,
-        private readonly configService: ConfigService,
-    ) { }
+  @Post('/create-card')
+  @Public(['admin'])
+  @ApiOkResponse({
+    type: ResponseCardMapper,
+    description: 'Card is created and returned.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Something is invalid on the request body',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User is not logged in.',
+  })
+  public async create(
+    @CurrentUser() userId: number,
+    @Origin() origin: string | undefined,
+    @Body() cardDto: CardDto,
+  ): Promise<IResponseCard> {
+    return await this.cardService.create(origin, cardDto);
+  }
 
-    @Post('/create-card')
-    @Public(['admin'])
-    @ApiOkResponse({
-        type: ResponseCardMapper,
-        description: 'Card is created and returned.',
-    })
-    @ApiBadRequestResponse({
-        description: 'Something is invalid on the request body',
-    })
-    @ApiUnauthorizedResponse({
-        description: 'User is not logged in.',
-    })
-    public async create(
-        @CurrentUser() userId: number,
-        @Origin() origin: string | undefined,
-        @Body() cardDto: CardDto,
-    ): Promise<IResponseCard> {
+  @Get()
+  @Public(['admin', 'user'])
+  @ApiPaginatedResponse(ResponseCardMapper)
+  @ApiBadRequestResponse({
+    description: 'Something is invalid on the request body',
+  })
+  @ApiNotFoundResponse({
+    description: 'no section found.',
+  })
+  async getSections(
+    @Query() pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<CardDto>> {
+    return this.cardService.getCards(pageOptionsDto);
+  }
 
-        return await this.cardService.create(origin, cardDto);
-    }
-
-
-    @Get()
-    @Public(['admin', 'user'])
-    @ApiPaginatedResponse(ResponseCardMapper)
-    @ApiBadRequestResponse({
-        description: 'Something is invalid on the request body',
-    })
-    @ApiNotFoundResponse({
-        description: 'no section found.',
-    })
-    async getSections(
-        @Query() pageOptionsDto: PageOptionsDto
-    ): Promise<PageDto<CardDto>> {
-
-        return this.cardService.getCards(pageOptionsDto);
-    }
-
-    @Get('/:id')
-    @Public(['admin', 'user'])
-    @ApiOkResponse({
-        type: ResponseCardMapper,
-        description: 'card is found and returned.',
-    })
-    @ApiBadRequestResponse({
-        description: 'Something is invalid on the request body',
-    })
-    @ApiNotFoundResponse({
-        description: 'cardItem is not found.',
-    })
-    @ApiUnauthorizedResponse({
-        description: 'User is not logged in.',
-    })
-    public async findSectionById(@Param() params: GetCardParams): Promise<IResponseCard> {
-        const cardItem = await this.cardService.findCardById(params.id);
-        return ResponseCardMapper.map(cardItem);
-    }
-
-
+  @Get('/:id')
+  @Public(['admin', 'user'])
+  @ApiOkResponse({
+    type: ResponseCardMapper,
+    description: 'card is found and returned.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Something is invalid on the request body',
+  })
+  @ApiNotFoundResponse({
+    description: 'cardItem is not found.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User is not logged in.',
+  })
+  public async findSectionById(
+    @Param() params: GetCardParams,
+  ): Promise<IResponseCard> {
+    const cardItem = await this.cardService.findCardById(params.id);
+    return ResponseCardMapper.map(cardItem);
+  }
 }
-

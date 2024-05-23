@@ -1,5 +1,3 @@
- 
-
 export interface ITokenBase {
   iat: number;
   exp: number;

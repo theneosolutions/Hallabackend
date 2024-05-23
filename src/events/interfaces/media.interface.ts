@@ -1,4 +1,4 @@
 export interface IEventMedia {
-    link: string;
-    type: string;
-  }
+  link: string;
+  type: string;
+}

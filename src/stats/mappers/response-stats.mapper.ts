@@ -29,7 +29,6 @@ export class ResponseTransactionsMapper implements IResponseTransactions {
     description: 'Transaction amount',
     type: String,
   })
-
   public amount!: string;
 
   @ApiProperty({
@@ -40,7 +39,6 @@ export class ResponseTransactionsMapper implements IResponseTransactions {
     required: false,
     type: String,
   })
-
   public description: string;
 
   @ApiProperty({
@@ -49,7 +47,6 @@ export class ResponseTransactionsMapper implements IResponseTransactions {
     type: String,
   })
   public paymentId: string;
-
 
   @ApiProperty({
     description: 'Transaction status',
@@ -80,7 +77,7 @@ export class ResponseTransactionsMapper implements IResponseTransactions {
     return new ResponseTransactionsMapper({
       id: transaction.id,
       user: transaction.user,
-      package:transaction?.package,
+      package: transaction?.package,
       amount: transaction.amount,
       description: transaction.description,
       paymentId: transaction.paymentId,

@@ -1,5 +1,3 @@
-
-
 import { Module } from '@nestjs/common';
 import { JwtModule } from '../jwt/jwt.module';
 import { UsersModule } from '../users/users.module';
@@ -10,8 +8,13 @@ import { AuthController } from './auth.controller';
 import { MailerModule } from '../mailer/mailer.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BlacklistedToken]), UsersModule, JwtModule, MailerModule],
+  imports: [
+    TypeOrmModule.forFeature([BlacklistedToken]),
+    UsersModule,
+    JwtModule,
+    MailerModule,
+  ],
   providers: [AuthService],
   controllers: [AuthController],
 })
-export class AuthModule { }
+export class AuthModule {}

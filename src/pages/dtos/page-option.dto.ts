@@ -1,58 +1,56 @@
-import { ApiPropertyOptional } from "@nestjs/swagger";
-import { Transform, Type } from "class-transformer";
-import { IsEnum, IsInt, IsOptional, Max, Min } from "class-validator";
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export enum Order {
-    ASC = "ASC",
-    DESC = "DESC",
+  ASC = 'ASC',
+  DESC = 'DESC',
 }
 
 export enum Filterby {
-    DAILY = "daily",
-    WEEKLY = "weekly",
-    MONTH = "monthly",
-    ALL = "all"
+  DAILY = 'daily',
+  WEEKLY = 'weekly',
+  MONTH = 'monthly',
+  ALL = 'all',
 }
 
 export class PageOptionsDto {
-    @ApiPropertyOptional({ enum: Order, default: Order.ASC })
-    @IsEnum(Order)
-    @IsOptional()
-    readonly order?: Order = Order.ASC;
-    
-    @ApiPropertyOptional({
-        minimum: 1,
-        default: 1,
-    })
-    @Type(() => Number)
-    @IsInt()
-    @Min(1)
-    @IsOptional()
-    readonly page?: number = 1;
+  @ApiPropertyOptional({ enum: Order, default: Order.ASC })
+  @IsEnum(Order)
+  @IsOptional()
+  readonly order?: Order = Order.ASC;
 
-    @ApiPropertyOptional({
-        minimum: 1,
-        maximum: 100,
-        default: 10,
-    })
-    @Type(() => Number)
-    @IsInt()
-    @Min(1)
-    @Max(100)
-    @IsOptional()
-    readonly take?: number = 10;
+  @ApiPropertyOptional({
+    minimum: 1,
+    default: 1,
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  readonly page?: number = 1;
 
-    get skip(): number {
-        return (this.page - 1) * this.take;
-    }
+  @ApiPropertyOptional({
+    minimum: 1,
+    maximum: 100,
+    default: 10,
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  readonly take?: number = 10;
 
-    @ApiPropertyOptional({
-        default: '',
-    })
-    @Type(() => String)
-    @IsOptional()
-    @Transform((param) => param.value.toLowerCase())
-    readonly search?: string = '';
+  get skip(): number {
+    return (this.page - 1) * this.take;
+  }
 
-
+  @ApiPropertyOptional({
+    default: '',
+  })
+  @Type(() => String)
+  @IsOptional()
+  @Transform((param) => param.value.toLowerCase())
+  readonly search?: string = '';
 }

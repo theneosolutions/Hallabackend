@@ -1,5 +1,10 @@
-
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, DeleteDateColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  DeleteDateColumn,
+} from 'typeorm';
 import { IsOptional, IsString } from 'class-validator';
 import { INotifications } from '../interfaces/notifications.interface';
 import { Users } from '../../users/entities/user.entity';
@@ -18,7 +23,6 @@ export class Notifications implements INotifications {
   @Column({ type: 'boolean', default: false })
   public status: boolean;
 
-
   @IsOptional()
   @IsString()
   @Column({ type: 'bigint', default: false, nullable: true })
@@ -28,7 +32,6 @@ export class Notifications implements INotifications {
   @IsString()
   @Column({ type: 'bigint', default: null, nullable: true })
   public parent: number;
-
 
   @IsOptional()
   @IsString()
@@ -42,7 +45,6 @@ export class Notifications implements INotifications {
 
   @ManyToOne(() => Users, (user) => user.id)
   public user: number;
-
 
   @Column({ default: () => `now()`, nullable: false })
   public createdAt: Date;

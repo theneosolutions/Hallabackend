@@ -1,5 +1,13 @@
-
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, DeleteDateColumn, ManyToMany, OneToMany, JoinTable } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  DeleteDateColumn,
+  ManyToMany,
+  OneToMany,
+  JoinTable,
+} from 'typeorm';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { ICard } from '../interfaces/card.interface';
 import { Events } from '../../events/entities/event.entity';
@@ -37,7 +45,7 @@ export class Card implements ICard {
   public image: string;
 
   @ManyToMany(() => Events, (events) => events.card)
-  events: Events[]
+  events: Events[];
 
   @Column({ default: () => `now()`, nullable: false })
   public createdAt: Date;
@@ -47,6 +55,4 @@ export class Card implements ICard {
 
   @DeleteDateColumn()
   public deletedAt: Date;
-
-
 }
