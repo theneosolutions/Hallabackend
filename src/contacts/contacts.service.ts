@@ -194,7 +194,7 @@ export class ContactsService {
 
   public async findOneById(id: number): Promise<Contacts> {
     const contactId = await this.contactsRepository.findOneBy({ id });
-    console.log('🚀 ~ CardService ~ cardItem:', contactId);
+    console.log('🚀 ~ ContactsService ~ contactItem:', contactId);
     this.commonService.checkEntityExistence(contactId, 'contact');
     return contactId;
   }
