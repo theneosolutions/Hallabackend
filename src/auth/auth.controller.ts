@@ -55,6 +55,8 @@ import { PhoneDto } from './dtos/phone.dto';
 import { PhoneOTPDto } from './dtos/phone-otp.dto';
 import { ResetPasswordWithPhoneDto } from './dtos/reset-password-phone.dto';
 import { EmailOTPDto } from './dtos/email-otp.dto';
+import { LogoutDto } from './dtos/logout.dto';
+import { RefreshCookieDto } from './dtos/refreshCookie.dto';
 
 const btoa = require('btoa');
 const qs = require('qs');
@@ -241,10 +243,10 @@ export class AuthController {
     description: 'Invalid token',
   })
   public async logout(
-    @Req() req: Request,
     @Res() res: Response,
+    @Body() body: LogoutDto,
   ): Promise<void> {
-    const token = this.refreshTokenFromReq(req);
+    const { token } = body;
     const message = await this.authService.logout(token);
     res
       .clearCookie(this.cookieName, { path: this.cookiePath })
@@ -266,9 +268,10 @@ export class AuthController {
   })
   public async refreshAccess(
     @Req() req: Request,
+    @Body() body: RefreshCookieDto,
     @Res() res: Response,
   ): Promise<void> {
-    const token = this.refreshTokenFromReq(req);
+    const { token } = body;
     console.log('🚀 ~ AuthController ~ token:', token);
     const result = await this.authService.refreshTokenAccess(
       token,
@@ -424,14 +427,14 @@ export class AuthController {
     return AuthResponseUserMapper.map(user);
   }
 
-  private refreshTokenFromReq(req: Request): string {
-    const token: string | undefined = req.signedCookies[this.cookieName];
-    if (isUndefined(token)) {
-      throw new UnauthorizedException();
-    }
+  // private refreshTokenFromReq(req: Request): string {
+  //   const token: string | undefined = req.signedCookies[this.cookieName];
+  //   if (isUndefined(token)) {
+  //     throw new UnauthorizedException();
+  //   }
 
-    return token;
-  }
+  //   return token;
+  // }
 
   private saveRefreshCookie(res: Response, refreshToken: string): Response {
     return res.cookie(this.cookieName, refreshToken, {

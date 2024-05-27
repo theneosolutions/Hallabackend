@@ -334,7 +334,7 @@ export class WhatsappService {
       console.error('Invite not found for confirmation button event.');
       return;
     }
-    const url = `https://${this.domain}/api/events/scan-qrcode/${invite?.code}`;
+    const url = `${this.domain}/events/scan-qrcode/${invite?.code}`;
     const qrCodeDataURL = await this.generateQrCode(url);
     const html = this.templates.invite({
       guests: String(invite?.numberOfGuests),
@@ -347,7 +347,7 @@ export class WhatsappService {
       const imageResponse: any = await this.sendImage({
         recipientPhone: recipientPhone,
         caption: `Please use this code to access (${invite?.events?.name}),make sure to save the image before it expire.`,
-        url: `https://${this.domain}/api/events/qrcodes/${invite?.code}.png`,
+        url: `${this.domain}/events/qrcodes/${invite?.code}.png`,
       });
       if (imageResponse && imageResponse?.error) {
         console.error('Error sending image:', imageResponse?.error);
