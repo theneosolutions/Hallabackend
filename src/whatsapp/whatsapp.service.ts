@@ -87,6 +87,10 @@ export class WhatsappService {
   public async create(origin: string | undefined, body: any): Promise<any> {
     let data = this.parseMessage(body);
     try {
+      if (Object.keys(data).length === 0) {
+        return; // Return when no body found
+      }
+
       if (data?.isMessage) {
         let incomingMessage = data.message;
         let recipientPhone = incomingMessage.from.phone; // extract the phone number of sender

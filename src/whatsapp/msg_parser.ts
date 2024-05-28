@@ -56,7 +56,10 @@ module.exports = ({ requestBody, currentWABA_ID }) => {
     : null;
 
   // Messages vs Notifications
-  console.log('messages', requestBody.entry[0].changes[0].value?.messages);
+  console.log(
+    'messages msg_parser.ts 59 ',
+    requestBody.entry[0].changes[0].value?.messages,
+  );
   let message = requestBody.entry[0].changes[0].value?.messages?.length
     ? requestBody.entry[0].changes[0].value.messages[0]
     : null;
