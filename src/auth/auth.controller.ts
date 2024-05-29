@@ -116,11 +116,8 @@ export class AuthController {
   @ApiBadRequestResponse({
     description: 'Something is invalid on the request body',
   })
-  public async signUpWithPhone(
-    @Origin() origin: string | undefined,
-    @Body() phoneDto: PhoneDto,
-  ): Promise<IMessage> {
-    return await this.authService.signUpWithPhone(phoneDto, origin);
+  public async signUpWithPhone(@Body() phoneDto: PhoneDto): Promise<IMessage> {
+    return await this.authService.signUpWithPhone(phoneDto);
   }
 
   @Post('/sign-in')
@@ -161,7 +158,7 @@ export class AuthController {
     @Body() phoneDto: PhoneDto,
   ): Promise<IMessage> {
     const message = await this.authService.signInWithPhone(phoneDto, origin);
-    console.log('🚀 ~ AuthController ~ message:', message);
+    console.log('🚀 ~ AuthController ~ signInWithPhone ~ message:', message);
     return message;
   }
 
@@ -183,7 +180,7 @@ export class AuthController {
     return await this.authService.reSendUserOTP(phoneDto, origin);
   }
 
-  @Post('/otp/verify')
+  @Post('/otp/verify/phone')
   @ApiOkResponse({
     type: AuthResponseMapper,
     description: 'Logs in the user and returns the access token',
@@ -194,12 +191,15 @@ export class AuthController {
   @ApiBadRequestResponse({
     description: 'Something is invalid on the request body',
   })
-  public async verifyUserOTP(
+  public async verifyUserPhoneOTP(
     @Res() res: Response,
     @Origin() origin: string | undefined,
     @Body() phoneOTPDto: PhoneOTPDto,
   ): Promise<void> {
-    const result = await this.authService.verifyUserOTP(phoneOTPDto, origin);
+    const result = await this.authService.verifyUserPhoneOTP(
+      phoneOTPDto,
+      origin,
+    );
     this.saveRefreshCookie(res, result.refreshToken)
       .status(HttpStatus.OK)
       .json(AuthResponseMapper.map(result));

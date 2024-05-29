@@ -79,10 +79,7 @@ export class AuthService {
     );
   }
 
-  public async signUpWithPhone(
-    dto: PhoneDto,
-    domain?: string,
-  ): Promise<IMessage> {
+  public async signUpWithPhone(dto: PhoneDto): Promise<IMessage> {
     const { callingCode, phoneNumber } = dto;
     const user = await this.usersService.createUserWithPhone(
       callingCode,
@@ -183,13 +180,13 @@ export class AuthService {
     );
   }
 
-  public async verifyUserOTP(
+  public async verifyUserPhoneOTP(
     dto: PhoneOTPDto,
     domain?: string,
   ): Promise<IAuthResult> {
     const { callingCode, phoneNumber, otp } = dto;
     const user = await this.userByPhoneNumber(callingCode, phoneNumber);
-    console.log('🚀 ~ AuthService ~ verifyUserOTP ~ user:', user);
+    console.log('🚀 ~ AuthService ~ verifyUserPhoneOTP ~ user:', user);
     if (!user?.id) {
       throw new NotFoundException(['Invalid credentials']);
     }
@@ -208,7 +205,7 @@ export class AuthService {
   ): Promise<IAuthResult> {
     const { email, otp } = dto;
     const user = await this.userByEmailOrUsername(email);
-    console.log('🚀 ~ AuthService ~ verifyUserOTP ~ user:', user);
+    console.log('🚀 ~ AuthService ~ verifyUserEmailOTP ~ user:', user);
     if (!user?.id) {
       throw new NotFoundException(['Invalid credentials']);
     }
@@ -244,7 +241,7 @@ export class AuthService {
     let email: string,
       firstName: string,
       lastName: string,
-      picture: string = '';
+      picture = '';
     if (newUser.hasOwnProperty('email')) {
       email = newUser.email;
     }
@@ -450,8 +447,8 @@ export class AuthService {
     callingCode: string,
     phoneNumber: string,
     otp: number,
-    maxRetries: number = 3,
-    retryDelay: number = 1000, // 1 second delay between retries
+    maxRetries = 3,
+    retryDelay = 1000, // 1 second delay between retries
   ): Promise<void> {
     const isLive = process.env.NODE_ENV;
     if (isLive == 'development') return;
