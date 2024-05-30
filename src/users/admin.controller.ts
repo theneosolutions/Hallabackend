@@ -36,9 +36,9 @@ import { Users } from './entities/user.entity';
 import { PageDto } from './dtos/page.dto';
 
 @ApiTags('Admin Users')
-@Controller('api/admin/users')
+@Controller('admin/users')
 export class UsersAdminController {
-  private cookiePath = '/api/auth';
+  private cookiePath = '/auth';
   private cookieName: string;
 
   constructor(

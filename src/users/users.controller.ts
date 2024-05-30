@@ -43,7 +43,7 @@ import { UserStats } from './interfaces/user.interface';
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  private cookiePath = '/api/auth';
+  private cookiePath = '/auth';
   private cookieName: string;
 
   constructor(
@@ -159,7 +159,7 @@ export class UsersController {
   // parametric routes
 
   @Get('/:idOrUsername')
-  // @Public(['admin', 'user'])
+  @Public(['admin', 'user'])
   @ApiOkResponse({
     type: ResponseUserMapper,
     description: 'The user is found and returned.',
