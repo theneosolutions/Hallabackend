@@ -162,7 +162,7 @@ export class AuthController {
     return message;
   }
 
-  @Post('/otp/resend')
+  @Post('/phone/otp/resend')
   @ApiCreatedResponse({
     type: MessageMapper,
     description: 'OTP sent and is waiting confirmation',
@@ -191,18 +191,33 @@ export class AuthController {
   @ApiBadRequestResponse({
     description: 'Something is invalid on the request body',
   })
-  public async verifyUserPhoneOTP(
+  public async verifyAndSignInUserPhoneOTP(
     @Res() res: Response,
     @Origin() origin: string | undefined,
     @Body() phoneOTPDto: PhoneOTPDto,
   ): Promise<void> {
-    const result = await this.authService.verifyUserPhoneOTP(
-      phoneOTPDto,
-      origin,
-    );
+    const user = await this.authService.verifyUserPhoneOTP(phoneOTPDto);
+    const result = await this.authService.signInUserViaPhone(user);
     this.saveRefreshCookie(res, result.refreshToken)
       .status(HttpStatus.OK)
       .json(AuthResponseMapper.map(result));
+  }
+
+  @Post('/forgot-password/phone/otp/verify')
+  @ApiOkResponse({
+    type: AuthResponseMapper,
+    description: 'OTP is verified',
+  })
+  @ApiNotFoundResponse({
+    description: 'No User found with this phone number',
+  })
+  @ApiBadRequestResponse({
+    description: 'Something is invalid on the request body',
+  })
+  public async verifyForgotPasswordPhoneOTP(
+    @Body() phoneOTPDTO: PhoneOTPDto,
+  ): Promise<IMessage> {
+    return this.authService.verifyForgotPasswordPhoneOTP(phoneOTPDTO);
   }
 
   @Post('/otp/verify/email')

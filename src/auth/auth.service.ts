@@ -180,10 +180,14 @@ export class AuthService {
     );
   }
 
-  public async verifyUserPhoneOTP(
+  public async verifyForgotPasswordPhoneOTP(
     dto: PhoneOTPDto,
-    domain?: string,
-  ): Promise<IAuthResult> {
+  ): Promise<IMessage> {
+    await this.verifyUserPhoneOTP(dto);
+    return this.commonService.generateMessage('OTP is verified');
+  }
+
+  public async verifyUserPhoneOTP(dto: PhoneOTPDto): Promise<Users> {
     const { callingCode, phoneNumber, otp } = dto;
     const user = await this.userByPhoneNumber(callingCode, phoneNumber);
     console.log('🚀 ~ AuthService ~ verifyUserPhoneOTP ~ user:', user);
@@ -191,6 +195,13 @@ export class AuthService {
       throw new NotFoundException(['Invalid credentials']);
     }
     this.compareOTPs(user?.otp, otp);
+    return user;
+  }
+
+  public async signInUserViaPhone(
+    user: Users,
+    domain?: string,
+  ): Promise<IAuthResult> {
     await this.usersService.updateUserOTP(user?.id);
     const [accessToken, refreshToken] = await this.generateAuthTokens(
       user,

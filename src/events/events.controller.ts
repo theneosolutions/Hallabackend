@@ -90,7 +90,7 @@ export class EventsController {
   }
 
   @Get()
-  // @Public(['admin'])
+  @Public(['admin', 'user'])
   @ApiOkResponse({
     type: AuthResponseUserMapper,
     description: 'The email is updated, and the user is returned.',
