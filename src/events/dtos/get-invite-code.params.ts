@@ -9,5 +9,5 @@ export abstract class GetInviteCodeParams {
   })
   @IsString()
   @Length(1, 106)
-  public id: string;
+  public code: string;
 }

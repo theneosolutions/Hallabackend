@@ -1,16 +1,12 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Code, Connection, In, Like, Repository } from 'typeorm';
+import { Connection, In, Repository } from 'typeorm';
 import {
   BadRequestException,
-  ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
-  UnauthorizedException,
   forwardRef,
 } from '@nestjs/common';
-import { compare, hash } from 'bcrypt';
 import { CommonService } from '../common/common.service';
 import { isNull, isUndefined } from '../common/utils/validation.util';
 import { Events } from './entities/event.entity';
@@ -24,12 +20,7 @@ import { PageOptionsDto } from './dtos/page-option.dto';
 import { UsersService } from '../users/users.service';
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { UpdateEventDto } from './dtos/update-event.dto';
-import { MailerService } from 'src/mailer/mailer.service';
-import { v4 as uuidV4, v5 as uuidV5 } from 'uuid';
-import { JwtService } from 'src/jwt/jwt.service';
-import { TokenTypeEnum } from 'src/jwt/enums/token-type.enum';
-import { IEmailToken } from 'src/jwt/interfaces/email-token.interface';
-import { Users } from 'src/users/entities/user.entity';
+import { v4 as uuidV4 } from 'uuid';
 import { RatioEnum } from 'src/uploader/enums';
 import { UploaderService } from 'src/uploader/uploader.service';
 import { CardService } from 'src/cards/card.service';
@@ -37,7 +28,6 @@ import { ContactsService } from 'src/contacts/contacts.service';
 import { WhatsappService } from 'src/whatsapp/whatsapp.service';
 import { EventGuestsDto } from './dtos/create-guests-event.dto';
 import { EventsChats } from './entities/events_chats.entity';
-import { all } from 'axios';
 import { Contacts } from '../contacts/entities/contacts.entity';
 import { ContactsPageOptionsDto } from './dtos/contacts-page-option.dto';
 
@@ -150,7 +140,6 @@ export class EventsService {
   }
 
   public async addContactsIntoEvent(
-    origin: string | undefined,
     dto: EventGuestsDto,
     id: string,
   ): Promise<Events> {
@@ -159,23 +148,15 @@ export class EventsService {
     let contacts_ids = [];
     try {
       if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
-        throw new BadRequestException(['User cannot be null']);
+        throw new BadRequestException('User cannot be null');
       }
 
-      const userDetail = await this.usersService.findOneById(userId);
-
-      if (isNull(userDetail) || isUndefined(userDetail)) {
-        throw new BadRequestException(['User not found with id: ' + userId]);
-      }
-
-      if (isNull(id) || isUndefined(id)) {
-        throw new BadRequestException(['Event id cannot be null']);
-      }
-
-      const eventDetail = await this.findOneById(Number(id));
-
+      // fetch user specific event
+      const eventDetail = await this.findOneById(Number(id), userId);
       if (isNull(eventDetail) || isUndefined(eventDetail)) {
-        throw new BadRequestException(['Event not found with id: ' + id]);
+        throw new BadRequestException(
+          `Event not found with id:${id} and userId:${userId}`,
+        );
       }
 
       if (contacts?.length) {
@@ -204,10 +185,11 @@ export class EventsService {
           };
         });
 
+        const eventCode = uuidV4();
         const values = newCandidates
           .map(
             (candidate) =>
-              `(${candidate.contactsId}, ${candidate.eventId}, ${candidate.usersId},${candidate.haveChat},${candidate.numberOfGuests})`,
+              `(${candidate.contactsId}, ${candidate.eventId}, ${candidate.usersId},${candidate.haveChat},${candidate.numberOfGuests},'${eventCode}')`,
           )
           .join(', ');
         // Construct the full INSERT query
@@ -215,7 +197,7 @@ export class EventsService {
           '🚀 ~ EventsService ~ addContactsIntoEvent ~ values:',
           values,
         );
-        const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId,haveChat,numberOfGuests) VALUES ${values};`;
+        const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId,haveChat,numberOfGuests,code) VALUES ${values};`;
         const results = await this.connection.query(query);
         console.log(
           '🚀 ~ EventsService ~ addContactsIntoEvent ~ query:',
@@ -272,28 +254,27 @@ export class EventsService {
 
   public async sendEventInvites(userId: number, id: string): Promise<Events> {
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
-      throw new BadRequestException(['User cannot be null']);
+      throw new BadRequestException('User cannot be null');
     }
 
     const userDetail = await this.usersService.findOneById(userId);
 
     if (isNull(userDetail) || isUndefined(userDetail)) {
-      throw new BadRequestException(['User not found with id: ' + userId]);
+      throw new BadRequestException('User not found with id: ' + userId);
     }
 
     if (isNull(id) || isUndefined(id)) {
-      throw new BadRequestException(['Event id cannot be null']);
+      throw new BadRequestException('Event id cannot be null');
     }
-
-    const eventDetail = await this.findOneById(Number(id));
+    // fetch user specific event
+    const eventDetail = await this.findOneById(Number(id), userId);
 
     if (isNull(eventDetail) || isUndefined(eventDetail)) {
-      throw new BadRequestException(['Event not found with id: ' + id]);
+      throw new BadRequestException(
+        `Event not found with id:${id} and userId:${userId}`,
+      );
     }
 
-    const queryBuilder = this.eventInvitessContacts.createQueryBuilder(
-      'event_invitess_contacts',
-    );
     const rawQuery = `
             SELECT 
                 event_invitess_contacts.status AS event_invitess_contacts_status, 
@@ -406,7 +387,16 @@ export class EventsService {
         invite.sendList = true;
       }
 
-      await this.eventInvitessContacts.save(invite);
+      try {
+        await this.eventInvitessContacts.save(invite);
+      } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+          // Do nothing in case duplicate entry found
+          console.log(
+            `🚀 ~ EventsService ~ table:event_invitess_contacts ~ ${error.message}`,
+          );
+        }
+      }
     });
 
     return eventDetail;
@@ -417,10 +407,13 @@ export class EventsService {
       throw new BadRequestException(['Event id cannot be null']);
     }
 
-    const eventDetail = await this.findOneById(Number(id));
+    // fetch user specific event
+    const eventDetail = await this.findOneById(Number(id), userId);
 
     if (isNull(eventDetail) || isUndefined(eventDetail)) {
-      throw new BadRequestException(['Event not found with id: ' + id]);
+      throw new BadRequestException(
+        `Event not found with id:${id} and userId:${userId}`,
+      );
     }
 
     const rawQuery = `
@@ -531,26 +524,15 @@ export class EventsService {
 
   public async scanEventInvite(code: string): Promise<IMessage> {
     if (isNull(code) || isUndefined(code)) {
-      throw new BadRequestException(['Event invite code cannot be null']);
+      throw new BadRequestException('Event invite code cannot be null');
     }
     const queryBuilder = this.eventInvitessContacts.createQueryBuilder(
       'event_invitess_contacts',
     );
+
     const inviteDetail = await queryBuilder
       .where('event_invitess_contacts.code = :code', { code: code })
-      .leftJoinAndSelect('event_invitess_contacts.invites', 'invites')
-      .leftJoinAndSelect('event_invitess_contacts.events', 'events')
-      .select([
-        'event_invitess_contacts',
-        'events',
-        'invites.id',
-        'invites.name',
-        'invites.callingCode',
-        'invites.phoneNumber',
-        'invites.email',
-      ])
       .getOne();
-
     const totalAllowedGuests = +inviteDetail.numberOfGuests;
     const totalArrivedGuests = +inviteDetail.numberOfScans;
     if (totalArrivedGuests >= totalAllowedGuests) {
@@ -562,7 +544,6 @@ export class EventsService {
     if (totalArrivedGuests < totalAllowedGuests) {
       inviteDetail.numberOfScans = totalArrivedGuests + 1;
     }
-
     await this.eventInvitessContacts.save(inviteDetail);
 
     return this.commonService.generateMessage('Guest scan is successful!');
@@ -680,11 +661,19 @@ export class EventsService {
     return new PageDto(contacts, pageMetaDto);
   }
 
-  public async findOneById(id: number): Promise<Events> {
-    const eventId = await this.eventsRepository.findOneBy({ id });
-    console.log('🚀 ~ CardService ~ cardItem:', eventId);
-    this.commonService.checkEntityExistence(eventId, 'event');
-    return eventId;
+  public async findOneById(id: number, userId?: number): Promise<Events> {
+    let event;
+    if (userId) {
+      const queryBuilder = this.eventsRepository.createQueryBuilder('events');
+      event = await queryBuilder
+        .where('events.id = :id', { id })
+        .andWhere('events.userId = :userId', { userId })
+        .getOne();
+    } else {
+      event = await this.eventsRepository.findOneBy({ id });
+    }
+    console.log('🚀 ~ EventService ~ eventItem:', event);
+    return event;
   }
 
   public async findInviteOneById(
@@ -738,7 +727,7 @@ export class EventsService {
     }
 
     const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
 
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 
@@ -1013,7 +1002,7 @@ export class EventsService {
       .orderBy('events_chats.createdAt', pageOptionsDto.order);
 
     const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
     console.log('🚀 ~ EventsService ~ entities:', entities);
 
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
@@ -1048,7 +1037,7 @@ export class EventsService {
       ]);
 
     const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
 
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 
@@ -1080,7 +1069,7 @@ export class EventsService {
       ]);
 
     const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
 
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 
@@ -1318,7 +1307,7 @@ export class EventsService {
     // }
 
     const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
 
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 

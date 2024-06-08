@@ -1,20 +1,14 @@
 import {
   Column,
   Entity,
-  PrimaryGeneratedColumn,
   ManyToOne,
   DeleteDateColumn,
-  OneToMany,
-  JoinTable,
-  ManyToMany,
   PrimaryColumn,
-  OneToOne,
   JoinColumn,
 } from 'typeorm';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Users } from '../../users/entities/user.entity';
 import { Events } from './event.entity';
-import { v4 as uuidV4, v5 as uuidV5 } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 import { Contacts } from 'src/contacts/entities/contacts.entity';
 
 @Entity()
@@ -36,6 +30,9 @@ export class EventInvitessContacts {
 
   @Column({ type: 'int', nullable: true, default: 0 })
   usersId: number;
+
+  @PrimaryColumn({ type: 'int' })
+  contactsId: number;
 
   @PrimaryColumn({ type: 'int' })
   eventId: number;

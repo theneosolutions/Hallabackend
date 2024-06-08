@@ -1,17 +1,14 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  HttpStatus,
   Param,
   Patch,
   Post,
   Query,
   Res,
   UploadedFile,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -19,21 +16,14 @@ import {
   ApiBadRequestResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
-  ApiCreatedResponse,
   ApiOkResponse,
   ApiTags,
-  ApiConflictResponse,
   ApiUnauthorizedResponse,
   ApiConsumes,
   ApiBody,
-  ApiQuery,
-  ApiOperation,
-  ApiResponse,
 } from '@nestjs/swagger';
-import { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-import { IAuthResponseUser } from '../auth/interfaces/auth-response-user.interface';
 import { AuthResponseUserMapper } from '../auth/mappers/auth-response-user.mapper';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
@@ -47,11 +37,9 @@ import { Events } from './entities/event.entity';
 import { ApiPaginatedResponse } from './decorators/api-paginated-response.decorator';
 import { GetEventByUserIdParams } from './dtos/get-events-by-userid.params';
 import { EventDto } from './dtos/create-event.dto';
-import { extname, join } from 'path';
-import { MessageMapper } from 'src/common/mappers/message.mapper';
+import { join } from 'path';
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { UpdateEventDto } from './dtos/update-event.dto';
-import { userInfo } from 'os';
 import { ResponseEventsMapper } from './mappers/response-events.mapper';
 import { ResponseMediaMapper } from './mappers/response-media.mapper';
 import { IEventMedia } from './interfaces/media.interface';
@@ -123,7 +111,7 @@ export class EventsController {
   @ApiUnauthorizedResponse({
     description: 'User is not logged in.',
   })
-  public async findCompanyById(@Param() params: GetEventParams): Promise<any> {
+  public async getEventDetail(@Param() params: GetEventParams): Promise<any> {
     const eventItem = await this.eventsService.findEventById(params.id);
     return eventItem;
   }
@@ -141,13 +129,10 @@ export class EventsController {
     description: 'User is not logged in.',
   })
   public async addContactsIntoEvent(
-    @CurrentUser() id: number,
-    @Origin() origin: string | undefined,
     @Body() eventGuestsDto: EventGuestsDto,
     @Param() params: GetEventParams,
   ): Promise<IResponseEvent> {
     const event = await this.eventsService.addContactsIntoEvent(
-      origin,
       eventGuestsDto,
       params?.id,
     );
@@ -167,7 +152,7 @@ export class EventsController {
     description: 'User is not logged in.',
   })
   public async sendEventInvites(
-    @CurrentUser() id: number,
+    @CurrentUser() id: number, // logged in user id
     @Param() params: GetEventParams,
   ): Promise<IResponseEvent> {
     const event = await this.eventsService.sendEventInvites(id, params?.id);
@@ -175,7 +160,7 @@ export class EventsController {
   }
 
   @Get('send-reminder/:id')
-  // @Public(['admin', 'user'])
+  @Public(['admin', 'user'])
   @ApiOkResponse({
     type: ResponseEventsMapper,
     description: 'Event invitations is sent and returned.',
@@ -194,7 +179,7 @@ export class EventsController {
     return ResponseEventsMapper.map(event);
   }
 
-  @Get('scan-qrcode/:id')
+  @Get('scan-qrcode/:code')
   @ApiOkResponse({
     type: ResponseEventsMapper,
     description: 'Event invitations is scaned and returned.',
@@ -205,10 +190,10 @@ export class EventsController {
   public async scanEventInvite(
     @Param() params: GetInviteCodeParams,
   ): Promise<IMessage> {
-    return await this.eventsService.scanEventInvite(params?.id);
+    return await this.eventsService.scanEventInvite(params?.code);
   }
 
-  // @Public(['admin', 'user'])
+  @Public(['admin', 'user'])
   @Get('/categorize/byUserId/:id')
   @ApiPaginatedResponse(ResponseEventsMapper)
   @ApiBadRequestResponse({
