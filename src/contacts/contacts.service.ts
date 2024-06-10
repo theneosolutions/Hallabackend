@@ -1,20 +1,17 @@
-import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   BadRequestException,
   ConflictException,
   Inject,
   Injectable,
-  UnauthorizedException,
   forwardRef,
 } from '@nestjs/common';
-import { compare, hash } from 'bcrypt';
 import { CommonService } from '../common/common.service';
 import { isNull, isUndefined } from '../common/utils/validation.util';
 import { Contacts } from './entities/contacts.entity';
 import { UpdateContactsDto } from './dtos/update-contacts.dto';
 import { isInt } from 'class-validator';
-import { SLUG_REGEX } from '../common/consts/regex.const';
 import { ContactsDto } from './dtos/create-contacts';
 import { UsersService } from 'src/users/users.service';
 import { PageOptionsDto } from './dtos/page-option.dto';
@@ -31,6 +28,7 @@ export class ContactsService {
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
     private readonly commonService: CommonService,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   public async create(
@@ -222,7 +220,7 @@ export class ContactsService {
     }
 
     const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
 
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 
@@ -262,4 +260,51 @@ export class ContactsService {
     await this.contactsRepository.softDelete(parsedValue);
     return this.commonService.generateMessage('Contact deleted successfully!');
   }
+
+  /**
+   *
+   * Get packageIds from transactions against userId 
+   * Get total numberOfGuest from packages
+   * Get total number of invitation sent against userId (event_invitess_contacts)
+   * Compare total numberOfGuest from packages to total number of invitation sent
+   * If invitation sent count exceeded reply with message Please buy package
+   * @param userId
+   * @returns true | false boolean
+   */
+  public async isUserAllowToAddContacts(userId: number): Promise<boolean> {
+    // Get total numberOfGuest from packages bought by user
+    const query = `
+      SELECT
+        SUM(p.numberOfGuest) as userInvitationCount
+      FROM
+        halla.transactions t
+      LEFT JOIN
+        halla.packages p
+      ON
+        p.id = t.packageId
+      WHERE
+        t.userId = ${userId}
+    `;
+    const packageNumberOfGuest: any = await this.dataSource.query(query);
+    const totalNumberOfGuest = packageNumberOfGuest[0].userInvitationCount ?? 0;
+
+    // Get total number of invitation sent count
+    const queryUserSentInvitationCount = `
+      SELECT
+        SUM(numberOfGuests) as userSentInvitationCount
+      FROM
+        halla.event_invitess_contacts
+      WHERE
+        usersId = ${userId}
+      `;
+
+    const userInvitationSentCount: any = await this.dataSource.query(
+      queryUserSentInvitationCount,
+    );
+    const totalNumberOfInvitationSentCount =
+      userInvitationSentCount[0].userSentInvitationCount ?? 0;
+
+    return totalNumberOfGuest >= totalNumberOfInvitationSentCount;
+  }
+
 }

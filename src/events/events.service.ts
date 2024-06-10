@@ -275,6 +275,14 @@ export class EventsService {
       );
     }
 
+    const isUserAllowToAddContacts =
+      await this.contactsService.isUserAllowToAddContacts(userId);
+    if (!isUserAllowToAddContacts) {
+      throw new BadRequestException(
+        `User exceeded available count for adding contacts. Please buy package to add more contacts to event`,
+      );
+    }
+
     const rawQuery = `
             SELECT 
                 event_invitess_contacts.status AS event_invitess_contacts_status, 
