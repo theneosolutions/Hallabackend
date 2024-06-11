@@ -275,9 +275,12 @@ export class EventsService {
       );
     }
 
-    const isUserAllowToAddContacts =
-      await this.contactsService.isUserAllowToAddContacts(userId);
-    if (!isUserAllowToAddContacts) {
+    const availableInvitationCount =
+      await this.usersService.getAvailableInvitationCount(userId);
+    const sentInvitationCount = await this.usersService.getSentInvitationCount(
+      userId,
+    );
+    if (availableInvitationCount < sentInvitationCount) {
       throw new BadRequestException(
         `User exceeded available count for adding contacts. Please buy package to add more contacts to event`,
       );

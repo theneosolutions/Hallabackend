@@ -32,4 +32,6 @@ export interface IUser {
 export interface UserStats {
   revenueGeneratedByUser: number;
   userEventCount: number;
+  availableInvitationCount: number;
+  sentInvitationCount: number;
 }

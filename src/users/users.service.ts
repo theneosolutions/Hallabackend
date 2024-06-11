@@ -1,5 +1,5 @@
-import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Like, Repository } from 'typeorm';
 import {
   BadRequestException,
   ConflictException,
@@ -46,6 +46,7 @@ export class UsersService {
 
     @Inject(forwardRef(() => TransactionsService))
     private readonly transactionsService: TransactionsService,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   public async create(
@@ -214,6 +215,41 @@ export class UsersService {
     return this.findOneByUsername(idOrUsername);
   }
 
+  public async getAvailableInvitationCount(userId: number): Promise<number> {
+    // Get total numberOfGuest from packages bought by user
+    const query = `
+      SELECT
+        SUM(p.numberOfGuest) as userInvitationCount
+      FROM
+        halla.transactions t
+      LEFT JOIN
+        halla.packages p
+      ON
+        p.id = t.packageId
+      WHERE
+        t.userId = ${userId}
+    `;
+    const packageNumberOfGuest: any = await this.dataSource.query(query);
+    return packageNumberOfGuest[0].userInvitationCount ?? 0;
+  }
+
+  public async getSentInvitationCount(userId: number): Promise<number> {
+    // Get total number of sent invitation count
+    const queryUserSentInvitationCount = `
+      SELECT
+        SUM(numberOfGuests) as userSentInvitationCount
+      FROM
+        halla.event_invitess_contacts
+      WHERE
+        usersId = ${userId}
+      `;
+
+    const userInvitationSentCount: any = await this.dataSource.query(
+      queryUserSentInvitationCount,
+    );
+    return userInvitationSentCount[0].userSentInvitationCount ?? 0;
+  }
+
   public async getUserStats(userId: string): Promise<UserStats> {
     const parsedValue = parseInt(userId, 10);
 
@@ -234,9 +270,18 @@ export class UsersService {
       parsedValue,
     );
 
+    const availableInvitationCount = await this.getAvailableInvitationCount(
+      parseInt(userId),
+    );
+    const sentInvitationCount = await this.getSentInvitationCount(
+      parseInt(userId),
+    );
+
     return {
       revenueGeneratedByUser,
       userEventCount,
+      availableInvitationCount,
+      sentInvitationCount,
     };
   }
 

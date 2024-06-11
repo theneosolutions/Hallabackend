@@ -186,6 +186,8 @@ export class UsersController {
       properties: {
         revenueGeneratedByUser: { type: 'number', example: 0 },
         userEventCount: { type: 'number', example: 0 },
+        availableInvitationCount: { type: 'number', example: 0 },
+        sentInvitationCount: { type: 'number', example: 0 },
       },
     },
   })
