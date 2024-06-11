@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, In, Repository } from 'typeorm';
+import { Connection, In, LessThan, Repository } from 'typeorm';
 import {
   BadRequestException,
   Inject,
@@ -743,6 +743,31 @@ export class EventsService {
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 
     return new PageDto(await Promise.all(entities), pageMetaDto);
+  }
+
+  public async setEventsStatusExpired(userId: number): Promise<void> {
+    const todayDate = new Date();
+    const todayDateString =
+      todayDate.getFullYear() +
+      '-' +
+      (todayDate.getMonth() + 1) +
+      '-' +
+      todayDate.getDate();
+
+    const events = await this.eventsRepository.find({
+      where: {
+        eventDate: LessThan(
+          this.commonService.getDateInMySQLFormat(todayDateString),
+        ),
+        user: In([userId]),
+      },
+    });
+
+    const updatedEvents = events.map((event) => ({
+      ...event,
+      status: 'expired',
+    }));
+    await this.eventsRepository.save(updatedEvents);
   }
 
   public async categorizeEvents(

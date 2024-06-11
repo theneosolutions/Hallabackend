@@ -14,17 +14,11 @@ import { CommonService } from '../common/common.service';
 import { isNull, isUndefined } from '../common/utils/validation.util';
 import { ChangeEmailDto } from './dtos/change-email.dto';
 import { UsernameDto } from './dtos/username.dto';
-import { UserStatus, Users } from './entities/user.entity';
+import { Users } from './entities/user.entity';
 import { PasswordDto } from './dtos/password.dto';
-import { UpdateUserDto } from './dtos/update-user.dto';
 import { isInt } from 'class-validator';
 import { SLUG_REGEX } from '../common/consts/regex.const';
-import {
-  APPLE_LOGIN,
-  DISCORD_LOGIN,
-  FACEBOOK_LOGIN,
-  GOOGLE_LOGIN,
-} from 'src/common/consts/login.const';
+import { GOOGLE_LOGIN } from 'src/common/consts/login.const';
 import { default as disposeAbleDomain } from './../data/domains.json';
 import { PageOptionsDto } from './dtos/page-option.dto';
 import { PageDto } from './dtos/page.dto';
@@ -596,5 +590,9 @@ export class UsersService {
 
     user.deviceToken = deviceToken;
     await this.usersRepository.save(user);
+  }
+
+  public async setEventsStatusExpired(userId: number): Promise<void> {
+    await this.eventsService.setEventsStatusExpired(userId);
   }
 }

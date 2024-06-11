@@ -130,6 +130,8 @@ export class AuthService {
         'Please confirm your email, a new email has been sent',
       ]);
     }
+    // Set user specific events expired (Those with passed date)
+    await this.usersService.setEventsStatusExpired(user.id);
 
     const [accessToken, refreshToken] = await this.generateAuthTokens(
       user,
@@ -203,6 +205,9 @@ export class AuthService {
     domain?: string,
   ): Promise<IAuthResult> {
     await this.usersService.updateUserOTP(user?.id);
+    // Set user specific events expired (Those with passed date)
+    await this.usersService.setEventsStatusExpired(user.id);
+
     const [accessToken, refreshToken] = await this.generateAuthTokens(
       user,
       domain,
