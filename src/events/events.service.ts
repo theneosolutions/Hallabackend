@@ -660,10 +660,8 @@ export class EventsService {
         `${inviteDetail?.code}.png`,
       ),
       html: html,
-      puppeteer: {
-        launch: {
-          executablePath: '/usr/bin/chromium-browser'
-        }
+      puppeteerArgs: {
+        executablePath: '/usr/bin/chromium-browser'
       }
     }).then(async () => {
       // inviteDetail.status = 'confirmed';
@@ -673,7 +671,7 @@ export class EventsService {
         'QRcode generated and added to PNG',
       );
     });
-  }
+ }
 
   public async findEventById(id: string): Promise<any> {
     const parsedValue = parseInt(id, 10);
