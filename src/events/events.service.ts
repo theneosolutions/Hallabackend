@@ -615,8 +615,9 @@ export class EventsService {
       .where('event_invitess_contacts.eventId = :eventId', { eventId: eventId })
       .getOne();
     const qrcode = inviteDetail.code;
-    const url = `https://${process.env.domain}/events/scan-qrcode/${qrcode}`;
+    const url = `https://${process.env.DOMAIN}/events/scan-qrcode/${qrcode}`;
     const qrCodeDataURL = await this.generateQrCode(url);
+    console.log('QRCode generated>>>>>>>>>>>>>>>>>>', qrCodeDataURL);
     const html = this.templates.invite({
       guests: String(inviteDetail?.numberOfGuests),
       qrCodeDataURL: qrCodeDataURL,
