@@ -37,7 +37,7 @@ import { join } from 'path';
 import nodeHtmlToImage from 'node-html-to-image';
 import { ITemplatedData } from 'src/whatsapp/interfaces/template-data.interface';
 import Handlebars from 'handlebars';
-import puppeteer from 'puppeteer';
+import puppeteer, { launch } from 'puppeteer';
 import { error } from 'console';
 
 @Injectable()
@@ -619,11 +619,12 @@ export class EventsService {
     const qrcode = inviteDetail.code;
     const url = `https://${process.env.DOMAIN}/events/scan-qrcode/${qrcode}`;
     const qrCodeDataURL = await this.generateQrCode(url);
-    console.log('QRCode generated>>>>>>>>>>>>>>>>>>', qrCodeDataURL);
+
     const html = this.templates.invite({
       guests: String(inviteDetail?.numberOfGuests),
       qrCodeDataURL: qrCodeDataURL,
     });
+    /*
     // const browser = await puppeteer.launch();
     const browser = await puppeteer.launch({
       executablePath: '/usr/bin/chromium-browser'
@@ -649,11 +650,7 @@ export class EventsService {
     console.log(imageBuffer,'>>>>>>>>>>>>>>>>>>>>>>>', fileName);
     appendFileSync(fileName, imageBuffer);
     return ;
-
-    // return imageBuffer;
-    // res.set("Content-Type", "image/png");
-    // res.send(imageBuffer);
-/*
+*/
     return nodeHtmlToImage({
       output: join(
         __dirname,
@@ -663,6 +660,11 @@ export class EventsService {
         `${inviteDetail?.code}.png`,
       ),
       html: html,
+      puppeteer: {
+        launch: {
+          executablePath: '/usr/bin/chromium-browser'
+        }
+      }
     }).then(async () => {
       // inviteDetail.status = 'confirmed';
       // await this.eventInvitessContacts.save(inviteDetail);
@@ -671,7 +673,6 @@ export class EventsService {
         'QRcode generated and added to PNG',
       );
     });
-*/
   }
 
   public async findEventById(id: string): Promise<any> {
