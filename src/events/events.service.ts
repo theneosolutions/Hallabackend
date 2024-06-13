@@ -624,8 +624,7 @@ export class EventsService {
       guests: String(inviteDetail?.numberOfGuests),
       qrCodeDataURL: qrCodeDataURL,
     });
-    
-    return nodeHtmlToImage({
+    const nodeHtmlToImageOptions: any = {
       output: join(
         __dirname,
         '..',
@@ -634,10 +633,16 @@ export class EventsService {
         `${inviteDetail?.code}.png`,
       ),
       html: html,
-      puppeteerArgs: {
-        executablePath: '/usr/bin/chromium-browser'
-      }
-    }).then(async () => {
+    };
+    // Added 'puppeteerArgs' to resolve issue at server side for creating PNG 
+    // Check the path where 'chromium-browser' is installed using command `which chromium-browser`
+    // Paste that path at line #354
+    if (process.env.NODE_ENV != 'development') {
+      nodeHtmlToImageOptions.puppeteerArgs = {
+        executablePath: '/usr/bin/chromium-browser',
+      };
+    }
+    return nodeHtmlToImage(nodeHtmlToImageOptions).then(async () => {
       return this.commonService.generateMessage(
         'QRcode generated and added to PNG',
       );
