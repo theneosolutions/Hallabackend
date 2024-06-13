@@ -204,7 +204,7 @@ export class EventsController {
   })
   public async createQRcode(
     @Param() params: GetQRCodeParams,
-  ): Promise<IMessage> {
+  ): Promise<any> {
     return await this.eventsService.createQRCode(
       params.contactId,
       params.eventId,

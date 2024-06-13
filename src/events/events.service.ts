@@ -32,11 +32,13 @@ import { Contacts } from '../contacts/entities/contacts.entity';
 import { ContactsPageOptionsDto } from './dtos/contacts-page-option.dto';
 import * as qrcode from 'qrcode';
 import { ITemplates } from 'src/whatsapp/interfaces/templates.interface';
-import { readFileSync } from 'fs';
+import { readFileSync, appendFileSync } from 'fs';
 import { join } from 'path';
 import nodeHtmlToImage from 'node-html-to-image';
 import { ITemplatedData } from 'src/whatsapp/interfaces/template-data.interface';
 import Handlebars from 'handlebars';
+import puppeteer from 'puppeteer';
+import { error } from 'console';
 
 @Injectable()
 export class EventsService {
@@ -622,7 +624,33 @@ export class EventsService {
       guests: String(inviteDetail?.numberOfGuests),
       qrCodeDataURL: qrCodeDataURL,
     });
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
 
+    await page.setContent(html);
+
+    const content = await page.$("body");
+    const imageBuffer = await content.screenshot({ omitBackground: true });
+
+    await page.close();
+    await browser.close();
+
+    
+    const fileName = join(
+      __dirname,
+      '..',
+      '..',
+      'qrcodes',
+      `${inviteDetail?.code}.png`,
+    );
+    console.log(imageBuffer,'>>>>>>>>>>>>>>>>>>>>>>>', fileName);
+    appendFileSync(fileName, imageBuffer);
+    return ;
+
+    // return imageBuffer;
+    // res.set("Content-Type", "image/png");
+    // res.send(imageBuffer);
+/*
     return nodeHtmlToImage({
       output: join(
         __dirname,
@@ -640,6 +668,7 @@ export class EventsService {
         'QRcode generated and added to PNG',
       );
     });
+*/
   }
 
   public async findEventById(id: string): Promise<any> {
