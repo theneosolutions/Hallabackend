@@ -37,8 +37,6 @@ import { join } from 'path';
 import nodeHtmlToImage from 'node-html-to-image';
 import { ITemplatedData } from 'src/whatsapp/interfaces/template-data.interface';
 import Handlebars from 'handlebars';
-import puppeteer, { launch } from 'puppeteer';
-import { error } from 'console';
 
 @Injectable()
 export class EventsService {
@@ -594,6 +592,8 @@ export class EventsService {
     }
   }
 
+  // This is test flight for creating qrcode image
+  // Actual implementation is done under whatsapp.service.ts > handleConfirmEventButton()
   public async createQRCode(
     contactId: string,
     eventId: string,
@@ -624,33 +624,7 @@ export class EventsService {
       guests: String(inviteDetail?.numberOfGuests),
       qrCodeDataURL: qrCodeDataURL,
     });
-    /*
-    // const browser = await puppeteer.launch();
-    const browser = await puppeteer.launch({
-      executablePath: '/usr/bin/chromium-browser'
-    })
-    const page = await browser.newPage();
-
-    await page.setContent(html);
-
-    const content = await page.$("body");
-    const imageBuffer = await content.screenshot({ omitBackground: true });
-
-    await page.close();
-    await browser.close();
-
     
-    const fileName = join(
-      __dirname,
-      '..',
-      '..',
-      'qrcodes',
-      `${inviteDetail?.code}.png`,
-    );
-    console.log(imageBuffer,'>>>>>>>>>>>>>>>>>>>>>>>', fileName);
-    appendFileSync(fileName, imageBuffer);
-    return ;
-*/
     return nodeHtmlToImage({
       output: join(
         __dirname,
@@ -664,9 +638,6 @@ export class EventsService {
         executablePath: '/usr/bin/chromium-browser'
       }
     }).then(async () => {
-      // inviteDetail.status = 'confirmed';
-      // await this.eventInvitessContacts.save(inviteDetail);
-
       return this.commonService.generateMessage(
         'QRcode generated and added to PNG',
       );

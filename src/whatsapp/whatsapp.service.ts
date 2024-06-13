@@ -344,9 +344,15 @@ export class WhatsappService {
       guests: String(invite?.numberOfGuests),
       qrCodeDataURL: qrCodeDataURL,
     });
+    // Added 'puppeteerArgs' to resolve issue at server side for creating PNG 
+    // Check the path where 'chromium-browser' is installed using command `which chromium-browser`
+    // Paste that path at line #354
     nodeHtmlToImage({
       output: join(__dirname, '..', '..', 'qrcodes', `${invite?.code}.png`),
       html: html,
+      puppeteerArgs: {
+        executablePath: '/usr/bin/chromium-browser',
+      },
     }).then(async () => {
       const imageResponse: any = await this.sendImage({
         recipientPhone: recipientPhone,
