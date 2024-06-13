@@ -47,6 +47,7 @@ import { EventGuestsDto } from './dtos/create-guests-event.dto';
 import { GetInviteCodeParams } from './dtos/get-invite-code.params';
 import { Contacts } from 'src/contacts/entities/contacts.entity';
 import { ContactsPageOptionsDto } from './dtos/contacts-page-option.dto';
+import { GetQRCodeParams } from './dtos/get-qrcode-params';
 
 @ApiTags('Events')
 @Controller('events')
@@ -191,6 +192,23 @@ export class EventsController {
     @Param() params: GetInviteCodeParams,
   ): Promise<IMessage> {
     return await this.eventsService.scanEventInvite(params?.code);
+  }
+
+  @Get('create-qrcode/:contactId/:eventId')
+  @ApiOkResponse({
+    type: ResponseEventsMapper,
+    description: 'QRcode created.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Something is invalid on the request body',
+  })
+  public async createQRcode(
+    @Param() params: GetQRCodeParams,
+  ): Promise<IMessage> {
+    return await this.eventsService.createQRCode(
+      params.contactId,
+      params.eventId,
+    );
   }
 
   @Public(['admin', 'user'])

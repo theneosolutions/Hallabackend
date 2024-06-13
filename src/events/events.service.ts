@@ -30,9 +30,18 @@ import { EventGuestsDto } from './dtos/create-guests-event.dto';
 import { EventsChats } from './entities/events_chats.entity';
 import { Contacts } from '../contacts/entities/contacts.entity';
 import { ContactsPageOptionsDto } from './dtos/contacts-page-option.dto';
+import * as qrcode from 'qrcode';
+import { ITemplates } from 'src/whatsapp/interfaces/templates.interface';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import nodeHtmlToImage from 'node-html-to-image';
+import { ITemplatedData } from 'src/whatsapp/interfaces/template-data.interface';
+import Handlebars from 'handlebars';
 
 @Injectable()
 export class EventsService {
+  private readonly templates: ITemplates;
+
   constructor(
     @InjectRepository(Events)
     private readonly eventsRepository: Repository<Events>,
@@ -54,7 +63,21 @@ export class EventsService {
     private readonly whatsappService: WhatsappService,
     private readonly commonService: CommonService,
     private readonly connection: Connection,
-  ) {}
+  ) {
+    this.templates = {
+      invite: EventsService.parseTemplate('invite.hbs'),
+    };
+  }
+
+  private static parseTemplate(
+    templateName: string,
+  ): Handlebars.TemplateDelegate<ITemplatedData> {
+    const templateText = readFileSync(
+      join(__dirname, '..', 'whatsapp', 'templates', templateName),
+      'utf-8',
+    );
+    return Handlebars.compile<ITemplatedData>(templateText, { strict: true });
+  }
 
   public async create(
     origin: string | undefined,
@@ -558,6 +581,64 @@ export class EventsService {
     await this.eventInvitessContacts.save(inviteDetail);
 
     return this.commonService.generateMessage('Guest scan is successful!');
+  }
+
+  private async generateQrCode(data: string): Promise<string> {
+    try {
+      const qrCodeDataURL = await qrcode.toDataURL(data);
+      return qrCodeDataURL;
+    } catch (error) {
+      throw new Error('Failed to generate QR code.');
+    }
+  }
+
+  public async createQRCode(
+    contactId: string,
+    eventId: string,
+  ): Promise<IMessage> {
+    if (isNull(contactId) || isUndefined(contactId)) {
+      throw new BadRequestException('Contact id cannot be null');
+    }
+
+    if (isNull(eventId) || isUndefined(eventId)) {
+      throw new BadRequestException('Event id cannot be null');
+    }
+
+    const queryBuilder = this.eventInvitessContacts.createQueryBuilder(
+      'event_invitess_contacts',
+    );
+
+    const inviteDetail = await queryBuilder
+      .where('event_invitess_contacts.contactsId = :contactId', {
+        contactId: contactId,
+      })
+      .where('event_invitess_contacts.eventId = :eventId', { eventId: eventId })
+      .getOne();
+    const qrcode = inviteDetail.code;
+    const url = `https://${process.env.domain}/events/scan-qrcode/${qrcode}`;
+    const qrCodeDataURL = await this.generateQrCode(url);
+    const html = this.templates.invite({
+      guests: String(inviteDetail?.numberOfGuests),
+      qrCodeDataURL: qrCodeDataURL,
+    });
+
+    return nodeHtmlToImage({
+      output: join(
+        __dirname,
+        '..',
+        '..',
+        'qrcodes',
+        `${inviteDetail?.code}.png`,
+      ),
+      html: html,
+    }).then(async () => {
+      // inviteDetail.status = 'confirmed';
+      // await this.eventInvitessContacts.save(inviteDetail);
+
+      return this.commonService.generateMessage(
+        'QRcode generated and added to PNG',
+      );
+    });
   }
 
   public async findEventById(id: string): Promise<any> {
