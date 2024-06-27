@@ -21,4 +21,13 @@ export abstract class SignInDto {
   @IsString()
   @MinLength(1)
   public password: string;
+
+  @ApiProperty({
+    description: "User's role",
+    minLength: 1,
+    type: String,
+  })
+  @IsString()
+  @MinLength(1)
+  public role: string;
 }
