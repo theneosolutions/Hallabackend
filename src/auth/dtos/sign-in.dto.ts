@@ -24,10 +24,8 @@ export abstract class SignInDto {
 
   @ApiProperty({
     description: "User's role",
-    minLength: 1,
     type: String,
   })
   @IsString()
-  @MinLength(1)
-  public role: string;
+  public role?: string = 'user';
 }
