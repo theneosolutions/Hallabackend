@@ -115,7 +115,7 @@ export class AuthService {
       throw new BadRequestException(['Invalid credentials']);
     }
 
-    if (dto.role && !user.roles.includes(dto.role)) {
+    if (dto.role === 'admin' && !user.roles.includes(dto.role)) {
       throw new BadRequestException([
         'User does not have Admin role to access it',
       ]);
