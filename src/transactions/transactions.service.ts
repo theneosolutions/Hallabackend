@@ -21,6 +21,7 @@ import { PageOptionsDto } from './dtos/page-option.dto';
 import { PageDto } from './dtos/page.dto';
 import { PageMetaDto } from './dtos/page-meta.dto';
 import { IMessage } from 'src/common/interfaces/message.interface';
+import { Users } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class TransactionsService {
@@ -28,6 +29,8 @@ export class TransactionsService {
     @InjectRepository(Transactions)
     private readonly transactionssRepository: Repository<Transactions>,
     private readonly commonService: CommonService,
+    @InjectRepository(Users)
+    private readonly usersRepository: Repository<Users>,
 
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
@@ -80,6 +83,17 @@ export class TransactionsService {
       package: packageId,
     });
     await this.transactionssRepository.insert(transaction);
+
+    const user = await this.usersService.findOneById(userId);
+    if (user?.id) {
+      const availableInvitationCount =
+        await this.usersService.getAvailableInvitationCount(userId);
+      const sentInvitationCount =
+        await this.usersService.getSentInvitationCount(userId);
+
+      user.wallet = availableInvitationCount - sentInvitationCount;
+      await this.usersRepository.update(userId, user);
+    }
     return transaction;
   }
 

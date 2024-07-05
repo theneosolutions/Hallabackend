@@ -143,6 +143,16 @@ export class AuthService {
       user,
       domain,
     );
+
+    // Make sure invitation count for logged in user
+    if (user.wallet === 0) {
+      const availableInvitationCount =
+        await this.usersService.getAvailableInvitationCount(user.id);
+      const sentInvitationCount =
+        await this.usersService.getSentInvitationCount(user.id);
+
+      user.wallet = availableInvitationCount - sentInvitationCount;
+    }
     return { user, accessToken, refreshToken };
   }
 

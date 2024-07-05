@@ -5,10 +5,11 @@ import { TransactionsService } from './transactions.service';
 import { TransactionsController } from './transactions.controller';
 import { TransactionsAdminController } from './transactions-admin/transactions-admin.controller';
 import { UsersModule } from 'src/users/users.module';
+import { Users } from 'src/users/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Transactions]),
+    TypeOrmModule.forFeature([Transactions, Users]),
     forwardRef(() => UsersModule),
   ],
   providers: [TransactionsService],
