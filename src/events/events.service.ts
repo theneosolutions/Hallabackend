@@ -1124,6 +1124,8 @@ export class EventsService {
         'contact.callingCode',
         'contact.phoneNumber',
       ])
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take)
       .orderBy('events_chats.createdAt', pageOptionsDto.order);
 
     const itemCount = await queryBuilder.getCount();
@@ -1151,9 +1153,11 @@ export class EventsService {
       })
       .leftJoinAndSelect('event_invitess_contacts.invites', 'invites')
       .leftJoinAndSelect('event_invitess_contacts.events', 'events')
+      .leftJoinAndSelect('events_chats.contact', 'contact')
       .select([
         'event_invitess_contacts',
         'events',
+        'events_chats',
         'invites.id',
         'invites.name',
         'invites.callingCode',
@@ -1191,7 +1195,16 @@ export class EventsService {
         'invites.callingCode',
         'invites.phoneNumber',
         'invites.email',
-      ]);
+      ])
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take);
+
+    if (pageOptionsDto.search !== '') {
+      queryBuilder.andWhere(
+        '(event.name like :search OR' + ' invites.name like :search)',
+        { search: `%${pageOptionsDto.search}%` },
+      );
+    }
 
     const itemCount = await queryBuilder.getCount();
     const { entities }: any = await queryBuilder.getRawAndEntities();
