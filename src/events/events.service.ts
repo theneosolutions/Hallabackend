@@ -37,6 +37,7 @@ import { join } from 'path';
 import nodeHtmlToImage from 'node-html-to-image';
 import { ITemplatedData } from 'src/whatsapp/interfaces/template-data.interface';
 import Handlebars from 'handlebars';
+import { Users } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class EventsService {
@@ -55,6 +56,8 @@ export class EventsService {
 
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+    @InjectRepository(Users)
+    private readonly usersRepository: Repository<Users>,
 
     // private readonly usersService: UsersService,
     private readonly cardService: CardService,
@@ -87,7 +90,6 @@ export class EventsService {
     const {
       user: userId,
       name,
-      cardId,
       image,
       eventDate,
       showQRCode,
@@ -106,17 +108,6 @@ export class EventsService {
 
     if (isNull(userDetail) || isUndefined(userDetail)) {
       throw new BadRequestException(['User not found with id: ' + userId]);
-    }
-
-    if (isNull(cardId) || isUndefined(cardId)) {
-      throw new BadRequestException(['cardId cannot be null']);
-    }
-
-    const cardDetail = await this.cardService.findOneById(cardId);
-    console.log('🚀 ~ EventsService ~ create ~ cardDetail:', cardDetail);
-
-    if (isNull(cardDetail) || isUndefined(cardDetail)) {
-      throw new BadRequestException(['Card not found with id: ' + cardId]);
     }
 
     if (isNull(image) || isUndefined(image)) {
@@ -144,9 +135,7 @@ export class EventsService {
     }
 
     const event = this.eventsRepository.create({
-      //@ts-ignore
       user: userDetail?.id,
-      card: cardId,
       name: name,
       image: image,
       eventDate: eventDate,
@@ -169,13 +158,16 @@ export class EventsService {
     console.log('🚀 ~ EventsService ~ create ~ dto:', dto);
     const { user: userId, contacts } = dto;
     let contacts_ids = [];
+    let alreadyInvitedContacts = [];
+    let newCandidates = [];
+    let eventDetail;
     try {
       if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
         throw new BadRequestException('User cannot be null');
       }
 
       // fetch user specific event
-      const eventDetail = await this.findOneById(Number(id), userId);
+      eventDetail = await this.findOneById(Number(id), userId);
       if (isNull(eventDetail) || isUndefined(eventDetail)) {
         throw new BadRequestException(
           `Event not found with id:${id} and userId:${userId}`,
@@ -198,13 +190,13 @@ export class EventsService {
       }
 
       if (contacts_ids?.length) {
-        const newCandidates: any = contacts_ids.map((item) => {
+        newCandidates = contacts_ids.map((item) => {
           return {
             eventId: eventDetail?.id,
             contactsId: Number(item?.id),
             usersId: userId,
             haveChat: false,
-            numberOfGuests: item?.guestcount ? item?.guestcount + 1 : 1,
+            numberOfGuests: item?.guestcount || 1,
           };
         });
 
@@ -231,7 +223,6 @@ export class EventsService {
       }
       await this.eventsRepository.save(eventDetail);
 
-      return eventDetail;
     } catch (error) {
       if (error.code === 'ER_DUP_ENTRY') {
         const errorMessage = error.message;
@@ -249,7 +240,6 @@ export class EventsService {
             '🚀 ~ EventsService ~ update ~ duplicateValue:',
             duplicateValue,
           );
-          const duplicateKey = match[2];
           const [event_id, contact_id] = duplicateValue.split('-');
           console.log(
             '🚀 ~ EventsService ~ update ~ event_id, contact_id:',
@@ -257,14 +247,17 @@ export class EventsService {
             contact_id,
           );
 
-          const existingRecord: any = await this.contactsService.findOneByWhere(
-            { id: In([contact_id]) },
+          alreadyInvitedContacts = await this.contactsService.findOneByWhere({
+            id: In([contact_id]),
+          });
+          console.log(
+            '🚀 ~ file: assessment.service.ts:596 ~ AssessmentService ~ update ~ existingRecord:',
+            alreadyInvitedContacts,
           );
-          // console.log("🚀 ~ file: assessment.service.ts:596 ~ AssessmentService ~ update ~ existingRecord:", existingRecord)
           throw new BadRequestException([
             {
-              callingCode: existingRecord[0]?.callingCode,
-              phoneNumber: existingRecord[0]?.phoneNumber,
+              callingCode: alreadyInvitedContacts[0]?.callingCode,
+              phoneNumber: alreadyInvitedContacts[0]?.phoneNumber,
             },
           ]);
         }
@@ -272,6 +265,29 @@ export class EventsService {
         // Handle other errors.
         throw new BadRequestException([error?.message]);
       }
+    } finally {
+      if (alreadyInvitedContacts.length > 0) {
+        throw new BadRequestException([
+          {
+            callingCode: alreadyInvitedContacts[0]?.callingCode,
+            phoneNumber: alreadyInvitedContacts[0]?.phoneNumber,
+          },
+        ]);
+      }
+
+      const sendInvitationCount = newCandidates.reduce(
+        (acc, contact) => acc + contact.numberOfGuests,
+        0,
+      );
+
+      console.log('Send Invitation count:', sendInvitationCount);
+      const user = await this.usersService.findOneById(userId);
+      if (user?.id) {
+        user.wallet = user.wallet - sendInvitationCount;
+        await this.usersRepository.update(userId, user);
+      }
+
+      return eventDetail;
     }
   }
 

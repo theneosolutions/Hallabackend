@@ -77,10 +77,6 @@ export class Events implements IEvent {
   @ManyToOne(() => Users, (user) => user.id)
   public user: number;
 
-  @ManyToMany(() => Card)
-  @JoinTable()
-  card: Card[];
-
   @ManyToMany(() => Contacts, (contacts) => contacts.events, {
     onDelete: 'NO ACTION',
     onUpdate: 'NO ACTION',

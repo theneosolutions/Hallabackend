@@ -20,21 +20,12 @@ export abstract class EventDto {
   public user: number;
 
   @ApiProperty({
-    description: 'Card id',
-    example: 123,
-    type: Number,
-  })
-  @IsNumber()
-  public cardId: number;
-
-  @ApiProperty({
     type: String,
     example: ['+923012345678', '+962245234234'],
   })
   @ArrayMinSize(1)
   @IsOptional()
-  // @IsNumber()
-  public contacts?: String[];
+  public contacts?: string[];
 
   @ApiProperty({
     description: 'Event Name',
@@ -60,7 +51,7 @@ export abstract class EventDto {
     type: String,
   })
   @IsDateString()
-  public eventDate: String;
+  public eventDate: string;
 
   @ApiProperty({
     description: 'Show QR code',

@@ -44,9 +44,6 @@ export class Card implements ICard {
   @Column({ type: 'varchar', nullable: true, length: 1024 })
   public image: string;
 
-  @ManyToMany(() => Events, (events) => events.card)
-  events: Events[];
-
   @Column({ default: () => `now()`, nullable: false })
   public createdAt: Date;
 

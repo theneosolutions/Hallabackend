@@ -89,6 +89,7 @@ export class UsersService {
         .slice(0, 5)
         .toUpperCase(),
       referredBy: referredBy,
+      wallet: 1, // Default wallet invitation count
     });
     await this.usersRepository.insert(user);
     return user;
@@ -120,6 +121,7 @@ export class UsersService {
         .slice(2)
         .slice(0, 5)
         .toUpperCase(),
+      wallet: 1, // Default wallet invitation count
     });
     await this.usersRepository.insert(user);
     return user;
