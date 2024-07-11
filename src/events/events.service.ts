@@ -394,6 +394,12 @@ export class EventsService {
       }
     }
 
+    if (invitesList.length === 0) {
+      throw new BadRequestException(
+        `No contacts added to event. Please add contacts/guest to event first`,
+      );
+    }
+
     invitesList?.map(async (invite) => {
       console.log('🚀 ~ EventsService ~ invitesList?.map ~ invite:', invite);
       const { invites, events }: any = invite;
