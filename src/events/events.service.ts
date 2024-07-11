@@ -160,20 +160,20 @@ export class EventsService {
     let contacts_ids = [];
     let alreadyInvitedContacts = [];
     let newCandidates = [];
-    let eventDetail;
+
+    if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
+      throw new BadRequestException('User cannot be null');
+    }
+
+    // fetch user specific event
+    const eventDetail = await this.findOneById(Number(id), userId);
+    if (isNull(eventDetail) || isUndefined(eventDetail)) {
+      throw new BadRequestException(
+        `Event not found with id:${id} and userId:${userId}`,
+      );
+    }
+
     try {
-      if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
-        throw new BadRequestException('User cannot be null');
-      }
-
-      // fetch user specific event
-      eventDetail = await this.findOneById(Number(id), userId);
-      if (isNull(eventDetail) || isUndefined(eventDetail)) {
-        throw new BadRequestException(
-          `Event not found with id:${id} and userId:${userId}`,
-        );
-      }
-
       if (contacts?.length) {
         console.log(
           '🚀 ~ EventsService ~ addContactsIntoEvent ~ contacts:',
@@ -223,6 +223,7 @@ export class EventsService {
       }
       await this.eventsRepository.save(eventDetail);
 
+      return eventDetail;
     } catch (error) {
       if (error.code === 'ER_DUP_ENTRY') {
         const errorMessage = error.message;
@@ -240,7 +241,7 @@ export class EventsService {
             '🚀 ~ EventsService ~ update ~ duplicateValue:',
             duplicateValue,
           );
-          const [event_id, contact_id] = duplicateValue.split('-');
+          const [contact_id, event_id] = duplicateValue.split('-');
           console.log(
             '🚀 ~ EventsService ~ update ~ event_id, contact_id:',
             event_id,
@@ -265,29 +266,6 @@ export class EventsService {
         // Handle other errors.
         throw new BadRequestException([error?.message]);
       }
-    } finally {
-      if (alreadyInvitedContacts.length > 0) {
-        throw new BadRequestException([
-          {
-            callingCode: alreadyInvitedContacts[0]?.callingCode,
-            phoneNumber: alreadyInvitedContacts[0]?.phoneNumber,
-          },
-        ]);
-      }
-
-      const sendInvitationCount = newCandidates.reduce(
-        (acc, contact) => acc + contact.numberOfGuests,
-        0,
-      );
-
-      console.log('Send Invitation count:', sendInvitationCount);
-      const user = await this.usersService.findOneById(userId);
-      if (user?.id) {
-        user.wallet = user.wallet - sendInvitationCount;
-        await this.usersRepository.update(userId, user);
-      }
-
-      return eventDetail;
     }
   }
 
@@ -311,17 +289,6 @@ export class EventsService {
     if (isNull(eventDetail) || isUndefined(eventDetail)) {
       throw new BadRequestException(
         `Event not found with id:${id} and userId:${userId}`,
-      );
-    }
-
-    const availableInvitationCount =
-      await this.usersService.getAvailableInvitationCount(userId);
-    const sentInvitationCount = await this.usersService.getSentInvitationCount(
-      userId,
-    );
-    if (availableInvitationCount < sentInvitationCount) {
-      throw new BadRequestException(
-        `User exceeded available count for adding contacts. Please buy package to add more contacts to event`,
       );
     }
 
@@ -369,7 +336,8 @@ export class EventsService {
             LEFT JOIN 
                 events ON events.id = event_invitess_contacts.eventId AND events.deletedAt IS NULL 
             WHERE 
-                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status = ? 
+                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status = ?
+                AND event_invitess_contacts.sendList = false
                 AND event_invitess_contacts.deletedAt IS NULL`;
     const entities = await this.connection.query(rawQuery, [
       eventDetail.id,
@@ -412,6 +380,23 @@ export class EventsService {
       },
     }));
 
+    let eventInvitationCount = 0;
+    if (invitesList.length > 0) {
+      const availableInvitationCount = Number(userDetail.wallet);
+      eventInvitationCount = await this.usersService.getSentInvitationCount(
+        userId,
+        eventDetail.id,
+      );
+      if (availableInvitationCount < eventInvitationCount) {
+        const packageRequirement =
+          Math.abs(availableInvitationCount - eventInvitationCount) + 1;
+
+        throw new BadRequestException(
+          `User available invitation count balance is not enough to perform this operation. Please top up your account balance with minimum ${packageRequirement} invitation(s)`,
+        );
+      }
+    }
+
     invitesList?.map(async (invite) => {
       console.log('🚀 ~ EventsService ~ invitesList?.map ~ invite:', invite);
       const { invites, events }: any = invite;
@@ -434,7 +419,9 @@ export class EventsService {
 
       if (status == 'failed') {
         invite.status = 'failed';
-        invite.sendList = true;
+        invite.sendList = false;
+        // Removed failed invite numberOfGuests from eventInvitationCount
+        eventInvitationCount -= invite.numberOfGuests;
       }
 
       try {
@@ -448,6 +435,12 @@ export class EventsService {
         }
       }
     });
+
+    // update user balance
+    if (invitesList.length > 0 && eventInvitationCount > 0) {
+      userDetail.wallet = userDetail.wallet - eventInvitationCount;
+      await this.usersRepository.update(userId, userDetail);
+    }
 
     return eventDetail;
   }
@@ -510,7 +503,8 @@ export class EventsService {
             LEFT JOIN 
                 events ON events.id = event_invitess_contacts.eventId AND events.deletedAt IS NULL 
             WHERE 
-                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status IN ('invited', 'confirmed') 
+                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status NOT IN ('rejected') 
+                AND event_invitess_contacts.sendList = 1
                 AND event_invitess_contacts.deletedAt IS NULL`;
 
     const entities = await this.connection.query(rawQuery, [eventDetail.id]);

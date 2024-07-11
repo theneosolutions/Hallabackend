@@ -229,9 +229,12 @@ export class UsersService {
     return packageNumberOfGuest[0].userInvitationCount ?? 0;
   }
 
-  public async getSentInvitationCount(userId: number): Promise<number> {
+  public async getSentInvitationCount(
+    userId: number,
+    eventId?: number,
+  ): Promise<number> {
     // Get total number of sent invitation count
-    const queryUserSentInvitationCount = `
+    let queryUserSentInvitationCount = `
       SELECT
         SUM(numberOfGuests) as userSentInvitationCount
       FROM
@@ -239,6 +242,10 @@ export class UsersService {
       WHERE
         usersId = ${userId}
       `;
+    if (eventId) {
+      queryUserSentInvitationCount += ` AND eventId = ${eventId}`;
+      queryUserSentInvitationCount += ` AND status = 'pending'`;
+    }
 
     const userInvitationSentCount: any = await this.dataSource.query(
       queryUserSentInvitationCount,
