@@ -87,11 +87,9 @@ export class TransactionsService {
     const user = await this.usersService.findOneById(userId);
     if (user?.id) {
       const availableInvitationCount =
-        await this.usersService.getAvailableInvitationCount(userId);
-      const sentInvitationCount =
-        await this.usersService.getSentInvitationCount(userId);
+        await this.usersService.getAvailableInvitationCount(userId, packageId);
 
-      user.wallet = availableInvitationCount - sentInvitationCount;
+      user.wallet = Number(user.wallet) + Number(availableInvitationCount);
       await this.usersRepository.update(userId, user);
     }
     return transaction;

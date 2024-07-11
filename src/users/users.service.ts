@@ -211,9 +211,9 @@ export class UsersService {
     return this.findOneByUsername(idOrUsername);
   }
 
-  public async getAvailableInvitationCount(userId: number): Promise<number> {
+  public async getAvailableInvitationCount(userId: number, packageId?: number): Promise<number> {
     // Get total numberOfGuest from packages bought by user
-    const query = `
+    let query = `
       SELECT
         SUM(p.numberOfGuest) as userInvitationCount
       FROM
@@ -225,6 +225,9 @@ export class UsersService {
       WHERE
         t.userId = ${userId}
     `;
+    if (packageId) {
+      query += ` AND t.packageId = ${packageId}`;
+    }
     const packageNumberOfGuest: any = await this.dataSource.query(query);
     return packageNumberOfGuest[0].userInvitationCount ?? 0;
   }
