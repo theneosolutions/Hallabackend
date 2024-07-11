@@ -276,18 +276,12 @@ export class UsersService {
       parsedValue,
     );
 
-    const availableInvitationCount = await this.getAvailableInvitationCount(
-      parseInt(userId),
-    );
-    const sentInvitationCount = await this.getSentInvitationCount(
-      parseInt(userId),
-    );
+    const availableInvitationCount = Number(user.wallet);
 
     return {
       revenueGeneratedByUser,
       userEventCount,
       availableInvitationCount,
-      sentInvitationCount,
     };
   }
 
