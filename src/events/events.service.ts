@@ -336,13 +336,10 @@ export class EventsService {
             LEFT JOIN 
                 events ON events.id = event_invitess_contacts.eventId AND events.deletedAt IS NULL 
             WHERE 
-                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status = ?
+                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status IN ('pending', 'failed')
                 AND event_invitess_contacts.sendList = false
                 AND event_invitess_contacts.deletedAt IS NULL`;
-    const entities = await this.connection.query(rawQuery, [
-      eventDetail.id,
-      'pending',
-    ]);
+    const entities = await this.connection.query(rawQuery, [eventDetail.id]);
     const invitesList = entities.map((entity) => ({
       status: entity.event_invitess_contacts_status,
       numberOfScans: entity.event_invitess_contacts_numberOfScans,
@@ -503,8 +500,7 @@ export class EventsService {
             LEFT JOIN 
                 events ON events.id = event_invitess_contacts.eventId AND events.deletedAt IS NULL 
             WHERE 
-                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status NOT IN ('rejected') 
-                AND event_invitess_contacts.sendList = 1
+                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status NOT IN ('rejected', 'confirmed') 
                 AND event_invitess_contacts.deletedAt IS NULL`;
 
     const entities = await this.connection.query(rawQuery, [eventDetail.id]);
@@ -545,6 +541,12 @@ export class EventsService {
         updatedAt: entity.events_updatedAt,
       },
     }));
+
+    if (invitesList.length === 0) {
+      throw new BadRequestException(
+        `No contacts added to event. Please add contacts/guest to event first`,
+      );
+    }
 
     invitesList?.map(async (invite) => {
       console.log('🚀 ~ EventsService ~ invitesList?.map ~ invite:', invite);
