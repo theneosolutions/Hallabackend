@@ -1171,11 +1171,9 @@ export class EventsService {
       })
       .leftJoinAndSelect('event_invitess_contacts.invites', 'invites')
       .leftJoinAndSelect('event_invitess_contacts.events', 'events')
-      .leftJoinAndSelect('events_chats.contact', 'contact')
       .select([
         'event_invitess_contacts',
         'events',
-        'events_chats',
         'invites.id',
         'invites.name',
         'invites.callingCode',
