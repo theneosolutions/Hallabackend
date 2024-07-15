@@ -316,6 +316,7 @@ export class AuthController {
       idToken: idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
+    console.log('>>>>>>>>>>>>>>>INFO', ticket);
     const userDetail: any = ticket.getPayload();
     const { name, email, picture, given_name, family_name } = userDetail;
     const newUser = {
