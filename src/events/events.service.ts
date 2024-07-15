@@ -1113,10 +1113,10 @@ export class EventsService {
     if (isNaN(contact) && !isInt(contact)) {
       throw new BadRequestException('Invalid contact id: ' + contact);
     }
-    //@ts-ignore
+
     await this.eventInvitessContacts.delete({
       eventId: event,
-      invites: contact,
+      contactsId: contact,
     });
     return this.commonService.generateMessage('Guest deleted successfully!');
   }
