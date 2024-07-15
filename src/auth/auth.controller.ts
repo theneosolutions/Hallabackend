@@ -311,12 +311,10 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<void> {
     const { idToken } = GoogleDto;
-    console.log('>>>>>>>>>>>>>', idToken);
     const ticket = await client.verifyIdToken({
       idToken: idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-    console.log('>>>>>>>>>>>>>>>INFO', ticket);
     const userDetail: any = ticket.getPayload();
     const { name, email, picture, given_name, family_name } = userDetail;
     const newUser = {

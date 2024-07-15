@@ -147,6 +147,7 @@ export class UsersService {
         profilePhoto: profilePhoto,
         confirmed: true,
         referenceCode: Math.random().toString(36).slice(2).toUpperCase(),
+        otp: Math.floor(1000 + Math.random() * 9000),
       });
       await this.usersRepository.insert(user);
       return user;
