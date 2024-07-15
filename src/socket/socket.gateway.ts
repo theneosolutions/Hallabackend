@@ -30,10 +30,9 @@ export class SocketGateway
   async handleSendMessage(client: Socket, payload: any): Promise<void> {
     console.log('🚀 ~ SocketGateway ~ handleSendMessage ~ payload:', payload);
     try {
-      await this.socketService.handleMessages(payload);
-      // const sms: any = await this.socketService.handleMessages(payload);
+      const sms: any = await this.socketService.handleMessages(payload);
       // console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ sms:", sms)
-      // this.server.emit('chat', sms);
+      this.server.emit('chat', sms);
     } catch (error) {
       console.log('🚀 ~ SocketGateway ~ handleSendMessage ~ error:', error);
     }
