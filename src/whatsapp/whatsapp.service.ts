@@ -148,6 +148,7 @@ export class WhatsappService {
         recipientPhone,
       );
       const userEvents: any = await this.findInviteByContactId(contactInfo?.id);
+      console.log('User Events >>>>>>>>>>>>>>>>>', userEvents);
       if (userEvents.length == 1) {
         const invite = userEvents[0];
         if (invite.sendList) {
@@ -260,6 +261,7 @@ export class WhatsappService {
               id: `event-selected_${invite?.eventId}_${invite?.invites?.id}`,
             };
           });
+          console.log('I was here <<<<<<<<<<<<<<<<<<', rows);
 
           await this.sendRadioButtons({
             recipientPhone: recipientPhone,
