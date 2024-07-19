@@ -13,4 +13,5 @@ export interface IResponseEvent {
   code?: string;
   createdAt: string;
   updatedAt: string;
+  description: string;
 }

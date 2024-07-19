@@ -110,4 +110,12 @@ export abstract class EventDto {
   })
   @IsLongitude()
   public longitude: number;
+
+  @ApiProperty({
+    description: 'Event Description',
+    example: 'Event description data',
+    type: String,
+  })
+  @IsString()
+  public description: string;
 }

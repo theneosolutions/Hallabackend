@@ -15,4 +15,5 @@ export interface IEvent {
   code?: string;
   createdAt: Date;
   updatedAt: Date;
+  description: string;
 }

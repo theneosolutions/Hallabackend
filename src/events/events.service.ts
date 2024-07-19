@@ -98,6 +98,7 @@ export class EventsService {
       latitude,
       longitude,
       notes,
+      description,
     } = dto;
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
@@ -146,6 +147,7 @@ export class EventsService {
       address: address || '',
       latitude: latitude,
       longitude: longitude,
+      description: description,
     });
     await this.eventsRepository.insert(event);
     return event;
@@ -1288,6 +1290,7 @@ export class EventsService {
       notes,
       latitude,
       longitude,
+      description,
     } = dto;
     let contacts_ids = [];
     if (contacts?.length) {
@@ -1350,6 +1353,10 @@ export class EventsService {
       }
       if (!isUndefined(longitude) && !isNull(longitude)) {
         eventItem.longitude = longitude;
+      }
+
+      if (!isUndefined(description) && !isNull(description)) {
+        eventItem.description = description;
       }
 
       if (

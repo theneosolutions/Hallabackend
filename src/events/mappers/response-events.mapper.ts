@@ -95,6 +95,13 @@ export class ResponseEventsMapper implements IResponseEvent {
   })
   public updatedAt: string;
 
+  @ApiProperty({
+    description: 'Event description',
+    example: 'Test event description',
+    type: String,
+  })
+  public description: string;
+
   constructor(values: IResponseEvent) {
     Object.assign(this, values);
   }
@@ -115,6 +122,7 @@ export class ResponseEventsMapper implements IResponseEvent {
       code: event?.code,
       createdAt: event.createdAt.toISOString(),
       updatedAt: event.updatedAt.toISOString(),
+      description: event.description,
     });
   }
 }
