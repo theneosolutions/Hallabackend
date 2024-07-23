@@ -684,7 +684,7 @@ export class WhatsappService {
       }
 
       const response = await this.sendSimpleButtons({
-        message: '', // text,
+        message: text,
         recipientPhone: recipientPhone,
         listOfButtons: [
           { title: 'Confirm', id: `event-confirm_${eventId}_${contactId}` },
