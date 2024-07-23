@@ -1138,8 +1138,6 @@ export class WhatsappService {
   async sendImage({ recipientPhone, caption = '', url }) {
     this._mustHaverecipientPhone(recipientPhone);
 
-    console.log('I was here >>>>>>>>>>>>>>>>>>>>>>>>>>>');
-
     const body = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
@@ -1156,6 +1154,8 @@ export class WhatsappService {
       method: 'POST',
       body,
     });
+
+    console.log('RESPONSE WHATSAPP IMAGE>>>>>>>>>>>>>>>>>>>', response);
 
     return {
       response,
