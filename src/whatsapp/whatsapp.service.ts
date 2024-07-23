@@ -1142,7 +1142,7 @@ export class WhatsappService {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
       to: recipientPhone,
-      type: 'image/*',
+      type: 'image',
       image: {
         link: url,
         caption: caption || '',
