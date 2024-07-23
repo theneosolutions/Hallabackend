@@ -673,7 +673,7 @@ export class WhatsappService {
       if (image) {
         const imageResponse: any = await this.sendImage({
           recipientPhone: recipientPhone,
-          // caption: text,
+          caption: text,
           url: image,
         });
 
@@ -684,7 +684,7 @@ export class WhatsappService {
       }
 
       const response = await this.sendSimpleButtons({
-        message: text,
+        message: '', // text,
         recipientPhone: recipientPhone,
         listOfButtons: [
           { title: 'Confirm', id: `event-confirm_${eventId}_${contactId}` },
@@ -1138,18 +1138,18 @@ export class WhatsappService {
   async sendImage({ recipientPhone, caption = '', url }) {
     this._mustHaverecipientPhone(recipientPhone);
 
-    let body = {
+    const body = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
       to: recipientPhone,
-      type: 'image',
+      type: 'image/*',
       image: {
         link: url,
         caption: caption || '',
       },
     };
 
-    let response = await this._fetchAssistant({
+    const response = await this._fetchAssistant({
       url: '/messages',
       method: 'POST',
       body,
