@@ -670,19 +670,6 @@ export class WhatsappService {
     const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
 
     try {
-      if (image) {
-        const imageResponse: any = await this.sendImage({
-          recipientPhone: recipientPhone,
-          caption: text,
-          url: image,
-        });
-
-        // Check if there's any error in sending image
-        if (imageResponse && imageResponse?.error) {
-          console.error('Error sending image:', imageResponse?.error);
-        }
-      }
-
       const response = await this.sendSimpleButtons({
         message: text,
         recipientPhone: recipientPhone,
@@ -695,6 +682,19 @@ export class WhatsappService {
           },
         ],
       });
+
+      if (image) {
+        const imageResponse: any = await this.sendImage({
+          recipientPhone: recipientPhone,
+          caption: text,
+          url: image,
+        });
+
+        // Check if there's any error in sending image
+        if (imageResponse && imageResponse?.error) {
+          console.error('Error sending image:', imageResponse?.error);
+        }
+      }
 
       console.log(
         '🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:',
