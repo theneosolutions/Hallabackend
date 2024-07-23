@@ -671,6 +671,7 @@ export class WhatsappService {
 
     try {
       if (image) {
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>> I was here');
         const imageResponse: any = await this.sendImage({
           recipientPhone: recipientPhone,
           caption: text,
