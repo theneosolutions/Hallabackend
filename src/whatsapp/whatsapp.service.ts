@@ -603,10 +603,12 @@ export class WhatsappService {
     const { invites, events }: any = invite;
     const { image, name: eventName, id }: any = events;
     const { callingCode, phoneNumber, name }: any = invites;
+    const messageText = `Hey ${recipientName}, \nWe are pleased to invite you to ${eventName}.`;
 
     const imageResponse: any = await this.sendImage({
       recipientPhone: recipientPhone,
       url: image,
+      caption: messageText,
     });
     console.log(
       'sendImage is called from handleEventInvitation <<<<<<<<<<<<<<<',
@@ -617,7 +619,7 @@ export class WhatsappService {
     }
 
     await this.sendSimpleButtons({
-      message: `Hey ${recipientName}, \nWe are pleased to invite you to ${eventName}.`,
+      message: '', //`Hey ${recipientName}, \nWe are pleased to invite you to ${eventName}.`,
       recipientPhone: recipientPhone,
       listOfButtons: [
         {
