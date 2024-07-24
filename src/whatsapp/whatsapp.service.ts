@@ -1070,14 +1070,13 @@ export class WhatsappService {
                         {
                             "type": "date_time",
                             "date_time" : {
-                                "fallback_value": "February 25, 1977",
+                                "fallback_value": "February 25, 2024",
                                 "day_of_week": 5,
                                 "day_of_month": 25,
                                 "year": 1977,
                                 "month": 2,
                                 "hour": 15,
                                 "minute": 33,
-                                "timestamp": 1485470276
                             }
                         }
                     ] 
