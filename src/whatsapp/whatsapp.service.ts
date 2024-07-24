@@ -608,6 +608,9 @@ export class WhatsappService {
       recipientPhone: recipientPhone,
       url: image,
     });
+    console.log(
+      'sendImage is called from handleEventInvitation <<<<<<<<<<<<<<<',
+    );
 
     if (imageResponse && imageResponse?.error) {
       console.error('Error sending image:', imageResponse?.error);
@@ -655,9 +658,8 @@ export class WhatsappService {
     const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
 
     try {
-      let imageResponse: any = null;
       if (image) {
-        imageResponse = await this.sendImage({
+        const imageResponse: any = await this.sendImage({
           recipientPhone: recipientPhone,
           caption: text,
           url: image,
@@ -667,9 +669,11 @@ export class WhatsappService {
         if (imageResponse && imageResponse?.error) {
           console.error('Error sending image:', imageResponse?.error);
         }
+        console.log(
+          'sendImage is called from sendInviteToGuest <<<<<<<<<<<<<<<',
+        );
       }
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      /*
+
       const response = await this.sendSimpleButtons({
         message: text,
         recipientPhone: recipientPhone,
@@ -682,13 +686,12 @@ export class WhatsappService {
           },
         ],
       });
-      */
 
       console.log(
         '🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:',
-        imageResponse,
+        response,
       );
-      return imageResponse;
+      return response;
     } catch (error) {
       console.error('Error sending invite to guest:', error);
       return error;
