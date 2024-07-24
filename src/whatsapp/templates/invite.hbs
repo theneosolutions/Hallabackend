@@ -25,13 +25,13 @@
             display: flex;
         }
 
-        .hero-split {
+        {{!-- .hero-split {
             max-width: 500px;
             flex-direction: column;
             justify-content: flex-start;
             align-items: flex-start;
             display: flex;
-        }
+        } --}}
 
         .margin-bottom-24px {
             margin-bottom: 24px;
@@ -157,11 +157,10 @@
         }
 
         .div-block-4 {
-            width: 500px;
             grid-column-gap: 15px;
             grid-row-gap: 15px;
             background-color: #fff;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             display: flex;
         }
@@ -199,6 +198,10 @@
 
         .heading {
             text-align: center;
+            margin: 0;
+            padding:0;
+            padding-top: 1em;
+            font-size: 2em;
         }
 
         .text-block-6 {
@@ -214,6 +217,8 @@
             margin-left: 20px;
             margin-right: 20px;
             display: flex;
+            align-items: center;
+            justify-content: space-evenly;
         }
 
         .text-block-7 {
@@ -242,10 +247,10 @@
                 margin-bottom: -40px;
             }
 
-            .hero-split {
+            {{!-- .hero-split {
                 max-width: 100%;
                 margin-bottom: 40px;
-            }
+            } --}}
         }
 
         @media screen and (max-width: 767px) {
@@ -280,7 +285,6 @@
 
 <body>
     <section class="hero-subscribe-left">
-        <div class="container"></div>
         <div class="div-block-4">
             <div class="div-block-5">
                 <div class="div-block-7">
