@@ -16,6 +16,7 @@ import nodeHtmlToImage from 'node-html-to-image';
 import { ConfigService } from '@nestjs/config';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
+import { link } from 'joi';
 
 const unirest = require('unirest');
 const signale = require('signale');
@@ -1112,7 +1113,9 @@ export class WhatsappService {
         type: 'list',
         header: {
           type: 'image',
-          link: url,
+          image: {
+            link: url,
+          },
         },
         body: {
           text: message,
