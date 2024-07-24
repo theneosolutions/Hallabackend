@@ -1029,68 +1029,157 @@ export class WhatsappService {
         ...defaultHeaders(),
         ...headers,
       };
-      // body = body || defaultBody;
+      body = body || defaultBody;
+
       body = {
-        "type": "vertical",
-        "tag": "generic",
-        "elements": [
-          {
-            "type": "image",
-            "url": "https://d1hryyr5hiabsc.cloudfront.net/web2020/img/resources/rep-great-ai-divide@1x.jpg"
-          },
-          {
-            "type": "text",
-            "text": "Package delivery update",
-            "tag": "title"
-          },
-          {
-            "type": "text",
-            "text": "Hi! It was not possible to deliver your package on the 16th of August 2021. Please select a desired delivery location.",
-            "tag": "subtitle"
-          },
-          {
-            "type": "text",
-            "text": "Will be processed in 1 working day",
-            "tag": "footer"
-          },
-          {
-            "type": "button",
-            "title": "Retry same address",
-            "click": {
-              "actions": [
+        "to": body.to, //"recipient_wa_id",
+        messaging_product: 'whatsapp',
+        "type": "template",
+        "template": {
+            "namespace": "your-namespace",
+            "language": {
+                "policy": "deterministic",
+                "code": "your-language-and-locale-code"
+            },
+            "name": "your-template-name",
+            "components": [
                 {
-                  "type": "publishText",
-                  "text": "Retry same address"
-                }
-              ]
-            }
-          },
-          {
-            "type": "button",
-            "title": "Pickup point",
-            "click": {
-              "actions": [
+                    "type" : "header",
+                    "parameters": [
+                        {
+                            "type": "image",
+                            "text": "https://hallabucket007.s3.amazonaws.com/Screenshot+from+2024-07-23+18-43-24.png"
+                        }
+                    ]
+                },
                 {
-                  "type": "publishText",
-                  "text": "Pickup point"
-                }
-              ]
-            }
-          },
-          {
-            "type": "button",
-            title: 'Post office',
-            "click": {
-              "actions": [
+                    "type" : "body",
+                    "parameters": [
+                        {
+                            "type": "text",
+                            "text": "replacement_text"
+                        },
+                        {
+                            "type": "currency",
+                            "currency" : {
+                                "fallback_value": "$100.99",
+                                "code": "USD",
+                                "amount_1000": 100990
+                            }
+                        },
+                        {
+                            "type": "date_time",
+                            "date_time" : {
+                                "fallback_value": "February 25, 1977",
+                                "day_of_week": 5,
+                                "day_of_month": 25,
+                                "year": 1977,
+                                "month": 2,
+                                "hour": 15,
+                                "minute": 33,
+                                "timestamp": 1485470276
+                            }
+                        }
+                    ] 
+                },
+
                 {
-                  "type": "publishText",
-                  "text": "Post office"
+                    "type": "button",
+                    "sub_type" : "quick_reply",
+                    "index": "0", 
+                    "parameters": [
+                        {
+                            "type": "payload",
+                            "payload":"aGlzIHRoaXMgaXMgY29vZHNhc2phZHdpcXdlMGZoIGFTIEZISUQgV1FEV0RT"
+                        }
+                    ]
+                },
+                {
+                    "type": "button",
+                    "sub_type" : "url",
+                    "index": "1", 
+                    "parameters": [
+                        {
+                            "type": "text",
+                            "text": "9rwnB8RbYmPF5t2Mn09x4h"
+                        }
+                    ]
+                },
+                {
+                    "type": "button",
+                    "sub_type" : "url",
+                    "index": "2",
+                    "parameters": [
+                        {                    
+                            "type": "text",
+                            "text": "ticket.pdf"
+                        }
+                    ]
                 }
-              ]
-            }
-          }
-        ]
-      };
+            ]
+        }
+    };
+      // body = {
+      //   "type": "vertical",
+      //   "tag": "generic",
+      //   "elements": [
+      //     {
+      //       "type": "image",
+      //       "url": "https://d1hryyr5hiabsc.cloudfront.net/web2020/img/resources/rep-great-ai-divide@1x.jpg"
+      //     },
+      //     {
+      //       "type": "text",
+      //       "text": "Package delivery update",
+      //       "tag": "title"
+      //     },
+      //     {
+      //       "type": "text",
+      //       "text": "Hi! It was not possible to deliver your package on the 16th of August 2021. Please select a desired delivery location.",
+      //       "tag": "subtitle"
+      //     },
+      //     {
+      //       "type": "text",
+      //       "text": "Will be processed in 1 working day",
+      //       "tag": "footer"
+      //     },
+      //     {
+      //       "type": "button",
+      //       "title": "Retry same address",
+      //       "click": {
+      //         "actions": [
+      //           {
+      //             "type": "publishText",
+      //             "text": "Retry same address"
+      //           }
+      //         ]
+      //       }
+      //     },
+      //     {
+      //       "type": "button",
+      //       "title": "Pickup point",
+      //       "click": {
+      //         "actions": [
+      //           {
+      //             "type": "publishText",
+      //             "text": "Pickup point"
+      //           }
+      //         ]
+      //       }
+      //     },
+      //     {
+      //       "type": "button",
+      //       title: 'Post office',
+      //       "click": {
+      //         "actions": [
+      //           {
+      //             "type": "publishText",
+      //             "text": "Post office"
+      //           }
+      //         ]
+      //       }
+      //     }
+      //   ]
+      // };
 
       this.baseUrl = baseUrl || this.baseUrl;
       const fullUrl = `${this.baseUrl}${url}`;
