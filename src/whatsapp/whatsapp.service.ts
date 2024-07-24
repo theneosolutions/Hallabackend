@@ -655,9 +655,9 @@ export class WhatsappService {
     const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
 
     try {
-      const imageResponse: any = null;
+      let imageResponse: any = null;
       if (image) {
-        imageResponse: any = await this.sendImage({
+        imageResponse = await this.sendImage({
           recipientPhone: recipientPhone,
           caption: text,
           url: image,
