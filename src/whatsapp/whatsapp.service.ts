@@ -601,19 +601,9 @@ export class WhatsappService {
       Number(inviteId),
       Number(eventId),
     );
-    const { invites, events }: any = invite;
-    const { image, name: eventName, id }: any = events;
-    const { callingCode, phoneNumber, name }: any = invites;
+    const { events }: any = invite;
+    const { image, name: eventName }: any = events;
 
-    // const imageResponse: any = await this.sendImage({
-    //   recipientPhone: recipientPhone,
-    //   url: image,
-    // });
-
-    // if (imageResponse && imageResponse?.error) {
-    //   console.error('Error sending image:', imageResponse?.error);
-    // }
-    console.log('Handling event inivation >>>>>>>>>>>>');
     const messageText = `Hey ${recipientName}, \nWe are pleased to invite you to ${eventName}.`;
     await this.sendSimpleButtonsWithImage({
       url: image,
@@ -658,6 +648,8 @@ export class WhatsappService {
     const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
 
     try {
+      // Old implementation
+      /*
       if (image) {
         const imageResponse: any = await this.sendImage({
           recipientPhone: recipientPhone,
@@ -669,13 +661,30 @@ export class WhatsappService {
         if (imageResponse && imageResponse?.error) {
           console.error('Error sending image:', imageResponse?.error);
         }
-        console.log(
-          'sendImage is called from sendInviteToGuest <<<<<<<<<<<<<<<',
-        );
       }
 
       const response = await this.sendSimpleButtons({
         message: text,
+        recipientPhone: recipientPhone,
+        listOfButtons: [
+          { title: 'Confirm', id: `event-confirm_${eventId}_${contactId}` },
+          { title: 'Decline', id: `event-decline_${eventId}_${contactId}` },
+          {
+            title: 'Event Location',
+            id: `event-location_${eventId}_${contactId}`,
+          },
+        ],
+      });
+
+      console.log(
+        '🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:',
+        response,
+      );
+      return response;
+      */
+      const response = await this.sendSimpleButtonsWithImage({
+        message: text,
+        url: image,
         recipientPhone: recipientPhone,
         listOfButtons: [
           { title: 'Confirm', id: `event-confirm_${eventId}_${contactId}` },
@@ -1070,6 +1079,7 @@ export class WhatsappService {
     message,
     listOfButtons,
   }) {
+    this._mustHaveMessage(message);
     this._mustHaverecipientPhone(recipientPhone);
 
     if (!listOfButtons) throw new Error('listOfButtons cannot be empty');
@@ -1119,7 +1129,7 @@ export class WhatsappService {
           },
         },
         body: {
-          text: message || 'Testing',
+          text: message,
         },
         action: {
           buttons: validButtons,
@@ -1135,7 +1145,6 @@ export class WhatsappService {
 
     return response;
   }
-
 
   async sendSimpleButtons({ recipientPhone, message, listOfButtons }) {
     this._mustHaveMessage(message);
