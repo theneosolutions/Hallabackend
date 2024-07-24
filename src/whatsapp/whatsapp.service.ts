@@ -614,9 +614,10 @@ export class WhatsappService {
     //   console.error('Error sending image:', imageResponse?.error);
     // }
     console.log('Handling event inivation >>>>>>>>>>>>');
+    const messageText = `Hey ${recipientName}, \nWe are pleased to invite you to ${eventName}.`;
     await this.sendSimpleButtonsWithImage({
       url: image,
-      message: `Hey ${recipientName}, \nWe are pleased to invite you to ${eventName}.`,
+      message: messageText,
       recipientPhone: recipientPhone,
       listOfButtons: [
         {
@@ -1118,7 +1119,7 @@ export class WhatsappService {
           },
         },
         body: {
-          text: message,
+          text: message || 'Testing',
         },
         action: {
           buttons: validButtons,
