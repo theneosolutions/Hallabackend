@@ -668,7 +668,7 @@ export class WhatsappService {
           console.error('Error sending image:', imageResponse?.error);
         }
       }
-
+      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       /*
       const response = await this.sendSimpleButtons({
         message: text,
