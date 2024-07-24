@@ -1112,7 +1112,7 @@ export class WhatsappService {
         type: 'list',
         header: {
           type: 'image',
-          url: url,
+          link: url,
         },
         body: {
           text: message,
