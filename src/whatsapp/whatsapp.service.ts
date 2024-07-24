@@ -1,24 +1,10 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
-import {
-  BadRequestException,
-  ConflictException,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-  forwardRef,
-} from '@nestjs/common';
-import { compare, hash } from 'bcrypt';
+import { Repository } from 'typeorm';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { CommonService } from '../common/common.service';
-import { isNull, isUndefined } from '../common/utils/validation.util';
 import { Contacts } from './entities/contacts.entity';
-import { UpdateContactsDto } from './dtos/update-contacts.dto';
-import { isInt } from 'class-validator';
-import { SLUG_REGEX } from '../common/consts/regex.const';
-import { ContactsDto } from './dtos/create-contacts';
 import { UsersService } from 'src/users/users.service';
 import { Events } from 'src/events/entities/event.entity';
-import { EventsService } from 'src/events/events.service';
 import { ITemplatedData } from './interfaces/template-data.interface';
 import { readFileSync } from 'fs';
 import { ITemplates } from './interfaces/templates.interface';
@@ -28,7 +14,6 @@ import { EventInvitessContacts } from 'src/events/entities/events_invites_contac
 import * as qrcode from 'qrcode';
 import nodeHtmlToImage from 'node-html-to-image';
 import { ConfigService } from '@nestjs/config';
-import { eventNames } from 'process';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
 
@@ -85,18 +70,18 @@ export class WhatsappService {
   }
 
   public async create(origin: string | undefined, body: any): Promise<any> {
-    let data = this.parseMessage(body);
+    const data = this.parseMessage(body);
     try {
       if (Object.keys(data).length === 0) {
         return; // Return when no body found
       }
 
       if (data?.isMessage) {
-        let incomingMessage = data.message;
-        let recipientPhone = incomingMessage.from.phone; // extract the phone number of sender
-        let recipientName = incomingMessage.from.name;
-        let typeOfMsg = incomingMessage.type; // extract the type of message (some are text, others are images, others are responses to buttons etc...)
-        let message_id = incomingMessage.message_id; // extract the message id
+        const incomingMessage = data.message;
+        const recipientPhone = incomingMessage.from.phone; // extract the phone number of sender
+        const recipientName = incomingMessage.from.name;
+        const typeOfMsg = incomingMessage.type; // extract the type of message (some are text, others are images, others are responses to buttons etc...)
+        const message_id = incomingMessage.message_id; // extract the message id
 
         switch (incomingMessage.type) {
           case 'text_message':
@@ -828,7 +813,7 @@ export class WhatsappService {
     try {
       this._mustHaverecipientPhone(recipientPhone);
       this._mustHaveMessage(message);
-      let body = {
+      const body = {
         messaging_product: 'whatsapp',
         to: recipientPhone,
         type: 'text',
@@ -838,7 +823,7 @@ export class WhatsappService {
         },
       };
 
-      let response = await this._fetchAssistant({
+      const response = await this._fetchAssistant({
         url: '/messages',
         method: 'POST',
         body,
@@ -877,10 +862,10 @@ export class WhatsappService {
       throw new Error('"footerText" is required in making a request');
 
     let totalNumberOfItems = 0;
-    let validSections = listOfSections
+    const validSections = listOfSections
       .map((section) => {
-        let title = section.title;
-        let rows = section.rows?.map((row) => {
+        const title = section.title;
+        const rows = section.rows?.map((row) => {
           if (!row.id) {
             throw new Error(
               '"row.id" of an item is required in list of radio buttons.',
@@ -938,7 +923,7 @@ export class WhatsappService {
       );
     }
 
-    let samples = {
+    const samples = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
       to: recipientPhone,
@@ -966,7 +951,7 @@ export class WhatsappService {
       throw new Error('"listOfSections" is required in making a request');
     }
 
-    let response = await this._fetchAssistant({
+    const response = await this._fetchAssistant({
       url: '/messages',
       method: 'POST',
       body: samples,
@@ -1000,8 +985,8 @@ export class WhatsappService {
 
   private async _fetchAssistant({ baseUrl, url, method, headers, body }: any) {
     return new Promise((resolve, reject) => {
-      let defaultHeaders = () => {
-        let output = {
+      const defaultHeaders = () => {
+        const output = {
           'Content-Type': 'application/json',
           'Accept-Language': 'en_US',
           Accept: 'application/json',
@@ -1011,8 +996,8 @@ export class WhatsappService {
         }
         return output;
       };
-      let defaultBody = {};
-      let defaultMethod = 'GET';
+      const defaultBody = {};
+      const defaultMethod = 'GET';
 
       if (!url) {
         throw new Error('"url" is required in making a request');
@@ -1043,14 +1028,14 @@ export class WhatsappService {
       };
       body = body || defaultBody;
       this.baseUrl = baseUrl || this.baseUrl;
-      let fullUrl = `${this.baseUrl}${url}`;
+      const fullUrl = `${this.baseUrl}${url}`;
 
       unirest(method, fullUrl)
         .headers(headers)
         .send(JSON.stringify(body))
         .end(function (res) {
           if (res.error) {
-            let errorObject = () => {
+            const errorObject = () => {
               try {
                 return res.body?.error || JSON.parse(res.raw_body);
               } catch (e) {
@@ -1081,7 +1066,7 @@ export class WhatsappService {
     if (listOfButtons.length > 3)
       throw new Error('listOfButtons cannot be bigger than 3 elements');
 
-    let validButtons = listOfButtons
+    const validButtons = listOfButtons
       .map((button) => {
         if (!button.title) {
           throw new Error('"title" is required in making a request.');
@@ -1110,7 +1095,7 @@ export class WhatsappService {
       })
       .filter(Boolean);
 
-    let body = {
+    const body = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
       to: recipientPhone,
@@ -1126,7 +1111,7 @@ export class WhatsappService {
       },
     };
 
-    let response = await this._fetchAssistant({
+    const response = await this._fetchAssistant({
       url: '/messages',
       method: 'POST',
       body,
@@ -1155,8 +1140,6 @@ export class WhatsappService {
       body,
     });
 
-    console.log('RESPONSE WHATSAPP IMAGE>>>>>>>>>>>>>>>>>>>', response);
-
     return {
       response,
       body,
@@ -1175,7 +1158,7 @@ export class WhatsappService {
       throw new Error('"name" and "address" are required in making a request');
     }
 
-    let body = {
+    const body = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
       to: recipientPhone,
@@ -1188,7 +1171,7 @@ export class WhatsappService {
       },
     };
 
-    let response = await this._fetchAssistant({
+    const response = await this._fetchAssistant({
       url: '/messages',
       method: 'POST',
       body,
