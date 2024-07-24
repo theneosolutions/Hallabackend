@@ -1111,7 +1111,7 @@ export class WhatsappService {
       to: recipientPhone,
       type: 'interactive',
       interactive: {
-        type: 'list',
+        type: 'button',
         header: {
           type: 'image',
           image: {
