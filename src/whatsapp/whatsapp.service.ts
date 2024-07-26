@@ -1122,12 +1122,12 @@ export class WhatsappService {
       type: 'interactive',
       interactive: {
         type: 'button',
-        header: {
-          type: 'image',
-          image: {
-            link: url,
-          },
-        },
+        // header: {
+        //   type: 'image',
+        //   image: {
+        //     link: url,
+        //   },
+        // },
         body: {
           text: message,
         },
