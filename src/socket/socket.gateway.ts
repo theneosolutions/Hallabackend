@@ -26,7 +26,7 @@ export class SocketGateway
     return this.server;
   }
 
-  @SubscribeMessage('chat')
+  @SubscribeMessage('chat-send-message')
   async handleSendMessage(client: Socket, payload: any): Promise<void> {
     console.log('🚀 ~ SocketGateway ~ handleSendMessage ~ payload:', payload);
     try {
@@ -35,7 +35,7 @@ export class SocketGateway
         '🚀 ~ SocketGateway ~ I was here ~ handleSendMessage ~ sms:',
         sms,
       );
-      this.server.emit('chat', sms);
+      this.server.emit('chat-receive-message', sms);
     } catch (error) {
       console.log('🚀 ~ SocketGateway ~ handleSendMessage ~ error:', error);
     }
