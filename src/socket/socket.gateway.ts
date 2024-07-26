@@ -31,7 +31,10 @@ export class SocketGateway
     console.log('🚀 ~ SocketGateway ~ handleSendMessage ~ payload:', payload);
     try {
       const sms: any = await this.socketService.handleMessages(payload);
-      // console.log("🚀 ~ SocketGateway ~ handleSendMessage ~ sms:", sms)
+      console.log(
+        '🚀 ~ SocketGateway ~ I was here ~ handleSendMessage ~ sms:',
+        sms,
+      );
       this.server.emit('chat', sms);
     } catch (error) {
       console.log('🚀 ~ SocketGateway ~ handleSendMessage ~ error:', error);
