@@ -214,6 +214,7 @@ export class UploaderService {
         fileExt;
     }
 
+    console.log('>>>>>>>>>>>>>>>>>>> KEY:', key);
     try {
       await this.client.send(
         new PutObjectCommand({
