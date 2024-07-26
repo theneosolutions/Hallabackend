@@ -198,21 +198,22 @@ export class UploaderService {
     let key: string = '';
     if (fileType) {
       key =
-        // process.env.POST_FOLDER +
-        // '/' +
-        // uuidV5(userId.toString(), this.bucketData.appUuid) +
-        // '/' +
-        uuidV4() + fileExt;
+        process.env.POST_FOLDER +
+        '/' +
+        uuidV5(userId.toString(), this.bucketData.appUuid) +
+        '/' +
+        uuidV4() +
+        fileExt;
     } else {
       key =
-        // process.env.POST_FOLDER +
-        // '/' +
-        // uuidV5(userId.toString(), this.bucketData.appUuid) +
-        // '/' +
-        uuidV4() + fileExt;
+        process.env.POST_FOLDER +
+        '/' +
+        uuidV5(userId.toString(), this.bucketData.appUuid) +
+        '/' +
+        uuidV4() +
+        fileExt;
     }
 
-    console.log('>>>>>>>>>>>>>>>>>>> KEY:', key);
     try {
       await this.client.send(
         new PutObjectCommand({
