@@ -199,16 +199,16 @@ export class UploaderService {
     if (fileType) {
       key =
         process.env.POST_FOLDER +
-        '/' +
-        uuidV5(userId.toString(), this.bucketData.appUuid) +
+        // '/' +
+        // uuidV5(userId.toString(), this.bucketData.appUuid) +
         '/' +
         uuidV4() +
         fileExt;
     } else {
       key =
         process.env.POST_FOLDER +
-        '/' +
-        uuidV5(userId.toString(), this.bucketData.appUuid) +
+        // '/' +
+        // uuidV5(userId.toString(), this.bucketData.appUuid) +
         '/' +
         uuidV4() +
         fileExt;
