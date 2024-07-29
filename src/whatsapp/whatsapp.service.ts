@@ -1122,7 +1122,7 @@ export class WhatsappService {
         header: {
           type: 'image',
           image: {
-            link: url,
+            link: new URL(url).href,
           },
         },
         body: {
