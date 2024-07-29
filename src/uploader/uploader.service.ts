@@ -221,6 +221,7 @@ export class UploaderService {
           Body: fileBuffer,
           Key: key,
           ACL: 'public-read',
+          ContentType: 'image/jpeg',
         }),
       );
     } catch (error) {
