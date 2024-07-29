@@ -397,11 +397,12 @@ export class EventsController {
       dto,
       file,
     );
-    const { ratio, fileType } = dto;
+    // const { ratio, fileType } = dto;
+    const { ratio } = dto;
     const uploadedFile = await this.eventsService.uploadImage(
       file,
       ratio,
-      fileType,
+      'image/jpeg', //fileType,
     );
     return ResponseMediaMapper.map({
       link: uploadedFile,
