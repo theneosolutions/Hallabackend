@@ -61,7 +61,7 @@ export class AuthResponseUserMapper implements IAuthResponseUser {
 
   @ApiProperty({
     description: 'The user profile photo',
-    example: 'https://res.cloudinary.com/dogufahvv/image/upload/default.jpg',
+    example: 'https://res.cloudinary.com/dogufahvv/image/upload/default.jpeg',
     type: String,
   })
   public profilePhoto: string;

@@ -63,7 +63,7 @@ export class UsersService {
       ),
       password: await hash(password, 10),
       profilePhoto:
-        'https://res.cloudinary.com/dogufahvv/image/upload/default.jpg', //default placeholder image
+        'https://res.cloudinary.com/dogufahvv/image/upload/default.jpeg', //default placeholder image
       referenceCode: Math.random()
         .toString(36)
         .slice(2)
@@ -82,7 +82,7 @@ export class UsersService {
       password: await hash(password, 10),
       otp: Math.floor(1000 + Math.random() * 9000),
       profilePhoto:
-        'https://res.cloudinary.com/dogufahvv/image/upload/default.jpg', //default placeholder image
+        'https://res.cloudinary.com/dogufahvv/image/upload/default.jpeg', //default placeholder image
       referenceCode: Math.random()
         .toString(36)
         .slice(2)
@@ -115,7 +115,7 @@ export class UsersService {
       ),
       otp: Math.floor(1000 + Math.random() * 9000),
       profilePhoto:
-        'https://res.cloudinary.com/dogufahvv/image/upload/default.jpg', //default placeholder image
+        'https://res.cloudinary.com/dogufahvv/image/upload/default.jpeg', //default placeholder image
       referenceCode: Math.random()
         .toString(36)
         .slice(2)

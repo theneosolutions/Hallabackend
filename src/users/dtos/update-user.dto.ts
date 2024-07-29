@@ -81,7 +81,7 @@ export abstract class UpdateUserDto {
 
   @ApiProperty({
     description: 'profile image',
-    example: 'https://res.cloudinary.com/dogufahvv/image/upload/default.jpg',
+    example: 'https://res.cloudinary.com/dogufahvv/image/upload/default.jpeg',
     type: String,
   })
   @IsString()

@@ -405,7 +405,7 @@ export class EventsController {
     );
     return ResponseMediaMapper.map({
       link: uploadedFile,
-      type: 'jpg',
+      type: 'jpeg', // use jpeg as per amazon available exentsion
     });
   }
 

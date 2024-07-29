@@ -11,7 +11,7 @@ export class ResponseMediaMapper implements IEventMedia {
 
   @ApiProperty({
     description: 'event image type',
-    example: '.jpg | .mp4',
+    example: '.jpeg | .mp4',
     type: String,
   })
   public type: string;

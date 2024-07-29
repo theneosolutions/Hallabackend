@@ -34,7 +34,7 @@ export class ResponseEventsMapper implements IResponseEvent {
   @ApiProperty({
     description: 'Event Image',
     example:
-      'https://www.shutterstock.com/shutterstock/photos/1883117047/display_1500/stock-vector-vector-grand-opening-invitation-or-flyer-design-with-event-details-for-restaurant-1883117047.jpg',
+      'https://hallabucket007.s3.amazonaws.com/events/ceb705e6-21a8-5f3d-bdc0-d67a6aa0e123/89e8a91c-74e3-4799-85da-d3bd2a8e1025.jpeg',
     type: String,
   })
   public image: string;

@@ -123,7 +123,7 @@ export class UploaderService {
         file.buffer?.length < 50000
           ? file.buffer
           : await UploaderService.compressImage(file.buffer, ratio),
-        file.buffer?.length < 50000 ? '.' + mimetype.split('/')[1] : '.jpg',
+        file.buffer?.length < 50000 ? '.' + mimetype.split('/')[1] : '.jpeg',
         fileType,
       );
     } catch (error) {
