@@ -16,7 +16,6 @@ import nodeHtmlToImage from 'node-html-to-image';
 import { ConfigService } from '@nestjs/config';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
-import { link } from 'joi';
 
 const unirest = require('unirest');
 const signale = require('signale');
@@ -189,12 +188,12 @@ export class WhatsappService {
           console.log('🚀 ~ WhatsappService ~ create ~ message:', message);
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
-          this.emitEvent('chat', chat);
+          this.emitEvent('chat-receive-message', chat);
           invite.sendList = true;
           invite.haveChat = true;
           await this.eventInvitessContacts.save(invite);
           this.sendText({
-            message: 'Thank you.Message is sent to event creator',
+            message: 'Thank you. Message is sent to event creator',
             recipientPhone: recipientPhone,
           });
 
@@ -225,12 +224,12 @@ export class WhatsappService {
           console.log('🚀 ~ WhatsappService ~ create ~ message:', message);
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
-          this.emitEvent('chat', chat);
+          this.emitEvent('chat-receive-message', chat);
           inviteDetail.sendList = true;
           inviteDetail.haveChat = true;
           await this.eventInvitessContacts.save(inviteDetail);
           this.sendText({
-            message: 'Thank you.Message is sent to event creator',
+            message: 'Thank you. Message is sent to event creator',
             recipientPhone: recipientPhone,
           });
           userEvents?.map(async (invite: any) => {
@@ -737,7 +736,7 @@ export class WhatsappService {
 
   public async saveAndSendMessage(payload: any): Promise<any> {
     try {
-      const { event, contact, actionUser } = payload;
+      const { event, contact } = payload;
       const queryBuilder = this.eventInvitessContacts.createQueryBuilder(
         'event_invitess_contacts',
       );
@@ -849,11 +848,9 @@ export class WhatsappService {
       console.log('🚀 ~ WhatsappService ~ sendText ~ error:', error);
     }
   }
-
   public async emitEvent(event: string, data: any): Promise<void> {
     const server = this.socketGateway.getServerInstance();
     if (server) {
-      // console.log("🚀 ~ WhatsappService ~ create ~ chat:", data)
       server.emit(event, data);
     } else {
       console.error('Server instance not available');
