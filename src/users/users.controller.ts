@@ -199,7 +199,7 @@ export class UsersController {
     return await this.usersService.getUserStats(params?.id);
   }
 
-  @Public(['user'])
+  @Public(['admin', 'user'])
   @Post('/update-device-token/:id')
   @ApiParam({ name: 'id', description: 'User ID', type: 'number' })
   @ApiBody({
