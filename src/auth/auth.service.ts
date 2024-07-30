@@ -121,7 +121,7 @@ export class AuthService {
       ]);
     }
 
-    if (!(await compare(password, user.password))) {
+    if (!(await compare(String(password), String(user.password)))) {
       await this.checkLastPassword(user.credentials, password);
     }
 
