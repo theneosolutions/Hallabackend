@@ -16,6 +16,8 @@ import nodeHtmlToImage from 'node-html-to-image';
 import { ConfigService } from '@nestjs/config';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
+import { NotificationsService } from 'src/Notifications/notifications.service';
+import { NotificationDto } from 'src/Notifications/dtos/create-notification.dto';
 
 const unirest = require('unirest');
 const signale = require('signale');
@@ -52,6 +54,8 @@ export class WhatsappService {
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => SocketGateway))
     private readonly socketGateway: SocketGateway,
+    @Inject(forwardRef(() => NotificationsService))
+    private readonly notificationService: NotificationsService,
   ) {
     this.domain = this.configService.get<string>('domain');
     this.templates = {
@@ -227,8 +231,8 @@ export class WhatsappService {
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
           this.emitEvent('chat-receive-message', chat);
-          console.log('WAHMED >>>>>>>>>>>>>> Event detail:', inviteDetail);
-          // send notification to event user about chat message;
+          this.sendChatMessageNotification(inviteDetail);
+
           inviteDetail.sendList = true;
           inviteDetail.haveChat = true;
           await this.eventInvitessContacts.save(inviteDetail);
@@ -265,6 +269,22 @@ export class WhatsappService {
         }
       }
     }
+  }
+
+  private async sendChatMessageNotification(notificationDetail: any) {
+    const notificationDto: NotificationDto = {
+      user: notificationDetail.usersId,
+      resourceId: notificationDetail.usersId,
+      resourceType: 'custom-notification',
+      parent: null,
+      parentType: 'custom-notification',
+      sendNotificationTo: notificationDetail.usersId,
+      content: undefined,
+    };
+    notificationDto.content.body = `${notificationDetail.invites.name} sent you message for an event ${notificationDetail.events.name}`;
+    console.log('WAHMED >>>>>>>>>>>>>> Notification detail:', notificationDto);
+
+    await this.notificationService.create(undefined, notificationDto);
   }
 
   private async processButtonMessage(
