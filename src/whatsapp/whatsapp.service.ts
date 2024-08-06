@@ -227,6 +227,8 @@ export class WhatsappService {
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
           this.emitEvent('chat-receive-message', chat);
+          console.log('WAHMED >>>>>>>>>>>>>> Event detail:', inviteDetail);
+          // send notification to event user about chat message;
           inviteDetail.sendList = true;
           inviteDetail.haveChat = true;
           await this.eventInvitessContacts.save(inviteDetail);
