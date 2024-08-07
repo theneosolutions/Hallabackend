@@ -17,7 +17,7 @@ import { ContactsModule } from './contacts/contacts.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { EventsModule } from './events/events.module';
 import { CardModule } from './cards/card.module';
-import { NotificationsModule } from './Notifications/notifications.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { SocketModule } from './socket/socket.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { PackagesModule } from './packages/packages.module';

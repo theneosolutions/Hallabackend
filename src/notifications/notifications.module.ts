@@ -1,7 +1,7 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { Notifications } from './entities/notifications.entity';
-import { UsersModule } from './../users/users.module';
+import { UsersModule } from '../users/users.module';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { MailerModule } from '../mailer/mailer.module';

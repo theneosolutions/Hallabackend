@@ -11,13 +11,10 @@ import slugify from 'slugify';
 import { v4 } from 'uuid';
 import { IMessage } from './interfaces/message.interface';
 import { isNull, isUndefined } from './utils/validation.util';
-import { NotificationDto } from 'src/Notifications/dtos/create-notification.dto';
-import { NotificationsService } from 'src/Notifications/notifications.service';
 
 @Injectable()
 export class CommonService {
   private readonly loggerService: LoggerService;
-  private readonly notificationService: NotificationsService;
 
   constructor() {
     this.loggerService = new Logger(CommonService.name);
@@ -110,10 +107,5 @@ export class CommonService {
     if (date < 10) date = '0' + date;
 
     return `${year}-${month}-${date}`;
-  }
-
-  async sendChatMessageNotification(notificationDto: NotificationDto) {
-    console.log('WAHMED >>>>>>>>>>>>>> Notification detail:', notificationDto);
-    await this.notificationService.create(undefined, notificationDto);
   }
 }

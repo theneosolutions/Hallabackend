@@ -9,7 +9,7 @@ import {
   Matches,
 } from 'class-validator';
 import { NAME_REGEX } from '../../common/consts/regex.const';
-import { ContentDto } from '../dtos/notification-content.dto';
+import { ContentDto } from './notification-content.dto';
 
 export abstract class NotificationDto {
   @ApiProperty({
