@@ -15,7 +15,6 @@ import nodeHtmlToImage from 'node-html-to-image';
 import { ConfigService } from '@nestjs/config';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
-import { NotificationsService } from 'src/Notifications/notifications.service';
 import { NotificationDto } from 'src/Notifications/dtos/create-notification.dto';
 
 const unirest = require('unirest');
@@ -50,8 +49,6 @@ export class WhatsappService {
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => SocketGateway))
     private readonly socketGateway: SocketGateway,
-    // @Inject(forwardRef(() => NotificationsService))
-    // private readonly notificationService: NotificationsService,
   ) {
     this.domain = this.configService.get<string>('domain');
     this.templates = {
