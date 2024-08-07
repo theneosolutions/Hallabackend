@@ -869,6 +869,7 @@ export class WhatsappService {
   }
   public async emitEvent(event: string, data: any): Promise<void> {
     const server = this.socketGateway.getServerInstance();
+    console.log('🚀 ~ WhatsappService ~ emitEvent ~ socket:', server);
     if (server) {
       server.emit(event, data);
     } else {
