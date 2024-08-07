@@ -12,10 +12,12 @@ import slugify from 'slugify';
 import { v4 } from 'uuid';
 import { IMessage } from './interfaces/message.interface';
 import { isNull, isUndefined } from './utils/validation.util';
+import { NotificationDto } from 'src/Notifications/dtos/create-notification.dto';
 
 @Injectable()
 export class CommonService {
   private readonly loggerService: LoggerService;
+  notificationService: any;
 
   constructor() {
     this.loggerService = new Logger(CommonService.name);
@@ -108,5 +110,21 @@ export class CommonService {
     if (date < 10) date = '0' + date;
 
     return `${year}-${month}-${date}`;
+  }
+
+  async sendChatMessageNotification(payload: any) {
+    const notificationDto: NotificationDto = {
+      user: payload.usersId,
+      resourceId: payload.usersId,
+      resourceType: 'custom-notification',
+      parent: null,
+      parentType: 'custom-notification',
+      sendNotificationTo: payload.usersId,
+      content: undefined,
+    };
+    notificationDto.content.body = `${payload.invites.name} sent you message for an event ${payload.events.name}`;
+    console.log('WAHMED >>>>>>>>>>>>>> Notification detail:', notificationDto);
+
+    await this.notificationService.create(undefined, notificationDto);
   }
 }

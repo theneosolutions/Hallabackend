@@ -16,6 +16,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
 import { NotificationDto } from 'src/Notifications/dtos/create-notification.dto';
+import { NotificationsService } from 'src/Notifications/notifications.service';
 
 const unirest = require('unirest');
 const signale = require('signale');
@@ -278,8 +279,8 @@ export class WhatsappService {
       '🚀 ~ WhatsappService ~ send message notification:',
       notificationDto,
     );
-    // Hint: used emit event to resolve circular dependency between Whatsapp & Notification modules
-    await this.emitEvent('send-chat-notification', notificationDto);
+
+    await this.commonService.sendChatMessageNotification(notificationDto);
   }
 
   private async processButtonMessage(
