@@ -15,8 +15,6 @@ import nodeHtmlToImage from 'node-html-to-image';
 import { ConfigService } from '@nestjs/config';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
-import { NotificationDto } from 'src/Notifications/dtos/create-notification.dto';
-import { NotificationsService } from 'src/Notifications/notifications.service';
 
 const unirest = require('unirest');
 const signale = require('signale');
@@ -187,7 +185,7 @@ export class WhatsappService {
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
           this.emitEvent('chat-receive-message', chat);
-          this.sendChatMessageNotification(invite);
+          // Send notification to event owner
           invite.sendList = true;
           invite.haveChat = true;
           await this.eventInvitessContacts.save(invite);
@@ -224,7 +222,7 @@ export class WhatsappService {
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
           this.emitEvent('chat-receive-message', chat);
-          this.sendChatMessageNotification(inviteDetail);
+          // Send notification to event owner
 
           inviteDetail.sendList = true;
           inviteDetail.haveChat = true;
@@ -262,25 +260,6 @@ export class WhatsappService {
         }
       }
     }
-  }
-
-  private async sendChatMessageNotification(notificationDetail: any) {
-    const notificationDto: NotificationDto = {
-      user: notificationDetail.usersId,
-      resourceId: notificationDetail.usersId,
-      resourceType: 'custom-notification',
-      parent: null,
-      parentType: 'custom-notification',
-      sendNotificationTo: notificationDetail.usersId,
-      content: { body: '' },
-    };
-    notificationDto.content.body = `${notificationDetail.invites.name} sent you message for an event ${notificationDetail.events.name}`;
-    console.log(
-      '🚀 ~ WhatsappService ~ send message notification:',
-      notificationDto,
-    );
-
-    await this.commonService.sendChatMessageNotification(notificationDto);
   }
 
   private async processButtonMessage(

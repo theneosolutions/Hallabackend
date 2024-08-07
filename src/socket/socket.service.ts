@@ -1,13 +1,10 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { NotificationDto } from 'src/Notifications/dtos/create-notification.dto';
-import { NotificationsService } from 'src/Notifications/notifications.service';
 import { WhatsappService } from 'src/whatsapp/whatsapp.service';
 
 @Injectable()
 export class SocketService {
   private readonly connectedClients: Map<string, Socket> = new Map();
-  private readonly notificationService: NotificationsService;
 
   constructor(
     @Inject(forwardRef(() => WhatsappService))
@@ -47,22 +44,6 @@ export class SocketService {
     } catch (error) {
       console.log('🚀 ~ SocketService ~ handleMessages ~ error:', error);
     }
-  }
-
-  async sendChatMessageNotification(payload: any) {
-    const notificationDto: NotificationDto = {
-      user: payload.usersId,
-      resourceId: payload.usersId,
-      resourceType: 'custom-notification',
-      parent: null,
-      parentType: 'custom-notification',
-      sendNotificationTo: payload.usersId,
-      content: undefined,
-    };
-    notificationDto.content.body = `${payload.invites.name} sent you message for an event ${payload.events.name}`;
-    console.log('WAHMED >>>>>>>>>>>>>> Notification detail:', notificationDto);
-
-    await this.notificationService.create(undefined, notificationDto);
   }
 
   // Add more methods for handling events, messages, etc.
