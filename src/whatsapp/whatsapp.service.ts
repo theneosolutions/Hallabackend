@@ -274,7 +274,7 @@ export class WhatsappService {
       parent: null,
       parentType: 'custom-notification',
       sendNotificationTo: payload.usersId,
-      content: undefined,
+      content: { body: '' },
     };
     notificationDto.content.body = `${payload.invites.name} sent you message for an event ${payload.events.name}`;
     console.log('WAHMED >>>>>>>>>>>>>> Notification detail:', notificationDto);
