@@ -8,6 +8,8 @@ import { Events } from 'src/events/entities/event.entity';
 import { EventInvitessContacts } from 'src/events/entities/events_invites_contacts.entity';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketModule } from 'src/socket/socket.module';
+import { Notifications } from 'src/notifications/entities/notifications.entity';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -16,11 +18,13 @@ import { SocketModule } from 'src/socket/socket.module';
       Events,
       EventInvitessContacts,
       EventsChats,
+      Notifications,
     ]),
     forwardRef(() => EventsModule),
     forwardRef(() => EventInvitessContacts),
     forwardRef(() => EventsChats),
     forwardRef(() => SocketModule),
+    forwardRef(() => NotificationsModule),
   ],
   providers: [WhatsappService],
   exports: [WhatsappService],

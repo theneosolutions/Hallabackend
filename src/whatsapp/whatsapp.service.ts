@@ -15,6 +15,8 @@ import nodeHtmlToImage from 'node-html-to-image';
 import { ConfigService } from '@nestjs/config';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { NotificationDto } from 'src/notifications/dtos/create-notification.dto';
 
 const unirest = require('unirest');
 const signale = require('signale');
@@ -48,6 +50,8 @@ export class WhatsappService {
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => SocketGateway))
     private readonly socketGateway: SocketGateway,
+    @Inject(forwardRef(() => NotificationsService))
+    private readonly notificationsService: NotificationsService,
   ) {
     this.domain = this.configService.get<string>('domain');
     this.templates = {
@@ -185,7 +189,7 @@ export class WhatsappService {
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
           this.emitEvent('chat-receive-message', chat);
-          // Send notification to event owner
+          await this.sendChatMessageNotification(invite);
           invite.sendList = true;
           invite.haveChat = true;
           await this.eventInvitessContacts.save(invite);
@@ -222,7 +226,7 @@ export class WhatsappService {
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
           this.emitEvent('chat-receive-message', chat);
-          // Send notification to event owner
+          await this.sendChatMessageNotification(inviteDetail);
 
           inviteDetail.sendList = true;
           inviteDetail.haveChat = true;
@@ -261,6 +265,23 @@ export class WhatsappService {
       }
     }
   }
+
+  private async sendChatMessageNotification(payload: any) {
+    const notificationDto: NotificationDto = {
+      user: payload.usersId,
+      resourceId: payload.usersId,
+      resourceType: 'custom-notification',
+      parent: null,
+      parentType: 'custom-notification',
+      sendNotificationTo: payload.usersId,
+      content: undefined,
+    };
+    notificationDto.content.body = `${payload.invites.name} sent you message for an event ${payload.events.name}`;
+    console.log('WAHMED >>>>>>>>>>>>>> Notification detail:', notificationDto);
+
+    await this.notificationsService.create(undefined, notificationDto);
+  }
+
 
   private async processButtonMessage(
     incomingMessage: any,

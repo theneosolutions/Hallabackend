@@ -1,6 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
 import { isNull, isUndefined } from '../common/utils/validation.util';
 import { Notifications } from './entities/notifications.entity';
 import { isInt } from 'class-validator';
@@ -20,6 +20,7 @@ export class NotificationsService {
   constructor(
     @InjectRepository(Notifications)
     private readonly notificationsRepository: Repository<Notifications>,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
     private readonly commonService: CommonService,
   ) {}
