@@ -37,6 +37,21 @@ export class SocketGateway
     }
   }
 
+  @SubscribeMessage('send-chat-notification')
+  async handleSendChatMessageNotification(
+    client: Socket,
+    payload: any,
+  ): Promise<void> {
+    try {
+      await this.socketService.sendChatMessageNotification(payload);
+    } catch (error) {
+      console.log(
+        '🚀 ~ SocketGateway ~ handleSendChatMessageNotification ~ error:',
+        error,
+      );
+    }
+  }
+
   afterInit(server: any) {
     console.log(server);
   }

@@ -3,13 +3,11 @@ import { Module, forwardRef } from '@nestjs/common';
 import { Contacts } from './entities/contacts.entity';
 import { WhatsappService } from './whatsapp.service';
 import { WhatsappController } from './whatsapp.controller';
-import { UsersModule } from 'src/users/users.module';
 import { EventsModule } from 'src/events/events.module';
 import { Events } from 'src/events/entities/event.entity';
 import { EventInvitessContacts } from 'src/events/entities/events_invites_contacts.entity';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 import { SocketModule } from 'src/socket/socket.module';
-import { NotificationsService } from 'src/Notifications/notifications.service';
 
 @Module({
   imports: [
@@ -19,13 +17,10 @@ import { NotificationsService } from 'src/Notifications/notifications.service';
       EventInvitessContacts,
       EventsChats,
     ]),
-    // UsersModule,
-    forwardRef(() => UsersModule),
     forwardRef(() => EventsModule),
     forwardRef(() => EventInvitessContacts),
     forwardRef(() => EventsChats),
     forwardRef(() => SocketModule),
-    forwardRef(() => NotificationsService),
   ],
   providers: [WhatsappService],
   exports: [WhatsappService],

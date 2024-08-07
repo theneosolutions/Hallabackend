@@ -1,12 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Like, Not, Repository } from 'typeorm';
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { isNull, isUndefined } from '../common/utils/validation.util';
 import { Notifications } from './entities/notifications.entity';
 import { isInt } from 'class-validator';

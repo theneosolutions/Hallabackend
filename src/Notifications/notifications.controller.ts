@@ -3,36 +3,20 @@ import {
   Controller,
   Delete,
   Get,
-  HttpStatus,
   Param,
   Patch,
   Post,
   Query,
-  Res,
-  UploadedFile,
-  UseInterceptors,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
   ApiBadRequestResponse,
-  ApiNoContentResponse,
   ApiNotFoundResponse,
-  ApiCreatedResponse,
   ApiOkResponse,
   ApiTags,
-  ApiConflictResponse,
   ApiUnauthorizedResponse,
-  ApiConsumes,
-  ApiBody,
   ApiOperation,
 } from '@nestjs/swagger';
-import { Response } from 'express';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-import { IAuthResponseUser } from '../auth/interfaces/auth-response-user.interface';
-import { AuthResponseUserMapper } from '../auth/mappers/auth-response-user.mapper';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { Express } from 'express';
 import { IResponseNotifications } from './interfaces/response-notifications.interface';
 import { NotificationsService } from './notifications.service';
 import { Origin } from 'src/auth/decorators/origin.decorator';
@@ -45,17 +29,13 @@ import { ApiPaginatedResponse } from './decorators/api-paginated-response.decora
 import { GetNotificationByUserIdParams } from './dtos/get-notifications-by-userid.params';
 import { GetNotificationByResourceTypeParams } from './dtos/get-notifications-by-resourcetype.params';
 import { NotificationDto } from './dtos/create-notification.dto';
-import { extname } from 'path';
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { PushNotificationDto } from './dtos/send-push-notification.dto';
 
 @ApiTags('Notifications')
 @Controller('notifications')
 export class NotificationsController {
-  constructor(
-    private readonly notificationsService: NotificationsService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly notificationsService: NotificationsService) {}
 
   @Post()
   @Public(['admin', 'user'])

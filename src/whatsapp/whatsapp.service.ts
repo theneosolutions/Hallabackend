@@ -3,7 +3,6 @@ import { Repository } from 'typeorm';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { CommonService } from '../common/common.service';
 import { Contacts } from './entities/contacts.entity';
-import { UsersService } from 'src/users/users.service';
 import { Events } from 'src/events/entities/event.entity';
 import { ITemplatedData } from './interfaces/template-data.interface';
 import { readFileSync } from 'fs';
@@ -47,15 +46,12 @@ export class WhatsappService {
     @InjectRepository(EventsChats)
     private readonly eventsChats: Repository<EventsChats>,
 
-    @Inject(forwardRef(() => UsersService))
-    private readonly usersService: UsersService,
-
     private readonly commonService: CommonService,
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => SocketGateway))
     private readonly socketGateway: SocketGateway,
-    @Inject(forwardRef(() => NotificationsService))
-    private readonly notificationService: NotificationsService,
+    // @Inject(forwardRef(() => NotificationsService))
+    // private readonly notificationService: NotificationsService,
   ) {
     this.domain = this.configService.get<string>('domain');
     this.templates = {
@@ -193,8 +189,7 @@ export class WhatsappService {
           const chat = this.eventsChats.create(message);
           await this.eventsChats.insert(chat);
           this.emitEvent('chat-receive-message', chat);
-          console.log('WAHMED >>>>>>>>>>>>>> Event detail:', invite);
-          // send notification to event user about chat message
+          this.sendChatMessageNotification(invite);
           invite.sendList = true;
           invite.haveChat = true;
           await this.eventInvitessContacts.save(invite);
@@ -282,9 +277,12 @@ export class WhatsappService {
       content: undefined,
     };
     notificationDto.content.body = `${notificationDetail.invites.name} sent you message for an event ${notificationDetail.events.name}`;
-    console.log('WAHMED >>>>>>>>>>>>>> Notification detail:', notificationDto);
-
-    await this.notificationService.create(undefined, notificationDto);
+    console.log(
+      '🚀 ~ WhatsappService ~ send message notification:',
+      notificationDto,
+    );
+    // Hint: used emit event to resolve circular dependency between Whatsapp & Notification modules
+    this.emitEvent('send-chat-notification', notificationDto);
   }
 
   private async processButtonMessage(
