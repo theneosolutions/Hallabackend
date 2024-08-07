@@ -43,6 +43,7 @@ export class SocketGateway
     payload: any,
   ): Promise<void> {
     try {
+      console.log('🚀 ~ SocketGateway ~ send chat message:');
       await this.socketService.sendChatMessageNotification(payload);
     } catch (error) {
       console.log(
