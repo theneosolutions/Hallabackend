@@ -7,17 +7,17 @@ import {
   LoggerService,
   NotFoundException,
 } from '@nestjs/common';
-import { validate } from 'class-validator';
 import slugify from 'slugify';
 import { v4 } from 'uuid';
 import { IMessage } from './interfaces/message.interface';
 import { isNull, isUndefined } from './utils/validation.util';
 import { NotificationDto } from 'src/Notifications/dtos/create-notification.dto';
+import { NotificationsService } from 'src/Notifications/notifications.service';
 
 @Injectable()
 export class CommonService {
   private readonly loggerService: LoggerService;
-  notificationService: any;
+  private readonly notificationService: NotificationsService;
 
   constructor() {
     this.loggerService = new Logger(CommonService.name);
@@ -112,19 +112,8 @@ export class CommonService {
     return `${year}-${month}-${date}`;
   }
 
-  async sendChatMessageNotification(payload: any) {
-    const notificationDto: NotificationDto = {
-      user: payload.usersId,
-      resourceId: payload.usersId,
-      resourceType: 'custom-notification',
-      parent: null,
-      parentType: 'custom-notification',
-      sendNotificationTo: payload.usersId,
-      content: undefined,
-    };
-    notificationDto.content.body = `${payload.invites.name} sent you message for an event ${payload.events.name}`;
+  async sendChatMessageNotification(notificationDto: NotificationDto) {
     console.log('WAHMED >>>>>>>>>>>>>> Notification detail:', notificationDto);
-
     await this.notificationService.create(undefined, notificationDto);
   }
 }
