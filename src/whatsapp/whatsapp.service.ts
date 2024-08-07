@@ -279,7 +279,7 @@ export class WhatsappService {
       notificationDto,
     );
     // Hint: used emit event to resolve circular dependency between Whatsapp & Notification modules
-    this.emitEvent('send-chat-notification', notificationDto);
+    await this.emitEvent('send-chat-notification', notificationDto);
   }
 
   private async processButtonMessage(
