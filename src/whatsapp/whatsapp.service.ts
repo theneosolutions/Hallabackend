@@ -71,7 +71,6 @@ export class WhatsappService {
 
   public async create(origin: string | undefined, body: any): Promise<any> {
     const data = this.parseMessage(body);
-    console.log('Parsed whatsapp Object:', JSON.stringify(data));
     try {
       if (Object.keys(data).length === 0) {
         return; // Return when no body found
@@ -1086,7 +1085,7 @@ export class WhatsappService {
             resolve({
               status: 'success',
               data: res.body,
-              code: 200,
+              code: res.statusCode,
             });
           }
         });
