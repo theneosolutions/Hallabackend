@@ -82,6 +82,7 @@ export class WhatsappController {
   ): Promise<void> {
     console.log('POST: Someone is pinging me!', requestCount++);
     console.log('REQUEST HEADERS', JSON.stringify(headers));
+    return;
     await this.whatsappService.create(origin, body);
   }
 }
