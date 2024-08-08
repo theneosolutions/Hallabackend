@@ -6,7 +6,7 @@ module.exports = ({ requestBody, currentWABA_ID }) => {
     throw new Error('"requestBody" is required');
   }
 
-  console.log('Whatsapp Message Object:', requestBody);
+  console.log('Whatsapp Message Object:', JSON.stringify(requestBody));
 
   if (!currentWABA_ID) {
     throw new Error(
