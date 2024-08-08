@@ -6,13 +6,15 @@ module.exports = ({ requestBody, currentWABA_ID }) => {
     throw new Error('"requestBody" is required');
   }
 
+  console.log('Whatsapp Message Object:', requestBody);
+
   if (!currentWABA_ID) {
     throw new Error(
       'currentWABA_ID is required. This is the business ID that you have configured in your WABA account.',
     );
   }
 
-  let WABA_ID = requestBody.entry[0]?.id; // extract the business ID from the webhook payload
+  const WABA_ID = requestBody.entry[0]?.id; // extract the business ID from the webhook payload
   if (WABA_ID == 0) {
     console.warn({
       message: `WABA_ID is 0. You seem to be testing with Meta test subscription. This is not really a valid WABA_ID. I recommend you to send an actual message from an actual whatsapp customer's number.`,
@@ -50,8 +52,8 @@ module.exports = ({ requestBody, currentWABA_ID }) => {
     );
   }
 
-  let metadata = requestBody.entry[0].changes[0].value.metadata;
-  let contacts = requestBody.entry[0].changes[0].value.contacts?.length
+  const metadata = requestBody.entry[0].changes[0].value.metadata;
+  const contacts = requestBody.entry[0].changes[0].value.contacts?.length
     ? requestBody.entry[0].changes[0].value.contacts[0]
     : null;
 
@@ -60,7 +62,7 @@ module.exports = ({ requestBody, currentWABA_ID }) => {
     'messages msg_parser.ts 59 ',
     requestBody.entry[0].changes[0].value?.messages,
   );
-  let message = requestBody.entry[0].changes[0].value?.messages?.length
+  const message = requestBody.entry[0].changes[0].value?.messages?.length
     ? requestBody.entry[0].changes[0].value.messages[0]
     : null;
 
