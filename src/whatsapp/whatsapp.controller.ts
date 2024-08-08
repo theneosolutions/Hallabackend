@@ -3,6 +3,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  HttpCode,
   Param,
   Post,
   Query,
@@ -71,6 +72,7 @@ export class WhatsappController {
   @ApiNotFoundResponse({
     description: 'The user is not found.',
   })
+  @HttpCode(200)
   public async meta_wa_post_callbackurl(
     @Headers() headers: any,
     @Param() params: any,
