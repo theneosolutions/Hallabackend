@@ -16,7 +16,6 @@ import {
 } from '@nestjs/swagger';
 import { WhatsappService } from './whatsapp.service';
 import { Origin } from 'src/auth/decorators/origin.decorator';
-import { Headers } from '@nestjs/common';
 
 let requestCount = 0;
 @ApiTags('Whatsapp')
@@ -74,15 +73,12 @@ export class WhatsappController {
   })
   @HttpCode(200)
   public async meta_wa_post_callbackurl(
-    @Headers() headers: any,
     @Param() params: any,
     @Query() query: any,
     @Origin() origin: string | undefined,
     @Body() body: any,
   ): Promise<void> {
     console.log('POST: Someone is pinging me!', requestCount++);
-    console.log('REQUEST HEADERS', JSON.stringify(headers));
-    return;
     await this.whatsappService.create(origin, body);
   }
 }
