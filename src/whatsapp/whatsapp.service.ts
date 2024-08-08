@@ -277,8 +277,6 @@ export class WhatsappService {
       content: { body: '' },
     };
     notificationDto.content.body = `${payload.invites.name} sent you message for an event ${payload.events.name}`;
-    console.log('WAHMED >>>>>>>>>>>>>> Notification detail:', notificationDto);
-
     await this.notificationsService.create(undefined, notificationDto);
   }
 
@@ -1066,7 +1064,6 @@ export class WhatsappService {
         .headers(headers)
         .send(JSON.stringify(body))
         .end(function (res) {
-          console.log('Whatsapp API call response:', JSON.stringify(res));
           if (res.error) {
             const errorObject = () => {
               try {
