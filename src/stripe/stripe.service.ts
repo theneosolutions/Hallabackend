@@ -4,7 +4,6 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { v4 } from 'uuid';
 import { CommonService } from '../common/common.service';
 import Stripe from 'stripe';
 
