@@ -5,7 +5,6 @@ import {
 } from '@aws-sdk/client-s3';
 import {
   BadRequestException,
-  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -195,7 +194,7 @@ export class UploaderService {
     fileExt: string,
     fileType?: string,
   ): Promise<string> {
-    let key: string = '';
+    let key = '';
     if (fileType) {
       key =
         process.env.POST_FOLDER +
