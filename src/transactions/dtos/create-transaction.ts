@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, Length } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export abstract class TransactionDto {
   @ApiProperty({

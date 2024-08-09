@@ -1,20 +1,16 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   BadRequestException,
-  ConflictException,
   Inject,
   Injectable,
-  UnauthorizedException,
   forwardRef,
 } from '@nestjs/common';
-import { compare, hash } from 'bcrypt';
 import { CommonService } from '../common/common.service';
 import { isNull, isUndefined } from '../common/utils/validation.util';
 import { Transactions } from './entities/transactions.entity';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto';
 import { isInt } from 'class-validator';
-import { SLUG_REGEX } from '../common/consts/regex.const';
 import { TransactionDto } from './dtos/create-transaction';
 import { UsersService } from 'src/users/users.service';
 import { PageOptionsDto } from './dtos/page-option.dto';
@@ -115,10 +111,7 @@ export class TransactionsService {
   public async updateUserTransactionStatus(
     id: string,
     status: string,
-    amount: number,
-    currency: string,
   ): Promise<Transactions> {
-    const finalAmount = +(amount / 100).toFixed(2);
     try {
       const transaction = await this.findTransactionByPaymentId(id);
       console.log(
@@ -236,7 +229,7 @@ export class TransactionsService {
     }
 
     const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
 
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 

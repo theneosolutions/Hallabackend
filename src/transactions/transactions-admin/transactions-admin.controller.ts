@@ -1,41 +1,15 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiBadRequestResponse,
-  ApiNoContentResponse,
   ApiNotFoundResponse,
-  ApiOkResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Response } from 'express';
-import { CurrentUser } from '../../auth/decorators/current-user.decorator';
-import { Public } from '../../auth/decorators/public.decorator';
-import { IAuthResponseUser } from '../../auth/interfaces/auth-response-user.interface';
-import { AuthResponseUserMapper } from '../../auth/mappers/auth-response-user.mapper';
-
-import { IResponseTransactions } from '../interfaces/response-transactions.interface';
-
 import { TransactionsService } from '../transactions.service';
-import { Origin } from 'src/auth/decorators/origin.decorator';
 import { TransactionDto } from '../dtos/create-transaction';
 import { ResponseTransactionsMapper } from '../mappers/response-transactions.mapper';
-import { GetTransactionParams } from '../dtos/get-transaction.params';
-import { UpdateTransactionDto } from '../dtos/update-transaction.dto';
 import { PageOptionsDto } from '../dtos/page-option.dto';
 import { PageDto } from '../dtos/page.dto';
-import { Transactions } from '../entities/transactions.entity';
 import { ApiPaginatedResponse } from '../decorators/api-paginated-response.decorator';
 
 @ApiTags('Transactions | Admin')

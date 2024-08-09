@@ -3,12 +3,10 @@ import {
   Controller,
   Delete,
   Get,
-  HttpStatus,
   Param,
   Patch,
   Post,
   Query,
-  Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -19,7 +17,6 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto';
@@ -131,14 +128,9 @@ export class TransactionsController {
     }
     const { data } = webhookData;
     console.log('🚀 ~ TransactionsController ~ data:', data);
-    const { status, amount, currency, id } = data;
+    const { status, id } = data;
     const updatedTransaction =
-      await this.transactionsService.updateUserTransactionStatus(
-        id,
-        status,
-        amount,
-        currency,
-      );
+      await this.transactionsService.updateUserTransactionStatus(id, status);
     return ResponseTransactionsMapper.map(updatedTransaction);
   }
 
