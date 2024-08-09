@@ -22,7 +22,7 @@ export class ResponseEventsMapper implements IResponseEvent {
     type: String,
     example: ['+923012345678', '+962245234234'],
   })
-  public contacts?: String[];
+  public contacts?: string[];
 
   @ApiProperty({
     description: 'Event Name',

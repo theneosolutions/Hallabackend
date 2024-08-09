@@ -1,11 +1,4 @@
-import {
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  DeleteDateColumn,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { Users } from 'src/users/entities/user.entity';
 import { Events } from './event.entity';
 import { Contacts } from 'src/contacts/entities/contacts.entity';

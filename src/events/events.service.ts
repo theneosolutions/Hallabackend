@@ -32,7 +32,7 @@ import { Contacts } from '../contacts/entities/contacts.entity';
 import { ContactsPageOptionsDto } from './dtos/contacts-page-option.dto';
 import * as qrcode from 'qrcode';
 import { ITemplates } from 'src/whatsapp/interfaces/templates.interface';
-import { readFileSync, appendFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import nodeHtmlToImage from 'node-html-to-image';
 import { ITemplatedData } from 'src/whatsapp/interfaces/template-data.interface';
@@ -655,7 +655,7 @@ export class EventsService {
       ),
       html: html,
     };
-    // Added 'puppeteerArgs' to resolve issue at server side for creating PNG 
+    // Added 'puppeteerArgs' to resolve issue at server side for creating PNG
     // Check the path where 'chromium-browser' is installed using command `which chromium-browser`
     // Paste that path at line #354
     if (process.env.NODE_ENV != 'development') {
