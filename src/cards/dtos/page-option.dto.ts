@@ -1,16 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import {
-  IsArray,
-  IsEnum,
-  IsInt,
-  IsNumber,
-  IsOptional,
-  Max,
-  Min,
-  ValidateNested,
-} from 'class-validator';
-import { OtherPageOptionsDto } from './page-option-other-sections.dto';
+import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export enum Order {
   ASC = 'ASC',

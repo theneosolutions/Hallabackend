@@ -1,15 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Like, Repository } from 'typeorm';
-import {
-  BadRequestException,
-  ConflictException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-  forwardRef,
-} from '@nestjs/common';
-import { compare, hash } from 'bcrypt';
+import { Repository } from 'typeorm';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CommonService } from '../common/common.service';
 import { isNull, isUndefined } from '../common/utils/validation.util';
 import { Card } from './entities/card.entity';
@@ -18,28 +9,13 @@ import { CardDto } from './dtos/create-card.dto';
 import { PageDto } from './dtos/page.dto';
 import { PageMetaDto } from './dtos/page-meta.dto';
 import { PageOptionsDto } from './dtos/page-option.dto';
-import { UsersService } from '../users/users.service';
-
-import { RatioEnum } from '../uploader/enums/ratio.enum';
-import { UploaderService } from '../uploader/uploader.service';
-import { IMessage } from 'src/common/interfaces/message.interface';
-import { UpdateCardDto } from './dtos/update-card.dto';
-import { Events } from 'src/events/entities/event.entity';
-import { Users } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class CardService {
   constructor(
     @InjectRepository(Card)
     private readonly cardRepository: Repository<Card>,
-    @InjectRepository(Users)
-    private readonly usersRepository: Repository<Users>,
     private readonly commonService: CommonService,
-
-    @Inject(forwardRef(() => UsersService))
-    private readonly usersService: UsersService,
-
-    private readonly uploaderService: UploaderService,
   ) {}
 
   public async create(origin: string | undefined, dto: CardDto): Promise<Card> {
@@ -117,7 +93,7 @@ export class CardService {
     }
 
     const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
 
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 

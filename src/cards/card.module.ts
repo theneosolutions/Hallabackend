@@ -12,7 +12,6 @@ import { Users } from 'src/users/entities/user.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Card, Events, Users]),
-    // UsersModule,
     forwardRef(() => UsersModule),
 
     MailerModule,

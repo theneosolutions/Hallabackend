@@ -1,14 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-nocheck
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Length,
-  Matches,
-  ValidateIf,
-} from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export abstract class UpdateCardDto {
   @ApiProperty({

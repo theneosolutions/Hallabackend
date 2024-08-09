@@ -2,15 +2,10 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
-  ManyToOne,
   DeleteDateColumn,
-  ManyToMany,
-  OneToMany,
-  JoinTable,
 } from 'typeorm';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { ICard } from '../interfaces/card.interface';
-import { Events } from '../../events/entities/event.entity';
 
 @Entity()
 export class Card implements ICard {
