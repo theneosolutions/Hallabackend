@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PartialType } from '@nestjs/mapped-types';
 import { IsString, IsOptional, IsNotEmpty, IsEnum } from 'class-validator';
 import { PageType } from './create-page';
 
