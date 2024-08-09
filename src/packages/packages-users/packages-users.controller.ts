@@ -1,41 +1,20 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiBadRequestResponse,
-  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Response } from 'express';
-import { CurrentUser } from '../../auth/decorators/current-user.decorator';
-import { Public } from '../../auth/decorators/public.decorator';
-import { IAuthResponseUser } from '../../auth/interfaces/auth-response-user.interface';
-import { AuthResponseUserMapper } from '../../auth/mappers/auth-response-user.mapper';
-
 import { IResponsePackages } from '../interfaces/response-packages.interface';
 
 import { PackagesService } from '../packages.service';
-import { Origin } from 'src/auth/decorators/origin.decorator';
 import { PackagesDto } from '../dtos/create-packages.dto';
 import { ResponsePackagesMapper } from '../mappers/response-packages.mapper';
 import { GetPackageParams } from '../dtos/get-package.params';
-import { UpdatePackageDto } from '../dtos/update-package.dto';
 import { PageOptionsDto } from '../dtos/page-option.dto';
 import { PageDto } from '../dtos/page.dto';
-import { Packages } from '../entities/packages.entity';
 import { ApiPaginatedResponse } from '../decorators/api-paginated-response.decorator';
 
 @ApiTags('Packages')

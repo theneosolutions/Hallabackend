@@ -1,13 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { compare, hash } from 'bcrypt';
-import { CommonService } from '../common/common.service';
+import { Repository } from 'typeorm';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { isNull, isUndefined } from '../common/utils/validation.util';
 import { Packages } from './entities/packages.entity';
 import { UpdatePackageDto } from './dtos/update-package.dto';
@@ -22,7 +15,6 @@ export class PackagesService {
   constructor(
     @InjectRepository(Packages)
     private readonly packageRepository: Repository<Packages>,
-    private readonly commonService: CommonService,
   ) {}
 
   public async create(

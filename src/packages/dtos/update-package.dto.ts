@@ -4,10 +4,8 @@ import {
   IsOptional,
   IsString,
   Length,
-  Matches,
   ValidateIf,
 } from 'class-validator';
-import { NAME_REGEX, SLUG_REGEX } from '../../common/consts/regex.const';
 import { isNull, isUndefined } from '../../common/utils/validation.util';
 
 export abstract class UpdatePackageDto {
