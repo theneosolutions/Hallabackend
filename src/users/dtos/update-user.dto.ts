@@ -10,7 +10,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { NAME_REGEX, SLUG_REGEX } from '../../common/consts/regex.const';
-import { isNull, isUndefined } from '../../common/utils/validation.util';
+import { isUndefined } from '../../common/utils/validation.util';
 
 export abstract class UpdateUserDto {
   @ApiProperty({

@@ -213,7 +213,10 @@ export class UsersService {
     return this.findOneByUsername(idOrUsername);
   }
 
-  public async getAvailableInvitationCount(userId: number, packageId?: number): Promise<number> {
+  public async getAvailableInvitationCount(
+    userId: number,
+    packageId?: number,
+  ): Promise<number> {
     // Get total numberOfGuest from packages bought by user
     let query = `
       SELECT
@@ -575,7 +578,7 @@ export class UsersService {
     }
 
     const itemCount = await queryBuilder.getCount();
-    let { entities }: any = await queryBuilder.getRawAndEntities();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
 
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
 

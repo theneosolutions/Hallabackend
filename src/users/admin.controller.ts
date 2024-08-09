@@ -2,38 +2,25 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   HttpStatus,
   Param,
   Patch,
-  Query,
   Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiBadRequestResponse,
   ApiNoContentResponse,
-  ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Response } from 'express';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-import { IAuthResponseUser } from '../auth/interfaces/auth-response-user.interface';
-import { AuthResponseUserMapper } from '../auth/mappers/auth-response-user.mapper';
-import { ChangeEmailDto } from './dtos/change-email.dto';
-import { GetUserParams } from './dtos/get-user.params';
-import { PasswordDto } from './dtos/password.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { IResponseUser } from './interfaces/response-user.interface';
 import { ResponseUserMapper } from './mappers/response-user.mapper';
 import { UsersService } from './users.service';
-import { UsernameDto } from './dtos/username.dto';
-import { PageOptionsDto } from './dtos/page-option.dto';
-import { Users } from './entities/user.entity';
-import { PageDto } from './dtos/page.dto';
 
 @ApiTags('Admin Users')
 @Controller('admin/users')

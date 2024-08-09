@@ -2,8 +2,6 @@ import {
   Column,
   DeleteDateColumn,
   Entity,
-  JoinTable,
-  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -23,8 +21,6 @@ import {
 import { CredentialsEmbeddable } from '../embeddables/credentials.embeddable';
 import { IUser } from '../interfaces/user.interface';
 import { MANUAL_LOGIN } from '../../common/consts/login.const';
-import { EventInvitessContacts } from 'src/events/entities/events_invites_contacts.entity';
-import { Events } from 'src/events/entities/event.entity';
 import { EventsChats } from 'src/events/entities/events_chats.entity';
 
 export type UserStatus = 'active' | 'disabled';
