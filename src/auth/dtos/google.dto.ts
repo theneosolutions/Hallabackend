@@ -1,7 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, Length, Matches } from 'class-validator';
-import { NAME_REGEX } from '../../common/consts/regex.const';
-import { PasswordsDto } from './passwords.dto';
+import { IsString } from 'class-validator';
 
 export abstract class GoogleDto {
   @ApiProperty({

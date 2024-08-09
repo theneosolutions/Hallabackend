@@ -1,11 +1,7 @@
 import {
   BadRequestException,
-  CACHE_MANAGER,
-  Inject,
   Injectable,
   UnauthorizedException,
-  Logger,
-  LoggerService,
   NotFoundException,
 } from '@nestjs/common';
 import { compare } from 'bcrypt';
@@ -44,8 +40,6 @@ import { EmailOTPDto } from './dtos/email-otp.dto';
 
 @Injectable()
 export class AuthService {
-  private readonly loggerService: LoggerService;
-
   constructor(
     @InjectRepository(BlacklistedToken)
     private readonly blacklistedTokensRepository: Repository<BlacklistedToken>,
@@ -53,9 +47,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
-  ) {
-    this.loggerService = new Logger(AuthService.name);
-  }
+  ) {}
 
   public async signUp(dto: SignUpDto, domain?: string): Promise<IMessage> {
     const { firstName, lastName, email, password1, password2, referredBy } =
@@ -307,7 +299,7 @@ export class AuthService {
     const user = await this.usersService.uncheckedUserByEmail(dto.email);
 
     if (!isUndefined(user) && !isNull(user)) {
-      const resetToken = await this.jwtService.generateToken(
+      await this.jwtService.generateToken(
         user,
         TokenTypeEnum.RESET_PASSWORD,
         domain,

@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { isJWT } from 'class-validator';
-import { Request } from 'express';
 import { isNull, isUndefined } from '../../common/utils/validation.util';
 import { TokenTypeEnum } from '../../jwt/enums/token-type.enum';
 import { JwtService } from '../../jwt/jwt.service';

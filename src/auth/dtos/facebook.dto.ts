@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, Length, Matches } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export abstract class FacebookDto {
   @ApiProperty({

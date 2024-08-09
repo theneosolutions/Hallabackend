@@ -10,15 +10,12 @@ import {
   Res,
   Param,
   UnauthorizedException,
-  UseGuards,
   Logger,
   LoggerService,
-  BadRequestException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiBadRequestResponse,
-  ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
@@ -45,12 +42,10 @@ import { AuthResponseUserMapper } from './mappers/auth-response-user.mapper';
 import { AuthResponseMapper } from './mappers/auth-response.mapper';
 import { ConfirmEmailDto } from './dtos/confirm-email.dto';
 import { EmailDto } from './dtos/email.dto';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { GoogleDto } from './dtos/google.dto';
 import { config } from 'dotenv';
 import { OAuth2Client } from 'google-auth-library';
-import { FacebookDto } from './dtos/facebook.dto';
-import axios from 'axios';
-import { DiscordDto } from './dtos/discord.dto';
 import { PhoneDto } from './dtos/phone.dto';
 import { PhoneOTPDto } from './dtos/phone-otp.dto';
 import { ResetPasswordWithPhoneDto } from './dtos/reset-password-phone.dto';

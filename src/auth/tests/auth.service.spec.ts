@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { MikroORM } from '@mikro-orm/core';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { CACHE_MANAGER, CacheModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 
@@ -22,8 +21,6 @@ import { UsersModule } from '../../users/users.module';
 import { UsersService } from '../../users/users.service';
 import { AuthService } from '../auth.service';
 import { BlacklistedTokenEntity } from '../entities/blacklisted-token.entity';
-
-import { compare, hash } from 'bcrypt';
 
 describe('AuthService', () => {
   let module: TestingModule,
@@ -58,7 +55,6 @@ describe('AuthService', () => {
     usersService = module.get<UsersService>(UsersService);
     jwtService = module.get<JwtService>(JwtService);
     commonService = module.get<CommonService>(CommonService);
-    // cacheManager = module.get<Cache>(CACHE_MANAGER);
     orm = module.get<MikroORM>(MikroORM);
     await orm.getSchemaGenerator().createSchema();
   });

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsJWT, IsNumber, IsString, Length } from 'class-validator';
+import { IsEmail, IsNumber, IsString, Length } from 'class-validator';
 import { PasswordsDto } from './passwords.dto';
 
 export abstract class ResetPasswordDto extends PasswordsDto {
