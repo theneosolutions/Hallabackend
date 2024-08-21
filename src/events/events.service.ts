@@ -948,7 +948,10 @@ export class EventsService {
           .getMany();
         break;
       case 'missed':
-        events = []; // Implement missed events logic
+        events = await queryBuilder
+          .andWhere('invites_events.status = "invited"')
+          .andWhere('invites_events.numberOfScans = 0')
+          .getMany();
         break;
       default:
         throw new Error('Invalid event type');
