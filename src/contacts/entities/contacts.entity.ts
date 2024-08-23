@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import {
   IsEmail,
+  IsNumber,
   IsOptional,
   IsString,
   Length,
@@ -110,4 +111,12 @@ export class Contacts implements IContacts {
     },
   })
   events?: Events[];
+
+  @IsOptional()
+  @IsNumber()
+  public eventNumberOfGuests: number;
+
+  @IsOptional()
+  @IsNumber()
+  public eventNumberOfScans: number;
 }

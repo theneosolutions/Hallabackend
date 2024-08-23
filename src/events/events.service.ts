@@ -668,7 +668,7 @@ export class EventsService {
         'QRcode generated and added to PNG',
       );
     });
- }
+  }
 
   public async findEventById(id: string): Promise<any> {
     const parsedValue = parseInt(id, 10);
@@ -726,55 +726,40 @@ export class EventsService {
     eventId: string,
     pageOptionsDto: ContactsPageOptionsDto,
   ): Promise<PageDto<Contacts>> {
-    console.log('pageOptionsDto', pageOptionsDto);
-
     const parsedValue = parseInt(eventId, 10);
-
     if (isNaN(parsedValue) && !isInt(parsedValue)) {
       throw new BadRequestException('Invalid event id: ' + parsedValue);
     }
 
-    let query = `
-            SELECT
-                eic.contactsId AS event_invitess_contacts_contactsId
-            FROM
-                event_invitess_contacts eic
-            WHERE
-                eic.eventId = ?
-            `;
+    const queryBuilder = this.contacts.createQueryBuilder('contacts');
+    queryBuilder
+      .leftJoinAndSelect('contacts.events', 'events')
+      .where('events.id = :id', { id: eventId })
+      .select([
+        'contacts',
+        'contacts_events.numberOfScans as eventNumberOfScans',
+        'contacts_events.numberOfGuests as eventNumberOfGuests',
+      ]);
 
     if (pageOptionsDto?.status !== 'all') {
       if (pageOptionsDto.status === 'scanned') {
-        query += ` AND eic.numberOfScans > 0`;
+        queryBuilder.where('contacts_events.numberOfScans > 0');
       } else {
-        query += ` AND eic.status = ?`;
+        queryBuilder.where('events.status = :status', {
+          status: pageOptionsDto?.status,
+        });
       }
     }
+    queryBuilder.skip(pageOptionsDto.skip).take(pageOptionsDto.take);
 
-    // console.log('query', query);
-
-    const results = await this.connection.query(query, [
-      parseInt(eventId, 10),
-      pageOptionsDto?.status,
-    ]);
-
-    const contactIds = results.map(
-      (result: any) => result.event_invitess_contacts_contactsId,
-    );
-
-    const contacts = await this.contacts.find({
-      where: {
-        id: In(contactIds),
-      },
-      order: { createdAt: pageOptionsDto.order },
-      take: pageOptionsDto.take,
-      skip: pageOptionsDto.skip,
+    const totalCount = await queryBuilder.getCount();
+    const { entities, raw }: any = await queryBuilder.getRawAndEntities();
+    // populate entities [Contacts] propertiese (eventNumberOfGuests, eventNumberOfScans) using raw
+    raw.forEach((item, index) => {
+      entities[index].eventNumberOfGuests = item.eventNumberOfGuests || 0;
+      entities[index].eventNumberOfScans = item.eventNumberOfScans || 0;
     });
-
-    const totalCount = await this.contacts.count({
-      where: { id: In(contactIds) },
-    });
-
+    const contacts = entities as Contacts[];
     const pageMetaDto = new PageMetaDto({
       itemCount: totalCount,
       pageOptionsDto,
@@ -830,8 +815,17 @@ export class EventsService {
     queryBuilder
       .where('events.userId = :id', { id: id })
       .leftJoinAndSelect('events.user', 'user')
-      .select(['events', 'user.id', 'user.firstName', 'user.lastName'])
+      .leftJoinAndSelect('events.invites', 'invites')
+      .select([
+        'events',
+        'user.id',
+        'user.firstName',
+        'user.lastName',
+        'SUM(invites_events.numberOfGuests) as eventNumberOfGuests',
+        'SUM(invites_events.numberOfScans) as eventNumberOfScans',
+      ])
       .orderBy('events.createdAt', pageOptionsDto.order)
+      .groupBy('events_id')
       .skip(pageOptionsDto.skip)
       .take(pageOptionsDto.take);
 
@@ -848,10 +842,13 @@ export class EventsService {
     }
 
     const itemCount = await queryBuilder.getCount();
-    const { entities }: any = await queryBuilder.getRawAndEntities();
-
+    const { entities, raw }: any = await queryBuilder.getRawAndEntities();
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
-
+    // populate entities [eventDto] propertiese (eventNumberOfGuests, eventNumberOfScans) using raw
+    raw.forEach((item, index) => {
+      entities[index].eventNumberOfGuests = item.eventNumberOfGuests || 0;
+      entities[index].eventNumberOfScans = item.eventNumberOfScans || 0;
+    });
     return new PageDto(await Promise.all(entities), pageMetaDto);
   }
 

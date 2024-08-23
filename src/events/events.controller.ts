@@ -440,8 +440,6 @@ export class EventsController {
     @Param() params: GetEventParams,
     @Query() pageOptionsDto: ContactsPageOptionsDto,
   ): Promise<PageDto<Contacts>> {
-    // console.log('there');
-
     return await this.eventsService.getContactList(params.id, pageOptionsDto);
   }
 }

@@ -118,4 +118,18 @@ export abstract class EventDto {
   })
   @IsString()
   public description: string;
+
+  @ApiProperty({
+    description: 'EventsNumberOfGuests',
+    type: Number,
+  })
+  @IsNumber()
+  public eventNumberOfGuests: number;
+
+  @ApiProperty({
+    description: 'EventsNumberOfScans',
+    type: Number,
+  })
+  @IsNumber()
+  public eventNumberOfScans: number;
 }
