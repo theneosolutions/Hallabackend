@@ -51,7 +51,7 @@ export class SocketService {
 
   async handleCheckInvitationCount(payload: any): Promise<any> {
     try {
-      const userId = payload.userId;
+      const { userId } = payload;
       const userDetails = await this.usersService.findOneById(userId);
       return {
         wallet: Number(userDetails.wallet || 0),

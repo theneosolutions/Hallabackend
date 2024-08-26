@@ -38,7 +38,10 @@ export class SocketGateway
   }
 
   @SubscribeMessage('check-invitation-count')
-  async handleInvitationCountUpdate(payload: any): Promise<void> {
+  async handleInvitationCountUpdate(
+    client: Socket,
+    payload: any,
+  ): Promise<void> {
     try {
       const invitationCountObject =
         await this.socketService.handleCheckInvitationCount(payload);
