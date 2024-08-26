@@ -1,5 +1,6 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { Socket } from 'socket.io';
+import { UsersService } from 'src/users/users.service';
 import { WhatsappService } from 'src/whatsapp/whatsapp.service';
 
 @Injectable()
@@ -9,6 +10,8 @@ export class SocketService {
   constructor(
     @Inject(forwardRef(() => WhatsappService))
     private readonly whatsappService: WhatsappService,
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
   ) {}
 
   handleConnection(socket: Socket): void {
@@ -46,5 +49,19 @@ export class SocketService {
     }
   }
 
+  async handleCheckInvitationCount(payload: any): Promise<any> {
+    try {
+      const userId = payload.userId;
+      const userDetails = await this.usersService.findOneById(userId);
+      return {
+        wallet: Number(userDetails.wallet || 0),
+      };
+    } catch (error) {
+      console.log(
+        '🚀 ~ SocketService ~ handleCheckInvitationCount ~ error:',
+        error,
+      );
+    }
+  }
   // Add more methods for handling events, messages, etc.
 }

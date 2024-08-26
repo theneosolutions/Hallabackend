@@ -37,6 +37,25 @@ export class SocketGateway
     }
   }
 
+  @SubscribeMessage('check-invitation-count')
+  async handleInvitationCountUpdate(payload: any): Promise<void> {
+    try {
+      const invitationCountObject =
+        await this.socketService.handleCheckInvitationCount(payload);
+
+      console.log(
+        '🚀 ~ SocketGateway ~ User wallet balance:',
+        invitationCountObject.wallet,
+      );
+      this.server.emit('invitation-count-updated', invitationCountObject);
+    } catch (error) {
+      console.log(
+        '🚀 ~ SocketGateway ~ handleInvitationCountUpdate ~ error:',
+        error,
+      );
+    }
+  }
+
   afterInit(server: any) {
     console.log(server);
   }
