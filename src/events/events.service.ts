@@ -756,8 +756,10 @@ export class EventsService {
     const { entities, raw }: any = await queryBuilder.getRawAndEntities();
     // populate entities [Contacts] propertiese (eventNumberOfGuests, eventNumberOfScans) using raw
     raw.forEach((item, index) => {
-      entities[index].eventNumberOfGuests = item.eventNumberOfGuests || 0;
-      entities[index].eventNumberOfScans = item.eventNumberOfScans || 0;
+      if (entities[index]) {
+        entities[index].eventNumberOfGuests = item?.eventNumberOfGuests || 0;
+        entities[index].eventNumberOfScans = item?.eventNumberOfScans || 0;
+      }
     });
     const contacts = entities as Contacts[];
     const pageMetaDto = new PageMetaDto({
