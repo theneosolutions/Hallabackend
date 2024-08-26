@@ -745,7 +745,7 @@ export class EventsService {
       if (pageOptionsDto.status === 'scanned') {
         queryBuilder.where('contacts_events.numberOfScans > 0');
       } else {
-        queryBuilder.where('events.status = :status', {
+        queryBuilder.where('contacts_events.status = :status', {
           status: pageOptionsDto?.status,
         });
       }
@@ -753,6 +753,7 @@ export class EventsService {
     queryBuilder.skip(pageOptionsDto.skip).take(pageOptionsDto.take);
 
     const totalCount = await queryBuilder.getCount();
+    console.log('QUERY:', await queryBuilder.getQuery());
     const { entities, raw }: any = await queryBuilder.getRawAndEntities();
     // populate entities [Contacts] propertiese (eventNumberOfGuests, eventNumberOfScans) using raw
     raw.forEach((item, index) => {

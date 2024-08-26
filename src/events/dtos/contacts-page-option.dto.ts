@@ -15,6 +15,8 @@ export enum StatusType {
   FAILED = 'failed',
   SCANNED = 'scanned',
   ALL = 'all',
+  WAITING = 'waiting',
+  NOTINVITED = 'notinvited',
 }
 
 export class ContactsPageOptionsDto {
