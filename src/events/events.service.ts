@@ -734,7 +734,6 @@ export class EventsService {
     const queryBuilder = this.contacts.createQueryBuilder('contacts');
     queryBuilder
       .leftJoinAndSelect('contacts.events', 'events')
-      .where('events.id = :id', { id: eventId })
       .select([
         'contacts',
         'contacts_events.numberOfScans as eventNumberOfScans',
@@ -750,10 +749,13 @@ export class EventsService {
         });
       }
     }
-    queryBuilder.skip(pageOptionsDto.skip).take(pageOptionsDto.take);
+
+    queryBuilder
+      .where('events.id = :id', { id: eventId })
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take);
 
     const totalCount = await queryBuilder.getCount();
-    console.log('QUERY:', await queryBuilder.getQuery());
     const { entities, raw }: any = await queryBuilder.getRawAndEntities();
     // populate entities [Contacts] propertiese (eventNumberOfGuests, eventNumberOfScans) using raw
     raw.forEach((item, index) => {
