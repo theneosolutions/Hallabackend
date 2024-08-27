@@ -391,16 +391,15 @@ export class EventsService {
           Math.abs(availableInvitationCount - eventInvitationCount) + 1;
 
         throw new BadRequestException(
-          `Insufficient balance. Please top-up your account balance with minimum ${packageRequirement} invitation(s)`,
+          `Insufficient balance`,
+          // `Insufficient balance. Please top-up your account balance with minimum ${packageRequirement} invitation(s)`,
           // `User available invitation count balance is not enough to perform this operation. Please top up your account balance with minimum ${packageRequirement} invitation(s)`,
         );
       }
     }
 
     if (invitesList.length === 0) {
-      throw new BadRequestException(
-        `No contacts found against event. Please add contacts to event`,
-      );
+      throw new BadRequestException(`No contacts found against event`);
     }
 
     invitesList?.map(async (invite) => {
