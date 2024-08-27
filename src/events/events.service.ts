@@ -733,6 +733,7 @@ export class EventsService {
     const queryBuilder = this.contacts.createQueryBuilder('contacts');
     queryBuilder
       .leftJoinAndSelect('contacts.events', 'events')
+      .where('events.id = :id', { id: eventId })
       .select([
         'contacts',
         'contacts_events.numberOfScans as eventNumberOfScans',
@@ -741,18 +742,15 @@ export class EventsService {
 
     if (pageOptionsDto?.status !== 'all') {
       if (pageOptionsDto.status === 'scanned') {
-        queryBuilder.where('contacts_events.numberOfScans > 0');
+        queryBuilder.andWhere('contacts_events.numberOfScans > 0');
       } else {
-        queryBuilder.where('contacts_events.status = :status', {
+        queryBuilder.andWhere('contacts_events.status = :status', {
           status: pageOptionsDto?.status,
         });
       }
     }
 
-    queryBuilder
-      .where('events.id = :id', { id: eventId })
-      .skip(pageOptionsDto.skip)
-      .take(pageOptionsDto.take);
+    queryBuilder.skip(pageOptionsDto.skip).take(pageOptionsDto.take);
 
     const totalCount = await queryBuilder.getCount();
     const { entities, raw }: any = await queryBuilder.getRawAndEntities();
