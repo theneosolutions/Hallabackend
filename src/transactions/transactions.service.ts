@@ -18,6 +18,7 @@ import { PageDto } from './dtos/page.dto';
 import { PageMetaDto } from './dtos/page-meta.dto';
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { Users } from 'src/users/entities/user.entity';
+import { UsernameDto } from 'src/users/dtos/username.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -46,20 +47,45 @@ export class TransactionsService {
     } = dto;
 
     if (data?.id) {
-      const transactions = await this.transactionssRepository.findBy({
-        paymentId: data.id,
-      });
-
-      if (transactions.length == 0) {
-        throw new BadRequestException(['Invalid paymentId']);
+      const transaction = await this.findTransactionByPaymentId(data.id);
+      console.log(
+        '🚀 ~ TransactionsService ~ create ~ transaction:',
+        transaction,
+      );
+      if (!transaction) {
+        throw new Error('Transaction not found');
       }
 
-      transactions[0].status = data.status;
-      await this.transactionssRepository.update(
-        transactions[0].id,
-        transactions[0],
+      const userDetail = await this.usersService.findOneById(
+        transaction?.user?.id,
       );
-      return transactions[0];
+      console.log(
+        '🚀 ~ TransactionsService ~ create ~ userDetail:',
+        userDetail,
+      );
+
+      if (isNull(userDetail) || isUndefined(userDetail)) {
+        throw new BadRequestException([
+          'User not found with id: ' + transaction?.user?.id,
+        ]);
+      }
+      await this.transactionssRepository.save(transaction);
+
+      // const transactions = await this.transactionssRepository.findBy({
+      //   paymentId: data.id,
+      // });
+
+      // if (transactions.length == 0) {
+      //   throw new BadRequestException(['Invalid paymentId']);
+      // }
+
+      // transaction.transaction.status = data.status;
+      // await this.transactionssRepository.update(
+      //   transactions[0].id,
+      //   transactions[0],
+      // );
+      // return transactions[0];
+      return transaction;
     }
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
@@ -98,6 +124,17 @@ export class TransactionsService {
     });
     await this.transactionssRepository.insert(transaction);
 
+    const transactionWithPackageUserDetail =
+      await this.findTransactionByPaymentId(transaction.paymentId);
+
+    const user: any = transactionWithPackageUserDetail.user;
+    user.wallet =
+      Number(user.wallet) +
+      Number(transactionWithPackageUserDetail?.package?.numberOfGuest || 0);
+    transactionWithPackageUserDetail.user.update();
+
+    return transactionWithPackageUserDetail.transaction;
+    /*
     const user = await this.usersService.findOneById(userId);
     if (user?.id) {
       const availableInvitationCount =
@@ -107,6 +144,7 @@ export class TransactionsService {
       await this.usersRepository.update(userId, user);
     }
     return transaction;
+    */
   }
 
   public async findOneByWhere(where: any): Promise<Transactions[]> {
