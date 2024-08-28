@@ -51,7 +51,7 @@ export abstract class TransactionDto {
     type: String,
   })
   @IsString()
-  public status: string;
+  public status?: string;
 
   @ApiProperty({
     description: 'Payment message',
@@ -59,5 +59,5 @@ export abstract class TransactionDto {
     type: String,
   })
   @IsString()
-  public message: string;
+  public message?: string;
 }
