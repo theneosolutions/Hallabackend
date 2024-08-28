@@ -45,7 +45,8 @@ export class TransactionsService {
       data,
     } = dto;
 
-    if (data && Object.keys(data).length > 0) {
+    console.log('>>>>>>>>>><<<<<<<<< Data:', data);
+    if (data?.id) {
       const transactions = await this.transactionssRepository.findBy({
         paymentId: data.id,
       });
