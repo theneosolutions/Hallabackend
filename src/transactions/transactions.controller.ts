@@ -80,6 +80,10 @@ export class TransactionsController {
     @Origin() origin: string | undefined,
     @Body() contactsDto: TransactionDto,
   ): Promise<IResponseTransactions> {
+    console.log(
+      '🚀 ~ TransactionsController ~ create ~ transaction:',
+      TransactionDto,
+    );
     const transaction = await this.transactionsService.create(
       origin,
       contactsDto,
