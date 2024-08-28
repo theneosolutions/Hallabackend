@@ -24,7 +24,7 @@ export class MailerService {
   constructor(private readonly configService: ConfigService) {
     const emailConfig = this.configService.get<IEmailConfig>('emailService');
     this.transport = createTransport(emailConfig);
-    this.email = `"My App" <${emailConfig.email}>`;
+    this.email = `"Halla" <${emailConfig.email}>`;
     this.domain = this.configService.get<string>('domain');
     this.loggerService = new Logger(MailerService.name);
     this.templates = {
