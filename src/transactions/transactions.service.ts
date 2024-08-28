@@ -47,12 +47,6 @@ export class TransactionsService {
 
     if (data?.id ?? false) {
       const transactionPaymentId = data.id;
-
-      console.log(
-        '🚀 ~ TransactionsService ~ create ~ paymentId:',
-        transactionPaymentId,
-      );
-
       const transaction = await this.updateUserTransactionStatus(
         transactionPaymentId,
         data.status,
@@ -61,11 +55,6 @@ export class TransactionsService {
       if (!transaction) {
         return;
       }
-
-      console.log(
-        '🚀 ~ TransactionsService ~ update ~ transaction:',
-        transaction,
-      );
 
       return transaction as Transactions;
     }
@@ -137,7 +126,6 @@ export class TransactionsService {
       );
       if (!transaction) {
         return;
-        // throw new Error('Transaction not found');
       }
 
       const userDetail = await this.usersService.findOneById(
