@@ -82,7 +82,7 @@ export class TransactionsController {
   ): Promise<IResponseTransactions> {
     console.log(
       '🚀 ~ TransactionsController ~ create ~ transaction:',
-      TransactionDto,
+      contactsDto,
     );
     const transaction = await this.transactionsService.create(
       origin,
