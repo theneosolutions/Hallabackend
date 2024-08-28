@@ -157,7 +157,6 @@ export class EventsService {
     dto: EventGuestsDto,
     id: string,
   ): Promise<Events> {
-    console.log('🚀 ~ EventsService ~ create ~ dto:', dto);
     const { user: userId, contacts } = dto;
     let contacts_ids = [];
     let alreadyInvitedContacts = [];
@@ -177,17 +176,9 @@ export class EventsService {
 
     try {
       if (contacts?.length) {
-        console.log(
-          '🚀 ~ EventsService ~ addContactsIntoEvent ~ contacts:',
-          contacts,
-        );
         contacts_ids = await this.contactsService.getOrCreateContacts(
           contacts,
           userId,
-        );
-        console.log(
-          '🚀 ~ EventsService ~ addContactsIntoEvent ~ contacts_ids:',
-          contacts_ids,
         );
       }
 
@@ -210,16 +201,8 @@ export class EventsService {
           )
           .join(', ');
         // Construct the full INSERT query
-        console.log(
-          '🚀 ~ EventsService ~ addContactsIntoEvent ~ values:',
-          values,
-        );
         const query = `INSERT INTO event_invitess_contacts (contactsId, eventId, usersId,haveChat,numberOfGuests,code) VALUES ${values};`;
         const results = await this.connection.query(query);
-        console.log(
-          '🚀 ~ EventsService ~ addContactsIntoEvent ~ query:',
-          query,
-        );
         console.log('🚀 ~ EventsService ~ update ~ results:', results);
         eventDetail.status = 'active';
       }
@@ -239,30 +222,19 @@ export class EventsService {
 
         if (match) {
           const duplicateValue = match[1];
-          console.log(
-            '🚀 ~ EventsService ~ update ~ duplicateValue:',
-            duplicateValue,
-          );
-          const [contact_id, event_id] = duplicateValue.split('-');
+          const [event_id, contact_id] = duplicateValue.split('-');
           console.log(
             '🚀 ~ EventsService ~ update ~ event_id, contact_id:',
             event_id,
             contact_id,
           );
-
           alreadyInvitedContacts = await this.contactsService.findOneByWhere({
             id: In([contact_id]),
           });
-          console.log(
-            '🚀 ~ file: assessment.service.ts:596 ~ AssessmentService ~ update ~ existingRecord:',
-            alreadyInvitedContacts,
+
+          throw new BadRequestException(
+            `Duplicate record found against ${alreadyInvitedContacts[0]?.callingCode}${alreadyInvitedContacts[0]?.phoneNumber}`,
           );
-          throw new BadRequestException([
-            {
-              callingCode: alreadyInvitedContacts[0]?.callingCode,
-              phoneNumber: alreadyInvitedContacts[0]?.phoneNumber,
-            },
-          ]);
         }
       } else {
         // Handle other errors.
@@ -780,7 +752,7 @@ export class EventsService {
     } else {
       event = await this.eventsRepository.findOneBy({ id });
     }
-    console.log('🚀 ~ EventService ~ eventItem:', event);
+
     return event;
   }
 
@@ -1415,7 +1387,6 @@ export class EventsService {
             '🚀 ~ EventsService ~ update ~ duplicateValue:',
             duplicateValue,
           );
-          const duplicateKey = match[2];
           const [event_id, contact_id] = duplicateValue.split('-');
           console.log(
             '🚀 ~ EventsService ~ update ~ event_id, contact_id:',
@@ -1426,13 +1397,9 @@ export class EventsService {
           const existingRecord: any = await this.contactsService.findOneByWhere(
             { id: In([contact_id]) },
           );
-          // console.log("🚀 ~ file: assessment.service.ts:596 ~ AssessmentService ~ update ~ existingRecord:", existingRecord)
-          throw new BadRequestException([
-            {
-              callingCode: existingRecord[0]?.callingCode,
-              phoneNumber: existingRecord[0]?.phoneNumber,
-            },
-          ]);
+          throw new BadRequestException(
+            `Duplicate record found against ${existingRecord[0]?.callingCode}${existingRecord[0]?.phoneNumber}`,
+          );
         }
       } else {
         // Handle other errors.
