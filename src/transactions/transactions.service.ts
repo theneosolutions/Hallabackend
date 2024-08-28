@@ -151,7 +151,7 @@ export class TransactionsService {
       await this.usersRepository.update(userId, user);
     }
 
-    return transactionWithPackageUserDetail.transaction;
+    return transaction;
     /*
     const user = await this.usersService.findOneById(userId);
     if (user?.id) {
