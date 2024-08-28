@@ -78,12 +78,11 @@ export class TransactionsController {
   public async create(
     @CurrentUser() id: number,
     @Origin() origin: string | undefined,
-    @Body() contactsDto: any,
+    @Body() contactsDto: TransactionDto,
   ): Promise<IResponseTransactions> {
-    console.log(
-      '🚀 ~ TransactionsController ~ create ~ transaction:',
-      contactsDto,
-    );
+    // Note:
+    // 1. Callback given to Moyasar API
+    // 2. Callback given to Web base Halla Payment form
     const transaction = await this.transactionsService.create(
       origin,
       contactsDto,

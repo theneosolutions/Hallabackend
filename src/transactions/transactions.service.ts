@@ -42,7 +42,10 @@ export class TransactionsService {
       description,
       package: packageId,
       paymentId,
+      data,
     } = dto;
+
+    console.log('🚀 ~ TransactionsController ~ create ~ transaction:', data);
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
       throw new BadRequestException(['User cannot be null']);
