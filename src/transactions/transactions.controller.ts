@@ -79,7 +79,7 @@ export class TransactionsController {
     @CurrentUser() id: number,
     @Origin() origin: string | undefined,
     @Body() contactsDto: any,
-  ): Promise<IResponseTransactions> {
+  ): Promise<IResponseTransactions | any> {
     // Note:
     // 1. Callback given to Moyasar API
     // 2. Callback given to Web base Halla Payment form
@@ -87,7 +87,9 @@ export class TransactionsController {
       origin,
       contactsDto,
     );
-    return ResponseTransactionsMapper.map(transaction);
+    if (transaction) {
+      return ResponseTransactionsMapper.map(transaction);
+    }
   }
 
   @Public(['admin', 'user'])
@@ -123,7 +125,7 @@ export class TransactionsController {
   async updateUserTransactionStatus(
     @Query() query: any,
     @Body() webhookData: any,
-  ): Promise<ResponseTransactionsMapper> {
+  ): Promise<ResponseTransactionsMapper | any> {
     // Validate token secret
     const tokenSecretFromEnv = process.env.WEBHOOK_TOKEN_SECRET;
     if (webhookData.secret_token !== tokenSecretFromEnv) {
@@ -134,7 +136,10 @@ export class TransactionsController {
     const { status, id } = data;
     const updatedTransaction =
       await this.transactionsService.updateUserTransactionStatus(id, status);
-    return ResponseTransactionsMapper.map(updatedTransaction);
+
+    if (updatedTransaction) {
+      return ResponseTransactionsMapper.map(updatedTransaction);
+    }
   }
 
   @Patch('/:id')

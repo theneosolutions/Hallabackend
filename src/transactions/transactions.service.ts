@@ -35,7 +35,7 @@ export class TransactionsService {
   public async create(
     origin: string | undefined,
     dto: TransactionDto | any,
-  ): Promise<Transactions> {
+  ): Promise<Transactions | any> {
     const {
       user: userId,
       amount,
@@ -128,7 +128,7 @@ export class TransactionsService {
   public async updateUserTransactionStatus(
     id: string,
     status: string,
-  ): Promise<Transactions> {
+  ): Promise<Transactions | any> {
     try {
       const transaction = await this.findTransactionByPaymentId(id);
       console.log(
