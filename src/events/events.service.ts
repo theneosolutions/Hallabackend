@@ -1031,7 +1031,8 @@ export class EventsService {
                 event_invitess_contacts.deletedAt AS event_invitess_contacts_deletedAt, 
                 event_invitess_contacts.contactsId AS event_invitess_contacts_contactsId, 
                 invites.id AS invites_id, 
-                invites.name AS invites_name, 
+                invites.name AS invites_name,
+                invites.suffix AS invites_suffix, 
                 invites.email AS invites_email, 
                 invites.callingCode AS invites_callingCode, 
                 invites.phoneNumber AS invites_phoneNumber, 
@@ -1082,6 +1083,7 @@ export class EventsService {
         email: entity.invites_email,
         callingCode: entity.invites_callingCode,
         phoneNumber: entity.invites_phoneNumber,
+        suffix: entity.invites_suffix,
       },
       events: {
         id: entity.events_id,
