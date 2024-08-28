@@ -58,6 +58,10 @@ export class TransactionsService {
         data.status,
       );
 
+      if (!transaction) {
+        return;
+      }
+
       console.log(
         '🚀 ~ TransactionsService ~ update ~ transaction:',
         transaction,
@@ -132,7 +136,8 @@ export class TransactionsService {
         transaction,
       );
       if (!transaction) {
-        throw new Error('Transaction not found');
+        return;
+        // throw new Error('Transaction not found');
       }
 
       const userDetail = await this.usersService.findOneById(
