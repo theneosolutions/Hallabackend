@@ -55,10 +55,12 @@ export class TransactionsService {
         throw new BadRequestException(['Invalid paymentId']);
       }
 
-      return await this.updateUserTransactionStatus(
-        String(transactions[0].id),
-        data.status,
+      transactions[0].status = data.status;
+      await this.transactionssRepository.update(
+        transactions[0].id,
+        transactions[0],
       );
+      return transactions[0];
     }
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
