@@ -45,7 +45,19 @@ export class TransactionsService {
       data,
     } = dto;
 
-    console.log('🚀 ~ TransactionsController ~ create ~ transaction:', data);
+    if (Object.keys(data).length > 0) {
+      const transactionDetail = await this.transactionssRepository.findBy({
+        paymentId: data.id,
+      });
+      if (!transactionDetail[0]) {
+        throw new BadRequestException(['Invalid paymentId']);
+      }
+
+      return await this.updateUserTransactionStatus(
+        String(transactionDetail[0].id),
+        data.status,
+      );
+    }
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
       throw new BadRequestException(['User cannot be null']);
