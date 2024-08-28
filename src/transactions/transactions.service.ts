@@ -34,7 +34,7 @@ export class TransactionsService {
 
   public async create(
     origin: string | undefined,
-    dto: TransactionDto,
+    dto: TransactionDto | any,
   ): Promise<Transactions> {
     const {
       user: userId,

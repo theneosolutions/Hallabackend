@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
-import { any } from 'joi';
 
 export abstract class TransactionDto {
   @ApiProperty({
@@ -45,13 +44,4 @@ export abstract class TransactionDto {
   })
   @IsString()
   public paymentId: string;
-
-  @ApiProperty({
-    description: 'Payment object return from Moyasar',
-    example: 'contains information about payment',
-    type: any,
-  })
-  @IsOptional()
-  @IsString()
-  public data?: any;
 }
