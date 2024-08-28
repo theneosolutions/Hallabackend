@@ -131,7 +131,7 @@ export class TransactionsService {
     user.wallet =
       Number(user.wallet) +
       Number(transactionWithPackageUserDetail?.package?.numberOfGuest || 0);
-    transactionWithPackageUserDetail.user.update();
+    transactionWithPackageUserDetail.user.update(user);
 
     return transactionWithPackageUserDetail.transaction;
     /*
