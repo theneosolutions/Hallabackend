@@ -46,15 +46,17 @@ export class TransactionsService {
     } = dto;
 
     if (data && Object.keys(data).length > 0) {
-      const transactionDetail = await this.transactionssRepository.findBy({
+      const transactions = await this.transactionssRepository.findBy({
         paymentId: data.id,
       });
-      if (!transactionDetail[0]) {
+      console.log('>>>>>>>>>> Transaction:', transactions);
+
+      if (transactions.length == 0) {
         throw new BadRequestException(['Invalid paymentId']);
       }
 
       return await this.updateUserTransactionStatus(
-        String(transactionDetail[0].id),
+        String(transactions[0].id),
         data.status,
       );
     }
