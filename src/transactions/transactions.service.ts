@@ -109,7 +109,6 @@ export class TransactionsService {
       .where('transaction.status = :status', { status: 'Paid' })
       .andWhere('transaction.userId = :userId', { userId: userId })
       .getRawOne();
-    // console.log('revenueGenerated', revenueGenerated);
 
     return revenueGenerated?.revenueGenerated;
   }
@@ -120,20 +119,12 @@ export class TransactionsService {
   ): Promise<Transactions | any> {
     try {
       const transaction = await this.findTransactionByPaymentId(id);
-      console.log(
-        '🚀 ~ TransactionsService ~ updateUserTransactionStatus ~ transaction:',
-        transaction,
-      );
       if (!transaction) {
         return;
       }
 
       const userDetail = await this.usersService.findOneById(
         transaction?.user?.id,
-      );
-      console.log(
-        '🚀 ~ TransactionsService ~ updateUserTransactionStatus ~ userDetail:',
-        userDetail,
       );
 
       if (isNull(userDetail) || isUndefined(userDetail)) {
