@@ -47,29 +47,31 @@ export class TransactionsService {
     } = dto;
 
     if (data?.id ?? false) {
+      console.log('🚀 ~ TransactionsService ~ create ~ paymentId:', data.id);
       const transaction = await this.findTransactionByPaymentId(data.id);
       console.log(
         '🚀 ~ TransactionsService ~ create ~ transaction:',
         transaction,
       );
       if (!transaction) {
-        throw new Error('Transaction not found');
+        throw new Error('Transaction not found while updating');
       }
 
-      const userDetail = await this.usersService.findOneById(
-        transaction?.user?.id,
-      );
-      console.log(
-        '🚀 ~ TransactionsService ~ create ~ userDetail:',
-        userDetail,
-      );
+      // const userDetail = await this.usersService.findOneById(
+      //   transaction?.user?.id,
+      // );
+      // console.log(
+      //   '🚀 ~ TransactionsService ~ create ~ userDetail:',
+      //   userDetail,
+      // );
 
-      if (isNull(userDetail) || isUndefined(userDetail)) {
-        throw new BadRequestException([
-          'User not found with id: ' + transaction?.user?.id,
-        ]);
-      }
-      await this.transactionssRepository.save(transaction);
+      // if (isNull(userDetail) || isUndefined(userDetail)) {
+      //   throw new BadRequestException([
+      //     'User not found with id: ' + transaction?.user?.id,
+      //   ]);
+      // }
+      transaction.transaction.status = data.status;
+      await this.transactionssRepository.save(transaction.transaction);
 
       // const transactions = await this.transactionssRepository.findBy({
       //   paymentId: data.id,
@@ -127,11 +129,27 @@ export class TransactionsService {
     const transactionWithPackageUserDetail =
       await this.findTransactionByPaymentId(transaction.paymentId);
 
-    const user: any = transactionWithPackageUserDetail.user;
-    user.wallet =
-      Number(user.wallet) +
-      Number(transactionWithPackageUserDetail?.package?.numberOfGuest || 0);
-    transactionWithPackageUserDetail.user.update(user);
+    if (!transactionWithPackageUserDetail) {
+      throw new Error('Transaction not found while creating');
+    }
+
+    // const user: any = transactionWithPackageUserDetail.user;
+    // user.wallet =
+    //   Number(user.wallet) +
+    //   Number(transactionWithPackageUserDetail?.package?.numberOfGuest || 0);
+    // transactionWithPackageUserDetail.user.update(user);
+
+    const user = await this.usersService.findOneById(userId);
+    if (user?.id) {
+      // const availableInvitationCount =
+      //   await this.usersService.getAvailableInvitationCount(userId, packageId);
+      // user.wallet = Number(user.wallet) + Number(availableInvitationCount);
+
+      user.wallet =
+        Number(user.wallet) +
+        Number(transactionWithPackageUserDetail?.package?.numberOfGuest || 0);
+      await this.usersRepository.update(userId, user);
+    }
 
     return transactionWithPackageUserDetail.transaction;
     /*
