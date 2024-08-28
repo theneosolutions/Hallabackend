@@ -46,7 +46,7 @@ export class TransactionsService {
       data,
     } = dto;
 
-    if (data?.id) {
+    if (data?.id ?? false) {
       const transaction = await this.findTransactionByPaymentId(data.id);
       console.log(
         '🚀 ~ TransactionsService ~ create ~ transaction:',
