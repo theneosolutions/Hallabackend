@@ -78,7 +78,7 @@ export class TransactionsController {
   public async create(
     @CurrentUser() id: number,
     @Origin() origin: string | undefined,
-    @Body() contactsDto: TransactionDto,
+    @Body() contactsDto: any,
   ): Promise<IResponseTransactions> {
     console.log(
       '🚀 ~ TransactionsController ~ create ~ transaction:',

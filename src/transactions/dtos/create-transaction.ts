@@ -44,20 +44,4 @@ export abstract class TransactionDto {
   })
   @IsString()
   public paymentId: string;
-
-  @ApiProperty({
-    description: 'Payment status',
-    example: 'paid',
-    type: String,
-  })
-  @IsString()
-  public status?: string;
-
-  @ApiProperty({
-    description: 'Payment message',
-    example: 'payment completion message',
-    type: String,
-  })
-  @IsString()
-  public message?: string;
 }
