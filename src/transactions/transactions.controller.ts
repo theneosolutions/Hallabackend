@@ -80,16 +80,25 @@ export class TransactionsController {
     @Origin() origin: string | undefined,
     @Body() contactsDto: any,
   ): Promise<IResponseTransactions | any> {
-    // Note:
-    // 1. Callback given to Moyasar API
-    // 2. Callback given to Web base Halla Payment form
-    const transaction = await this.transactionsService.create(
-      origin,
-      contactsDto,
-    );
-    if (transaction) {
-      return ResponseTransactionsMapper.map(transaction);
+    let transaction;
+    // Note: this function is called from following:
+    // 1. Given as callback function to Moyasar API
+    // 2. Given as callback function Halla Payment form
+    // Update transaction status
+    if (contactsDto?.data ?? false) {
+      const { status: paymentStatus, id: paymentId } = contactsDto.data;
+      transaction = await this.transactionsService.updateUserTransactionStatus(
+        paymentId,
+        paymentStatus,
+      );
+    } else {
+      transaction = await this.transactionsService.create(
+        origin,
+        contactsDto as TransactionDto,
+      );
     }
+
+    return ResponseTransactionsMapper.map(transaction);
   }
 
   @Public(['admin', 'user'])
@@ -137,9 +146,7 @@ export class TransactionsController {
     const updatedTransaction =
       await this.transactionsService.updateUserTransactionStatus(id, status);
 
-    if (updatedTransaction) {
-      return ResponseTransactionsMapper.map(updatedTransaction);
-    }
+    return ResponseTransactionsMapper.map(updatedTransaction);
   }
 
   @Patch('/:id')

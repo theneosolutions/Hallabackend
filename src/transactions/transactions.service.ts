@@ -34,30 +34,15 @@ export class TransactionsService {
 
   public async create(
     origin: string | undefined,
-    dto: TransactionDto | any,
-  ): Promise<Transactions | any> {
+    dto: TransactionDto,
+  ): Promise<Transactions> {
     const {
       user: userId,
       amount,
       description,
       package: packageId,
       paymentId,
-      data,
     } = dto;
-
-    if (data?.id ?? false) {
-      const transactionPaymentId = data.id;
-      const transaction = await this.updateUserTransactionStatus(
-        transactionPaymentId,
-        data.status,
-      );
-
-      if (!transaction) {
-        return;
-      }
-
-      return transaction as Transactions;
-    }
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
       throw new BadRequestException(['User cannot be null']);
@@ -116,11 +101,13 @@ export class TransactionsService {
   public async updateUserTransactionStatus(
     id: string,
     status: string,
-  ): Promise<Transactions | any> {
+  ): Promise<Transactions> {
     try {
       const transaction = await this.findTransactionByPaymentId(id);
       if (!transaction) {
-        return;
+        throw new BadRequestException([
+          'Transaction not found against payment id: ' + id,
+        ]);
       }
 
       const userDetail = await this.usersService.findOneById(
@@ -135,11 +122,10 @@ export class TransactionsService {
       transaction.status = status;
       const invitations: number =
         Number(transaction?.package?.numberOfGuest) || 0;
-      // Save the updated transaction
-      await this.transactionssRepository.save(transaction);
 
+      await this.transactionssRepository.save(transaction);
       await this.usersService.updateWallet(userDetail, invitations);
-      return transaction; // Return the updated transaction
+      return transaction;
     } catch (error) {
       // Handle any errors that occur during the transaction update process
       throw new Error(`Failed to update transaction: ${error.message}`);
