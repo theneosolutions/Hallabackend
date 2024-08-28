@@ -18,7 +18,6 @@ import { PageDto } from './dtos/page.dto';
 import { PageMetaDto } from './dtos/page-meta.dto';
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { Users } from 'src/users/entities/user.entity';
-import { UsernameDto } from 'src/users/dtos/username.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -47,47 +46,24 @@ export class TransactionsService {
     } = dto;
 
     if (data?.id ?? false) {
-      console.log('🚀 ~ TransactionsService ~ create ~ paymentId:', data.id);
-      const transaction = await this.findTransactionByPaymentId(data.id);
+      const transactionPaymentId = data.id;
+
       console.log(
-        '🚀 ~ TransactionsService ~ create ~ transaction:',
+        '🚀 ~ TransactionsService ~ create ~ paymentId:',
+        transactionPaymentId,
+      );
+
+      const transaction = await this.updateUserTransactionStatus(
+        transactionPaymentId,
+        data.status,
+      );
+
+      console.log(
+        '🚀 ~ TransactionsService ~ update ~ transaction:',
         transaction,
       );
-      if (!transaction) {
-        throw new Error('Transaction not found while updating');
-      }
 
-      // const userDetail = await this.usersService.findOneById(
-      //   transaction?.user?.id,
-      // );
-      // console.log(
-      //   '🚀 ~ TransactionsService ~ create ~ userDetail:',
-      //   userDetail,
-      // );
-
-      // if (isNull(userDetail) || isUndefined(userDetail)) {
-      //   throw new BadRequestException([
-      //     'User not found with id: ' + transaction?.user?.id,
-      //   ]);
-      // }
-      transaction.transaction.status = data.status;
-      await this.transactionssRepository.save(transaction.transaction);
-
-      // const transactions = await this.transactionssRepository.findBy({
-      //   paymentId: data.id,
-      // });
-
-      // if (transactions.length == 0) {
-      //   throw new BadRequestException(['Invalid paymentId']);
-      // }
-
-      // transaction.transaction.status = data.status;
-      // await this.transactionssRepository.update(
-      //   transactions[0].id,
-      //   transactions[0],
-      // );
-      // return transactions[0];
-      return transaction;
+      return transaction as Transactions;
     }
 
     if (isNaN(userId) || isNull(userId) || isUndefined(userId)) {
@@ -125,44 +101,7 @@ export class TransactionsService {
       package: packageId,
     });
     await this.transactionssRepository.insert(transaction);
-
-    const transactionWithPackageUserDetail =
-      await this.findTransactionByPaymentId(transaction.paymentId);
-
-    if (!transactionWithPackageUserDetail) {
-      throw new Error('Transaction not found while creating');
-    }
-
-    // const user: any = transactionWithPackageUserDetail.user;
-    // user.wallet =
-    //   Number(user.wallet) +
-    //   Number(transactionWithPackageUserDetail?.package?.numberOfGuest || 0);
-    // transactionWithPackageUserDetail.user.update(user);
-
-    const user = await this.usersService.findOneById(userId);
-    if (user?.id) {
-      // const availableInvitationCount =
-      //   await this.usersService.getAvailableInvitationCount(userId, packageId);
-      // user.wallet = Number(user.wallet) + Number(availableInvitationCount);
-
-      user.wallet =
-        Number(user.wallet) +
-        Number(transactionWithPackageUserDetail?.package?.numberOfGuest || 0);
-      await this.usersRepository.update(userId, user);
-    }
-
     return transaction;
-    /*
-    const user = await this.usersService.findOneById(userId);
-    if (user?.id) {
-      const availableInvitationCount =
-        await this.usersService.getAvailableInvitationCount(userId, packageId);
-
-      user.wallet = Number(user.wallet) + Number(availableInvitationCount);
-      await this.usersRepository.update(userId, user);
-    }
-    return transaction;
-    */
   }
 
   public async findOneByWhere(where: any): Promise<Transactions[]> {
@@ -214,7 +153,8 @@ export class TransactionsService {
         Number(transaction?.package?.numberOfGuest) || 0;
       // Save the updated transaction
       await this.transactionssRepository.save(transaction);
-      await this.usersService.updateWallet(userDetail?.id, invitations);
+
+      await this.usersService.updateWallet(userDetail, invitations);
       return transaction; // Return the updated transaction
     } catch (error) {
       // Handle any errors that occur during the transaction update process

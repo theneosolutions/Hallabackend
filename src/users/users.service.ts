@@ -351,12 +351,10 @@ export class UsersService {
     return await this.usersRepository.save(user);
   }
 
-  public async updateWallet(userId: number, amount: number): Promise<Users> {
-    const user = await this.findOneById(userId);
-    const finalAmount = Number(user.wallet) + amount;
-    console.log('🚀 ~ UsersService ~ finalAmount:', finalAmount);
-    user.wallet = finalAmount;
-    // await this.commonService.saveEntity(this.usersRepository, user);
+  public async updateWallet(user: Users, invitation: number): Promise<Users> {
+    const totalInvitation = Number(user.wallet) + invitation;
+    console.log('🚀 ~ UsersService ~ totalInvitation:', totalInvitation);
+    user.wallet = totalInvitation;
     return await this.usersRepository.save(user);
   }
 
