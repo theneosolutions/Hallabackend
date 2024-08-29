@@ -10,9 +10,8 @@ export enum Order {
 export enum Filterby {
   DRAFT = 'draft',
   UPCOMING = 'upcoming',
-  ATTENDED = 'attended',
+  EXPIRED = 'expired',
   NEW = 'new',
-  MISSED = 'missed',
   ALL = 'all',
 }
 

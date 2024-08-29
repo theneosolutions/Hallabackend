@@ -913,15 +913,11 @@ export class EventsService {
           })
           .getMany();
         break;
-      case 'attended':
+      case 'expired':
         events = await queryBuilder
-          .andWhere('invites.id = :userId', { userId: userId })
-          .getMany();
-        break;
-      case 'missed':
-        events = await queryBuilder
-          .andWhere('invites_events.status = "invited"')
-          .andWhere('invites_events.numberOfScans = 0')
+          .andWhere('events.status = :status', {
+            status: pageOptionsDto.filter,
+          })
           .getMany();
         break;
       default:
