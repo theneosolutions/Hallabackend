@@ -86,6 +86,8 @@ export class TransactionsController {
     // 2. Given as callback function Halla Payment form
     // Update transaction status
     const transactionData = contactsDto?.data ?? false;
+    console.log('>>>>>>>>>> Payment status:', contactsDto?.data?.status);
+
     if (transactionData && transactionData?.status == 'Paid') {
       const { status: paymentStatus, id: paymentId } = contactsDto.data;
       transaction = await this.transactionsService.updateUserTransactionStatus(
