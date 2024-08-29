@@ -86,23 +86,40 @@ export class TransactionsController {
     // 2. Given as callback function Halla Payment form
     // Update transaction status
     const transactionData = contactsDto?.data ?? false;
-    console.log('>>>>>>>>>> Payment status:', contactsDto?.data?.status);
-    const isPaymentPaid =
-      String(transactionData?.status).toLocaleLowerCase() ===
-      'Paid'.toLocaleLowerCase();
 
-    if (transactionData && isPaymentPaid) {
-      const { status: paymentStatus, id: paymentId } = contactsDto.data;
-      transaction = await this.transactionsService.updateUserTransactionStatus(
-        paymentId,
-        paymentStatus,
+    if (transactionData) {
+      console.log(
+        '>>>>>>>>>> Payment status:',
+        contactsDto?.data?.status,
+        '>>>>>>>>>> PaymentId:',
+        transactionData.id,
       );
-    } else {
-      transaction = await this.transactionsService.create(
-        origin,
-        contactsDto as TransactionDto,
-      );
+      const isPaymentPaid =
+        String(transactionData?.status).toLocaleLowerCase() === 'paid';
+      if (isPaymentPaid) {
+        const { status: paymentStatus, id: paymentId } = contactsDto.data;
+        transaction =
+          await this.transactionsService.updateUserTransactionStatus(
+            paymentId,
+            paymentStatus,
+          );
+        console.log(
+          '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment successful and invitation count updated',
+        );
+        // push notification: Payment successful and invitation count updated
+        return ResponseTransactionsMapper.map(transaction);
+      } else {
+        console.log(
+          '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment failed and invitation count not updated',
+        );
+      }
+      return;
     }
+
+    transaction = await this.transactionsService.create(
+      origin,
+      contactsDto as TransactionDto,
+    );
 
     return ResponseTransactionsMapper.map(transaction);
   }
