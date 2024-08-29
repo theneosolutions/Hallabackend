@@ -118,6 +118,7 @@ export class TransactionsService {
         id,
       );
 
+      // If transaction status is same as status param then do nothing
       if (
         transaction.status.toLocaleLowerCase() === status.toLocaleLowerCase()
       ) {
@@ -138,9 +139,6 @@ export class TransactionsService {
       await this.transactionssRepository.save(transaction);
 
       if (status.toLocaleLowerCase() === 'failed') {
-        console.log(
-          '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment failed and invitation count not updated',
-        );
         this.sendPaymentNotification(
           id,
           'Payment is failed and invitation count is not updated',
@@ -155,9 +153,6 @@ export class TransactionsService {
       this.sendPaymentNotification(
         id,
         'Payment is successfull and invitation count updated',
-      );
-      console.log(
-        '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment successful and invitation count updated',
       );
       return transaction;
     } catch (error) {
