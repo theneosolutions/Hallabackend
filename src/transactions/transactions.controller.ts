@@ -88,32 +88,46 @@ export class TransactionsController {
     const transactionData = contactsDto?.data ?? false;
 
     if (transactionData) {
-      console.log(
-        '>>>>>>>>>> Payment status:',
-        contactsDto?.data?.status,
-        '>>>>>>>>>> PaymentId:',
-        transactionData.id,
+      const { status: paymentStatus, id: paymentId } = contactsDto.data;
+      transaction = await this.transactionsService.updateUserTransactionStatus(
+        paymentId,
+        paymentStatus,
       );
-      const isPaymentPaid =
-        String(transactionData?.status).toLocaleLowerCase() === 'paid';
-      if (isPaymentPaid) {
-        const { status: paymentStatus, id: paymentId } = contactsDto.data;
-        transaction =
-          await this.transactionsService.updateUserTransactionStatus(
-            paymentId,
-            paymentStatus,
-          );
-        console.log(
-          '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment successful and invitation count updated',
-        );
-        // push notification: Payment successful and invitation count updated
-        return ResponseTransactionsMapper.map(transaction);
-      } else {
-        console.log(
-          '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment failed and invitation count not updated',
-        );
-      }
-      return;
+      return ResponseTransactionsMapper.map(transaction);
+      // console.log(
+      //   '>>>>>>>>>> Payment status:',
+      //   contactsDto?.data?.status,
+      //   '>>>>>>>>>> PaymentId:',
+      //   transactionData.id,
+      // );
+      // const isPaymentPaid =
+      //   String(transactionData?.status).toLocaleLowerCase() === 'paid';
+      // if (isPaymentPaid) {
+      //   const { status: paymentStatus, id: paymentId } = contactsDto.data;
+      //   transaction =
+      //     await this.transactionsService.updateUserTransactionStatus(
+      //       paymentId,
+      //       paymentStatus,
+      //     );
+      //   console.log(
+      //     '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment successful and invitation count updated',
+      //   );
+      //   this.transactionsService.sendPaymentNotification(
+      //     paymentId,
+      //     'Payment is successfull and invitation count updated',
+      //   );
+      //   // push notification: Payment successful and invitation count updated
+      //   return ResponseTransactionsMapper.map(transaction);
+      // } else {
+      //   console.log(
+      //     '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment failed and invitation count not updated',
+      //   );
+      //   this.transactionsService.sendPaymentNotification(
+      //     contactsDto.data.id,
+      //     'Payment is failed and invitation count is not updated',
+      //   );
+      // }
+      // return;
     }
 
     transaction = await this.transactionsService.create(

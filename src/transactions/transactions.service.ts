@@ -17,7 +17,8 @@ import { PageOptionsDto } from './dtos/page-option.dto';
 import { PageDto } from './dtos/page.dto';
 import { PageMetaDto } from './dtos/page-meta.dto';
 import { IMessage } from 'src/common/interfaces/message.interface';
-import { Users } from 'src/users/entities/user.entity';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { NotificationDto } from 'src/notifications/dtos/create-notification.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -25,11 +26,11 @@ export class TransactionsService {
     @InjectRepository(Transactions)
     private readonly transactionssRepository: Repository<Transactions>,
     private readonly commonService: CommonService,
-    @InjectRepository(Users)
-    private readonly usersRepository: Repository<Users>,
 
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+    @Inject(forwardRef(() => NotificationsService))
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   public async create(
@@ -110,6 +111,17 @@ export class TransactionsService {
         ]);
       }
 
+      console.log(
+        '>>>>>>>>>> Payment status:',
+        status,
+        '>>>>>>>>>> PaymentId:',
+        id,
+      );
+
+      if (transaction.status.toLocaleLowerCase() === 'initiated') {
+        return transaction;
+      }
+
       const userDetail = await this.usersService.findOneById(
         transaction?.user?.id,
       );
@@ -119,12 +131,29 @@ export class TransactionsService {
           'User not found with id: ' + transaction?.user?.id,
         ]);
       }
+
       transaction.status = status;
+      await this.transactionssRepository.save(transaction);
+
+      if (status.toLocaleLowerCase() === 'failed') {
+        console.log(
+          '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment failed and invitation count not updated',
+        );
+        this.sendPaymentNotification(
+          id,
+          'Payment is failed and invitation count is not updated',
+        );
+        return transaction;
+      }
+
       const invitations: number =
         Number(transaction?.package?.numberOfGuest) || 0;
 
-      await this.transactionssRepository.save(transaction);
       await this.usersService.updateWallet(userDetail, invitations);
+      this.sendPaymentNotification(
+        id,
+        'Payment is successfull and invitation count updated',
+      );
       return transaction;
     } catch (error) {
       // Handle any errors that occur during the transaction update process
@@ -367,5 +396,28 @@ export class TransactionsService {
         currentMonthRevenue: chartData[chartData.length - 1].revenue,
       },
     };
+  }
+
+  public async sendPaymentNotification(paymentId: string, message: string) {
+    const transaction = await this.findTransactionByPaymentId(paymentId);
+    if (!transaction) {
+      throw new BadRequestException([
+        'Transactions ~ service ~ sendPaymentNotification ~ Not found against payment id: ' +
+          paymentId,
+      ]);
+    }
+    const notificationDto: NotificationDto = {
+      user: transaction.user.id,
+      resourceId: transaction.user.id,
+      resourceType: 'custom-notification',
+      parent: null,
+      parentType: 'custom-notification',
+      sendNotificationTo: transaction.user.id,
+      content: {
+        body: message,
+      },
+    };
+
+    await this.notificationsService.create(undefined, notificationDto);
   }
 }
