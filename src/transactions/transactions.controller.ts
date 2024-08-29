@@ -90,7 +90,7 @@ export class TransactionsController {
     if (transactionData) {
       console.log(
         '>>>>>>>>>>>>>>>>>>>>>>>>> Payment transaction status updated',
-        transaction.status,
+        transactionData?.status,
       );
       const { status: paymentStatus, id: paymentId } = contactsDto.data;
       transaction = await this.transactionsService.updateUserTransactionStatus(
