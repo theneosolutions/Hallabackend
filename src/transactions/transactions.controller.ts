@@ -88,6 +88,10 @@ export class TransactionsController {
     const transactionData = contactsDto?.data ?? false;
 
     if (transactionData) {
+      console.log(
+        '>>>>>>>>>>>>>>>>>>>>>>>>> Payment transaction status updated',
+        transaction.status,
+      );
       const { status: paymentStatus, id: paymentId } = contactsDto.data;
       transaction = await this.transactionsService.updateUserTransactionStatus(
         paymentId,
