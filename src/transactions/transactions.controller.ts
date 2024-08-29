@@ -85,7 +85,8 @@ export class TransactionsController {
     // 1. Given as callback function to Moyasar API
     // 2. Given as callback function Halla Payment form
     // Update transaction status
-    if (contactsDto?.data ?? false) {
+    const transactionData = contactsDto?.data ?? false;
+    if (transactionData && transactionData?.status == 'Paid') {
       const { status: paymentStatus, id: paymentId } = contactsDto.data;
       transaction = await this.transactionsService.updateUserTransactionStatus(
         paymentId,
