@@ -89,7 +89,7 @@ export class TransactionsController {
 
     if (transactionData) {
       console.log(
-        '>>>>>>>>>>>>>>>>>>>>>>>>> Payment transaction status updated',
+        '>>>>>>>>>>>>>>>>>>>>>>>>> Payment transaction status:',
         transactionData?.status,
       );
       const { status: paymentStatus, id: paymentId } = contactsDto.data;

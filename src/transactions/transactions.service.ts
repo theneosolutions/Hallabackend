@@ -118,7 +118,9 @@ export class TransactionsService {
         id,
       );
 
-      if (transaction.status.toLocaleLowerCase() === 'initiated') {
+      if (
+        transaction.status.toLocaleLowerCase() === status.toLocaleLowerCase()
+      ) {
         return transaction;
       }
 
