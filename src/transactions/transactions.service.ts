@@ -154,6 +154,9 @@ export class TransactionsService {
         id,
         'Payment is successfull and invitation count updated',
       );
+      console.log(
+        '>>>>>>>>>>>>>>>>>>>>>>> push notification: Payment successful and invitation count updated',
+      );
       return transaction;
     } catch (error) {
       // Handle any errors that occur during the transaction update process
