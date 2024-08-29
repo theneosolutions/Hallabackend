@@ -87,8 +87,11 @@ export class TransactionsController {
     // Update transaction status
     const transactionData = contactsDto?.data ?? false;
     console.log('>>>>>>>>>> Payment status:', contactsDto?.data?.status);
+    const isPaymentPaid =
+      String(transactionData?.status).toLocaleLowerCase() ===
+      'Paid'.toLocaleLowerCase();
 
-    if (transactionData && transactionData?.status == 'Paid') {
+    if (transactionData && isPaymentPaid) {
       const { status: paymentStatus, id: paymentId } = contactsDto.data;
       transaction = await this.transactionsService.updateUserTransactionStatus(
         paymentId,
