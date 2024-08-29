@@ -123,6 +123,7 @@ export abstract class EventDto {
     description: 'EventsNumberOfGuests',
     type: Number,
   })
+  @IsOptional()
   @IsNumber()
   public eventNumberOfGuests: number;
 
@@ -130,6 +131,7 @@ export abstract class EventDto {
     description: 'EventsNumberOfScans',
     type: Number,
   })
+  @IsOptional()
   @IsNumber()
   public eventNumberOfScans: number;
 }
