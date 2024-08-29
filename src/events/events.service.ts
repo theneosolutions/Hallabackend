@@ -1359,12 +1359,15 @@ export class EventsService {
         const results = await this.connection.query(query);
         console.log('🚀 ~ EventsService ~ update ~ results:', results);
       }
-      // const userDetail = await this.usersService.findOne({
-      //   where: { id: eventCreator?.id },
-      // });
 
-      eventItem.updatedAt = new Date();
-      eventItem.status = 'active';
+      const currentDate = new Date();
+      const eventItemDate = new Date(eventItem.eventDate);
+      eventItem.updatedAt = currentDate;
+      eventItem.status =
+        eventItemDate.getTime() > currentDate.getTime()
+          ? 'active'
+          : eventItem.status;
+
       await this.eventsRepository.save(eventItem);
       return eventItem;
     } catch (error) {
