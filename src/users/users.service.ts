@@ -299,9 +299,12 @@ export class UsersService {
 
   // necessary for password reset
   public async uncheckedUserByEmail(email: string): Promise<Users> {
-    return this.usersRepository.findOneBy({
+    const user = await this.usersRepository.findOneBy({
       email: email.toLowerCase(),
     });
+
+    this.commonService.checkEntityExistence(user, 'User');
+    return user;
   }
 
   public async findOneByCredentials(

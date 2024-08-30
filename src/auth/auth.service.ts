@@ -166,9 +166,7 @@ export class AuthService {
   ): Promise<IMessage> {
     const { callingCode, phoneNumber } = dto;
     const user = await this.userByPhoneNumber(callingCode, phoneNumber);
-    if (!user?.id) {
-      throw new NotFoundException(['Invalid credentials']);
-    }
+
     await this.sendOtpPhoneWithRetry(
       callingCode,
       phoneNumber,
@@ -298,14 +296,12 @@ export class AuthService {
   ): Promise<IMessage> {
     const user = await this.usersService.uncheckedUserByEmail(dto.email);
 
-    if (!isUndefined(user) && !isNull(user)) {
-      await this.jwtService.generateToken(
-        user,
-        TokenTypeEnum.RESET_PASSWORD,
-        domain,
-      );
-      this.mailerService.sendResetPasswordEmail(user, user?.otp);
-    }
+    await this.jwtService.generateToken(
+      user,
+      TokenTypeEnum.RESET_PASSWORD,
+      domain,
+    );
+    this.mailerService.sendResetPasswordEmail(user, user?.otp);
 
     return this.commonService.generateMessage('Reset password email sent');
   }
