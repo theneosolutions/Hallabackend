@@ -47,8 +47,10 @@ export class SocketGateway
         await this.socketService.handleCheckInvitationCount(payload);
 
       console.log(
-        '🚀 ~ SocketGateway ~ User wallet balance:',
-        invitationCountObject.wallet,
+        '🚀 ~ SocketGateway ~ User: ',
+        payload.userId,
+        ' wallet balance:',
+        invitationCountObject[payload.userId],
       );
       this.server.emit('invitation-count-updated', invitationCountObject);
     } catch (error) {
