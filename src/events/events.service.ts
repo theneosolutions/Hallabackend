@@ -351,7 +351,6 @@ export class EventsService {
       },
     }));
 
-    let successInvitationCount = 0;
     if (invitesList.length > 0) {
       const availableInvitationCount = Number(userDetail.wallet);
       if (availableInvitationCount < invitesList.length) {
