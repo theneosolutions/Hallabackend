@@ -37,6 +37,7 @@ import axios from 'axios';
 import { PhoneOTPDto } from './dtos/phone-otp.dto';
 import { ResetPasswordWithPhoneDto } from './dtos/reset-password-phone.dto';
 import { EmailOTPDto } from './dtos/email-otp.dto';
+import { MANUAL_LOGIN } from 'src/common/consts/login.const';
 
 @Injectable()
 export class AuthService {
@@ -128,6 +129,8 @@ export class AuthService {
         'Please confirm your email, a new email has been sent',
       ]);
     }
+    user.loginType = MANUAL_LOGIN;
+    await this.usersService.update(user.id, user);
     // Set user specific events expired (Those with passed date)
     await this.usersService.setEventsStatusExpired(user.id);
 
