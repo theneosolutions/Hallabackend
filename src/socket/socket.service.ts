@@ -53,9 +53,11 @@ export class SocketService {
     try {
       const { userId } = payload;
       const userDetails = await this.usersService.findOneById(userId);
-      return {
+      const retObj = {};
+      retObj[userId] = {
         wallet: Number(userDetails.wallet || 0),
       };
+      return retObj;
     } catch (error) {
       console.log(
         '🚀 ~ SocketService ~ handleCheckInvitationCount ~ error:',
