@@ -12,6 +12,7 @@ import { EventsService } from './events.service';
 import { Users } from 'src/users/entities/user.entity';
 import { EventsChats } from './entities/events_chats.entity';
 import { Contacts } from 'src/contacts/entities/contacts.entity';
+import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { Contacts } from 'src/contacts/entities/contacts.entity';
     UploaderModule,
     CardModule,
     ContactsModule,
+    forwardRef(() => SocketModule),
     forwardRef(() => WhatsappModule),
   ],
   providers: [EventsService],

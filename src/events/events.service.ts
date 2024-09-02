@@ -38,6 +38,7 @@ import nodeHtmlToImage from 'node-html-to-image';
 import { ITemplatedData } from 'src/whatsapp/interfaces/template-data.interface';
 import Handlebars from 'handlebars';
 import { Users } from 'src/users/entities/user.entity';
+import { SocketGateway } from 'src/socket/socket.gateway';
 
 @Injectable()
 export class EventsService {
@@ -58,6 +59,8 @@ export class EventsService {
     private readonly usersService: UsersService,
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
+    @Inject(forwardRef(() => SocketGateway))
+    private readonly socketGateway: SocketGateway,
 
     // private readonly usersService: UsersService,
     private readonly cardService: CardService,
@@ -378,8 +381,7 @@ export class EventsService {
         invite.status = 'invited';
         invite.sendList = true;
         // Update user invitation count
-        userDetail.wallet = userDetail.wallet - 1;
-        this.usersRepository.update(userId, userDetail);
+        this.emitInvitationCountUpdateEvent(userDetail);
       }
 
       if (status == 'failed') {
@@ -400,6 +402,23 @@ export class EventsService {
     });
 
     return eventDetail;
+  }
+
+  private async emitInvitationCountUpdateEvent(
+    userDetail: Users,
+  ): Promise<void> {
+    const server = this.socketGateway.getServerInstance();
+    userDetail.wallet = userDetail.wallet - 1;
+    await this.usersRepository.update(userDetail.id, userDetail);
+    if (server) {
+      const retObj = {};
+      retObj[userDetail.id] = {
+        wallet: Number(userDetail.wallet || 0),
+      };
+      server.emit('invitation-count-updated', retObj);
+    } else {
+      console.error('Server instance not available');
+    }
   }
 
   public async sendEventsReminder(userId: number, id: string): Promise<Events> {
