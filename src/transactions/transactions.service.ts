@@ -19,6 +19,8 @@ import { PageMetaDto } from './dtos/page-meta.dto';
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { NotificationDto } from 'src/notifications/dtos/create-notification.dto';
+import { Users } from 'src/users/entities/user.entity';
+import { SocketGateway } from 'src/socket/socket.gateway';
 
 @Injectable()
 export class TransactionsService {
@@ -31,6 +33,8 @@ export class TransactionsService {
     private readonly usersService: UsersService,
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
+    @Inject(forwardRef(() => SocketGateway))
+    private readonly socketGateway: SocketGateway,
   ) {}
 
   public async create(
@@ -150,6 +154,8 @@ export class TransactionsService {
         Number(transaction?.package?.numberOfGuest) || 0;
 
       await this.usersService.updateWallet(userDetail, invitations);
+      // Send socket emit
+      await this.emitInvitationCountUpdateEvent(userDetail);
       this.sendPaymentNotification(
         id,
         'Payment is successfull and invitation count updated',
@@ -158,6 +164,21 @@ export class TransactionsService {
     } catch (error) {
       // Handle any errors that occur during the transaction update process
       throw new Error(`Failed to update transaction: ${error.message}`);
+    }
+  }
+
+  private async emitInvitationCountUpdateEvent(
+    userDetail: Users,
+  ): Promise<void> {
+    const server = this.socketGateway.getServerInstance();
+    if (server) {
+      const retObj = {};
+      retObj[userDetail.id] = {
+        wallet: Number(userDetail.wallet || 0),
+      };
+      server.emit('invitation-count-updated', retObj);
+    } else {
+      console.error('Server instance not available');
     }
   }
 

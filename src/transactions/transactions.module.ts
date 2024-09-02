@@ -8,12 +8,14 @@ import { UsersModule } from 'src/users/users.module';
 import { Users } from 'src/users/entities/user.entity';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { Notifications } from 'src/notifications/entities/notifications.entity';
+import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Transactions, Users, Notifications]),
     forwardRef(() => UsersModule),
     forwardRef(() => NotificationsModule),
+    forwardRef(() => SocketModule),
   ],
   providers: [TransactionsService],
   exports: [TransactionsService],
