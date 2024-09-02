@@ -351,22 +351,11 @@ export class EventsService {
       },
     }));
 
-    let eventInvitationCount = 0;
+    let successInvitationCount = 0;
     if (invitesList.length > 0) {
       const availableInvitationCount = Number(userDetail.wallet);
-      eventInvitationCount = await this.usersService.getSentInvitationCount(
-        userId,
-        eventDetail.id,
-      );
-      if (availableInvitationCount < eventInvitationCount) {
-        const packageRequirement =
-          Math.abs(availableInvitationCount - eventInvitationCount) + 1;
-
-        throw new BadRequestException(
-          `Insufficient balance`,
-          // `Insufficient balance. Please top-up your account balance with minimum ${packageRequirement} invitation(s)`,
-          // `User available invitation count balance is not enough to perform this operation. Please top up your account balance with minimum ${packageRequirement} invitation(s)`,
-        );
+      if (availableInvitationCount < invitesList.length) {
+        throw new BadRequestException(`Insufficient balance`);
       }
     }
 
@@ -375,7 +364,6 @@ export class EventsService {
     }
 
     invitesList?.map(async (invite) => {
-      console.log('🚀 ~ EventsService ~ invitesList?.map ~ invite:', invite);
       const { invites, events }: any = invite;
       const { image, name: eventName, id }: any = events;
       const { callingCode, phoneNumber, name: recipientName } = invites;
@@ -384,21 +372,18 @@ export class EventsService {
         phoneNumber,
         text: `Hey ${recipientName}, \nWe are please to invite you to.\n${eventName}`,
         image,
-        recipientName,
-        eventName,
         eventId: id,
         contactId: invites?.id,
       });
       if (status == 'success') {
         invite.status = 'invited';
         invite.sendList = true;
+        successInvitationCount++;
       }
 
       if (status == 'failed') {
         invite.status = 'failed';
         invite.sendList = false;
-        // Removed failed invite numberOfGuests from eventInvitationCount
-        eventInvitationCount -= invite.numberOfGuests;
       }
 
       try {
@@ -414,8 +399,8 @@ export class EventsService {
     });
 
     // update user balance
-    if (invitesList.length > 0 && eventInvitationCount > 0) {
-      userDetail.wallet = userDetail.wallet - eventInvitationCount;
+    if (invitesList.length > 0 && successInvitationCount > 0) {
+      userDetail.wallet = userDetail.wallet - successInvitationCount;
       await this.usersRepository.update(userId, userDetail);
     }
 
@@ -480,7 +465,7 @@ export class EventsService {
             LEFT JOIN 
                 events ON events.id = event_invitess_contacts.eventId AND events.deletedAt IS NULL 
             WHERE 
-                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status NOT IN ('rejected', 'confirmed') 
+                event_invitess_contacts.eventId = ? AND event_invitess_contacts.status NOT IN ('rejected', 'confirmed', 'failed') 
                 AND event_invitess_contacts.deletedAt IS NULL`;
 
     const entities = await this.connection.query(rawQuery, [eventDetail.id]);

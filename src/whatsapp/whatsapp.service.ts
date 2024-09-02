@@ -652,53 +652,10 @@ export class WhatsappService {
   }
 
   public async sendInviteToGuest(body: any): Promise<any> {
-    const {
-      callingCode,
-      phoneNumber,
-      text,
-      image,
-      recipientName,
-      eventName,
-      eventId,
-      contactId,
-    } = body;
+    const { callingCode, phoneNumber, text, image, eventId, contactId } = body;
     const recipientPhone = `${callingCode.replace('+', '')}${phoneNumber}`;
 
     try {
-      // Old implementation
-      /*
-      if (image) {
-        const imageResponse: any = await this.sendImage({
-          recipientPhone: recipientPhone,
-          caption: text,
-          url: image,
-        });
-
-        // Check if there's any error in sending image
-        if (imageResponse && imageResponse?.error) {
-          console.error('Error sending image:', imageResponse?.error);
-        }
-      }
-
-      const response = await this.sendSimpleButtons({
-        message: text,
-        recipientPhone: recipientPhone,
-        listOfButtons: [
-          { title: 'Confirm', id: `event-confirm_${eventId}_${contactId}` },
-          { title: 'Decline', id: `event-decline_${eventId}_${contactId}` },
-          {
-            title: 'Event Location',
-            id: `event-location_${eventId}_${contactId}`,
-          },
-        ],
-      });
-
-      console.log(
-        '🚀 ~ WhatsappService ~ sendInviteToGuest ~ response:',
-        response,
-      );
-      return response;
-      */
       const response = await this.sendSimpleButtonsWithImage({
         message: text,
         url: image,

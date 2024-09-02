@@ -237,30 +237,6 @@ export class UsersService {
     return packageNumberOfGuest[0].userInvitationCount ?? 0;
   }
 
-  public async getSentInvitationCount(
-    userId: number,
-    eventId?: number,
-  ): Promise<number> {
-    // Get total number of sent invitation count
-    let queryUserSentInvitationCount = `
-      SELECT
-        SUM(numberOfGuests) as userSentInvitationCount
-      FROM
-        halla.event_invitess_contacts
-      WHERE
-        usersId = ${userId}
-      `;
-    if (eventId) {
-      queryUserSentInvitationCount += ` AND eventId = ${eventId}`;
-      queryUserSentInvitationCount += ` AND status = 'pending'`;
-    }
-
-    const userInvitationSentCount: any = await this.dataSource.query(
-      queryUserSentInvitationCount,
-    );
-    return userInvitationSentCount[0].userSentInvitationCount ?? 0;
-  }
-
   public async getUserStats(userId: string): Promise<UserStats> {
     const parsedValue = parseInt(userId, 10);
 
