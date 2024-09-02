@@ -378,7 +378,9 @@ export class EventsService {
       if (status == 'success') {
         invite.status = 'invited';
         invite.sendList = true;
-        successInvitationCount++;
+        // Update user invitation count
+        userDetail.wallet = userDetail.wallet - 1;
+        await this.usersRepository.update(userId, userDetail);
       }
 
       if (status == 'failed') {
@@ -397,16 +399,6 @@ export class EventsService {
         }
       }
     });
-
-    // update user balance
-    console.log(
-      '>>>>>>>>>>>> Success Invitation Count:',
-      successInvitationCount,
-    );
-    if (invitesList.length > 0 && successInvitationCount > 0) {
-      userDetail.wallet = userDetail.wallet - successInvitationCount;
-      await this.usersRepository.update(userId, userDetail);
-    }
 
     return eventDetail;
   }
