@@ -380,7 +380,7 @@ export class EventsService {
         invite.sendList = true;
         // Update user invitation count
         userDetail.wallet = userDetail.wallet - 1;
-        await this.usersRepository.update(userId, userDetail);
+        this.usersRepository.update(userId, userDetail);
       }
 
       if (status == 'failed') {
