@@ -381,7 +381,7 @@ export class EventsService {
         invite.status = 'invited';
         invite.sendList = true;
         // Update user invitation count
-        this.emitInvitationCountUpdateEvent(userDetail);
+        this.emitInvitationCountUpdateEvent(userDetail, invite.numberOfGuests);
       }
 
       if (status == 'failed') {
@@ -406,9 +406,10 @@ export class EventsService {
 
   private async emitInvitationCountUpdateEvent(
     userDetail: Users,
+    noOfGuests: number,
   ): Promise<void> {
     const server = this.socketGateway.getServerInstance();
-    userDetail.wallet = userDetail.wallet - 1;
+    userDetail.wallet = userDetail.wallet - noOfGuests;
     await this.usersRepository.update(userDetail.id, userDetail);
     if (server) {
       const retObj = {};
