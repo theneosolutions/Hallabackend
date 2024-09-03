@@ -776,6 +776,8 @@ export class WhatsappService {
   public async findInviteByContactId(
     id: number,
   ): Promise<EventInvitessContacts[]> {
+    const currentDate = new Date();
+
     const queryBuilder = this.eventInvitessContacts.createQueryBuilder(
       'event_invitess_contacts',
     );
@@ -795,6 +797,9 @@ export class WhatsappService {
         'invites.email',
       ])
       .andWhere('events.status != "epxired"')
+      .andWhere('events.eventDate > :currentDate', {
+        currentDate: currentDate,
+      })
       .getMany();
     return invite;
   }
