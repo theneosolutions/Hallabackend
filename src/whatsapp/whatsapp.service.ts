@@ -794,6 +794,7 @@ export class WhatsappService {
         'invites.phoneNumber',
         'invites.email',
       ])
+      .andWhere('events.status != "epxired"')
       .getMany();
     return invite;
   }
