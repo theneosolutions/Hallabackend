@@ -27,7 +27,7 @@ const WhatsappCloudAPI = require('whatsappcloudapi_wrapper');
 @Injectable()
 export class WhatsappService {
   private readonly accessToken = process.env.Meta_WA_accessToken;
-  private readonly graphAPIVersion = 'v18.0';
+  private readonly graphAPIVersion = 'v20.0';
   private readonly senderPhoneNumberId =
     process.env.Meta_WA_SenderPhoneNumberId;
   private baseUrl: any = `https://graph.facebook.com/${this.graphAPIVersion}/${this.senderPhoneNumberId}`;
