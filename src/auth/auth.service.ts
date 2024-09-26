@@ -125,19 +125,11 @@ export class AuthService {
         domain,
       );
       this.mailerService.sendConfirmationEmail(user, confirmationToken);
-      // throw new UnauthorizedException([
-      //   'Please confirm your email, a new email has been sent',
-      // ]);
       throw new UnauthorizedException({
-        message: 'User does not have Admin role to access it',
+        statusCode: 200,
+        message: 'Please confirm your email, a new email has been sent',
         emailConfirmed: false,
       });
-      // throw new BadRequestException({
-      //   statusCode: 200,
-      //   message: 'User does not have Admin role to access it',
-      //   confirmed: false,
-      //   error: 'Unauthorized',
-      // });
     }
     user.loginType = MANUAL_LOGIN;
     await this.usersService.update(user.id, user);
