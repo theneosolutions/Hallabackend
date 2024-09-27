@@ -26,15 +26,26 @@ export class AuthResponseMapper implements IAuthResponse {
   })
   public refreshToken: string;
 
+  @ApiProperty({
+    description: 'Message text',
+    example: 'Some dummy message',
+    type: String,
+  })
+  public message?: string;
+
   constructor(values: IAuthResponse) {
     Object.assign(this, values);
   }
 
   public static map(result: IAuthResult): AuthResponseMapper {
-    return new AuthResponseMapper({
+    const authResponse: any = {
       user: AuthResponseUserMapper.map(result.user),
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
-    });
+    };
+    if (result.message) {
+      authResponse.message = result.message;
+    }
+    return new AuthResponseMapper(authResponse);
   }
 }

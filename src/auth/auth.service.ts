@@ -10,7 +10,6 @@ import dayjs from 'dayjs';
 import { CommonService } from '../common/common.service';
 import { SLUG_REGEX } from '../common/consts/regex.const';
 import { IMessage } from '../common/interfaces/message.interface';
-import { isNull, isUndefined } from '../common/utils/validation.util';
 import { TokenTypeEnum } from '../jwt/enums/token-type.enum';
 import { IEmailToken } from '../jwt/interfaces/email-token.interface';
 import { IRefreshToken } from '../jwt/interfaces/refresh-token.interface';
@@ -125,11 +124,17 @@ export class AuthService {
         domain,
       );
       this.mailerService.sendConfirmationEmail(user, confirmationToken);
-      throw new UnauthorizedException({
-        statusCode: 200,
+      // throw new UnauthorizedException({
+      //   statusCode: 200,
+      //   message: 'Please confirm your email, a new email has been sent',
+      //   emailConfirmed: false,
+      // });
+      return {
+        user,
+        accessToken: '',
+        refreshToken: '',
         message: 'Please confirm your email, a new email has been sent',
-        emailConfirmed: false,
-      });
+      };
     }
     user.loginType = MANUAL_LOGIN;
     await this.usersService.update(user.id, user);
@@ -141,7 +146,7 @@ export class AuthService {
       domain,
     );
 
-    return { user, accessToken, refreshToken };
+    return { user, accessToken, refreshToken, message: '' };
   }
 
   public async signInWithPhone(
